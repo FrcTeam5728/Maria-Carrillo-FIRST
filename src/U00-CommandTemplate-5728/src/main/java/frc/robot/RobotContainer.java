@@ -5,12 +5,15 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.NamedCommands;
+
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -21,6 +24,9 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import java.io.File;
+
+import javax.lang.model.util.ElementScanner14;
+
 import swervelib.SwerveInputStream;
 
 /**
@@ -96,9 +102,38 @@ public class RobotContainer
   public RobotContainer()
   {
     // Configure the trigger bindings
-    configureBindings();
+    //configureBindings();
+    setupYagslSwerveTestBindings();
     DriverStation.silenceJoystickConnectionWarning(true);
     NamedCommands.registerCommand("test", Commands.print("I EXIST"));
+  }
+
+  private void setupYagslSwerveTestBindings()
+  {
+    if (DriverStation.isTest())
+    {
+      driverXbox.a().onTrue(Commands.runOnce(drivebase::zeroGyro).andThen(drivebase.centerModulesCommand()));
+      Command driveSimpleCommand = drivebase.driveCommand(() -> 0.0, () -> 0.0, () -> 0.10);
+      driverXbox.b().onTrue(driveSimpleCommand);
+      driverXbox.x().onTrue(drivebase.centerModulesCommand());
+      //drivebase.setDefaultCommand(driveSimpleCommand);
+
+    } else
+    {
+
+    // Applies deadbands and inverts controls because joysticks
+    // are back-right positive while robot
+    // controls are front-left positive
+    // left stick controls translation
+    // right stick controls the desired angle NOT angular rotation
+    Command driveFieldOrientedDirectAngle = drivebase.driveCommand(
+        () -> MathUtil.applyDeadband(driverXbox.getLeftY(), OperatorConstants.deadband),
+        () -> MathUtil.applyDeadband(driverXbox.getLeftX(), OperatorConstants.deadband),
+        () -> MathUtil.applyDeadband(driverXbox.getRightX(),OperatorConstants.deadband),
+        () -> MathUtil.applyDeadband(driverXbox.getRightY(), OperatorConstants.deadband));
+
+        drivebase.setDefaultCommand(driveFieldOrientedDirectAngle);
+    }
   }
 
   /**
