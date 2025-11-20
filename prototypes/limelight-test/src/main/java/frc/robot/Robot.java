@@ -39,9 +39,8 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotPeriodic() {
-    // ⬇️ LIMELIGHT CODE ADDED HERE ⬇️
     // Check if the Limelight has a target
-    boolean hasTarget = m_limelight.hasRetroTarget();
+    boolean hasTarget = m_limelight.hasTarget();
     
     // Do something based on the result
     if (hasTarget) {
@@ -51,7 +50,6 @@ public class Robot extends TimedRobot {
       // Limelight is not connected or does not have a target
       System.out.println("Limelight is not connected or does not have a target");
     }
-    // ⬆️ END LIMELIGHT CODE ⬆️
     
     // Runs the Scheduler.  This is responsible for polling buttons, adding newly-scheduled
     // commands, running already-scheduled commands, removing finished or interrupted commands,
