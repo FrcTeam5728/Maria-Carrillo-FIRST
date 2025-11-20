@@ -23,7 +23,7 @@ public class AprilTagFollower extends Command {
     
     // Configuration constants (tune these for your robot)
     private static final double MAX_ROTATION_SPEED = 0.5;  // Max rotation speed (0 to 1)
-    private static final double MAX_FORWARD_SPEED = 0.5;   // Max forward speed (0 to 1)
+    private static final double MAX_FORWARD_SPEED = 0.1;   // Max forward speed (0 to 1)
     private static final double MIN_TARGET_AREA = 0.5;     // Minimum target area to consider valid
     private static final double TARGET_DISTANCE = 1.0;     // Desired distance from target in meters
     private static final double ANGLE_TOLERANCE = 2.0;     // Degrees of error allowed
