@@ -23,20 +23,6 @@ import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import java.io.File;
 import swervelib.SwerveInputStream;
 
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import java.util.List;
-import org.json.simple.JSONObject;
-
-// JSON autonomous support
-import frc.robot.util.AutonLoader;
-import frc.robot.util.AutonLoader.AutonStep;
-import frc.robot.commands.auto.DriveToPosition;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import swervelib.SwerveInputStream;
-
-
-
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a "declarative" paradigm, very
  * little robot logic should actually be handled in the {@link Robot} periodic methods (other than the scheduler calls).
@@ -50,8 +36,6 @@ public class RobotContainer
   // The robot's subsystems and commands are defined here...
   private final SwerveSubsystem       drivebase  = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(),
                                                                                 "swerve/neo"));
-  // Chooser to select between PathPlanner and JSON autonomous systems
-  private final SendableChooser<String> autonChooser = new SendableChooser<>();
 
   /**
    * Converts driver input into a field-relative ChassisSpeeds that is controlled by angular velocity.
@@ -113,7 +97,6 @@ public class RobotContainer
   {
     // Configure the trigger bindings
     configureBindings();
-    configureAutonChooser();
     DriverStation.silenceJoystickConnectionWarning(true);
     NamedCommands.registerCommand("test", Commands.print("I EXIST"));
   }
@@ -193,67 +176,17 @@ public class RobotContainer
     }
 
   }
-  private void configureAutonChooser() {
-    autonChooser.setDefaultOption("PathPlanner Auto", "PATHPLANNER");
-    autonChooser.addOption("JSON Auto (auton_plan_5ft.json)", "JSON_5FT");
-  
-    SmartDashboard.putData("Autonomous Mode", autonChooser);
-  }
-  
+
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
    *
    * @return the command to run in autonomous
    */
-  public Command getAutonomousCommand() {
-    String choice = autonChooser.getSelected();
-
-    if (choice == null || choice.equals("PATHPLANNER")) {
-      System.out.println("Running PathPlanner...");
-      return drivebase.getAutonomousCommand("New Auto");
-    } else if (choice.equals("JSON_5FT")) {
-      System.out.println("Running JSON auto");
-      return buildJsonAutonomous("auton_plan_5ft.json");
-    }
-
-    return Commands.print("No autonomous mode selected, please select a mode to proceed.");
+  public Command getAutonomousCommand()
+  {
+    // An example command will be run in autonomous
+    return drivebase.getAutonomousCommand("New Auto");
   }
-
-  private Command createCommandFromStep(AutonStep step) {
-    JSONObject params = step.parameters();
-  
-    switch (step.commandName()) {
-      case "DriveToPosition":
-        double x = ((Number) params.get("x_meters")).doubleValue();
-        double y = ((Number) params.get("y_meters")).doubleValue();
-        double rot = ((Number) params.get("rotation_degrees")).doubleValue();
-        return new DriveToPosition(drivebase, x, y, Rotation2d.fromDegrees(rot));
-  
-      case "Wait":
-        double seconds = ((Number) params.get("seconds")).doubleValue();
-        return Commands.waitSeconds(seconds);
-  
-      default:
-        System.err.println("JSON Auton: Unknown command '" + step.commandName() + "'. Skipping.");
-        return Commands.none();
-    }
-  }
-  
-  private Command buildJsonAutonomous(String fileName) {
-    List<AutonStep> steps = AutonLoader.loadPlan(fileName);
-    SequentialCommandGroup autonGroup = new SequentialCommandGroup();
-  
-    for (AutonStep step : steps) {
-      Command command = createCommandFromStep(step);
-      if (command != null) {
-        autonGroup.addCommands(command);
-      }
-    }
-  
-    return autonGroup;
-  }
-  
-
 
   public void setMotorBrake(boolean brake)
   {
