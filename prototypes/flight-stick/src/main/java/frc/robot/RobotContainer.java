@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
@@ -32,10 +33,23 @@ public class RobotContainer
 {
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
-  final         CommandXboxController driverXbox = new CommandXboxController(0);
+  final         CommandXboxController driverXbox = new CommandXboxController(1);
+  
+  // Declares the CommandJoystick for the FlightStick -AJS
+  final CommandJoystick driverFlightStick = new CommandJoystick(0);
+
   // The robot's subsystems and commands are defined here...
   private final SwerveSubsystem       drivebase  = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(),
                                                                                 "swerve/neo"));
+
+                                                                                
+  // Converts flightstick input into ChassisSpeed + angular velocity -AJS
+  SwerveInputStream flightStickVelocity = SwerveInputStream.of(drivebase.getSwerveDrive(),
+      () -> -1 * driverFlightStick.getY(), () -> -1 * driverFlightStick.getX())
+      .withControllerRotationAxis(() -> -1 * driverFlightStick.getTwist())
+      .deadband(OperatorConstants.FLIGHT_DEADBAND)
+      .scaleTranslation(OperatorConstants.FLIGHT_SCALAR)
+      .allianceRelativeControl(true);
 
   /**
    * Converts driver input into a field-relative ChassisSpeeds that is controlled by angular velocity.
@@ -47,6 +61,7 @@ public class RobotContainer
                                                             .deadband(OperatorConstants.DEADBAND)
                                                             .scaleTranslation(0.8)
                                                             .allianceRelativeControl(true);
+
 
   /**
    * Clone's the angular velocity input stream and converts it to a fieldRelative input stream.
@@ -110,8 +125,8 @@ public class RobotContainer
    */
   private void configureBindings()
   {
-    Command driveFieldOrientedDirectAngle      = drivebase.driveFieldOriented(driveDirectAngle);
-    Command driveFieldOrientedAnglularVelocity = drivebase.driveFieldOriented(driveAngularVelocity);
+    Command driveFieldOrientedDirectAngle      = drivebase.driveFieldOriented(flightStickVelocity);
+    Command driveFieldOrientedAnglularVelocity = drivebase.driveFieldOriented(flightStickVelocity);
     Command driveRobotOrientedAngularVelocity  = drivebase.driveFieldOriented(driveRobotOriented);
     Command driveSetpointGen = drivebase.driveWithSetpointGeneratorFieldRelative(
         driveDirectAngle);
