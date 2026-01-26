@@ -1,0 +1,260 @@
+{
+  "field_elements": [
+    {
+      "id": 1,
+      "name": "Trench, Red",
+      "x": 467.64,
+      "y": 292.31,
+      "z": 35.00,
+      "z_rotation_degrees": 180
+    },
+    {
+      "id": 2,
+      "name": "Hub, Red",
+      "x": 469.11,
+      "y": 182.60,
+      "z": 44.25,
+      "z_rotation_degrees": 90
+    },
+    {
+      "id": 3,
+      "name": "Hub, Red",
+      "x": 445.35,
+      "y": 172.84,
+      "z": 44.25,
+      "z_rotation_degrees": 180
+    },
+    {
+      "id": 4,
+      "name": "Hub, Red",
+      "x": 445.35,
+      "y": 158.84,
+      "z": 44.25,
+      "z_rotation_degrees": 180
+    },
+    {
+      "id": 5,
+      "name": "Hub, Red",
+      "x": 469.11,
+      "y": 135.09,
+      "z": 44.25,
+      "z_rotation_degrees": 270
+    },
+    {
+      "id": 6,
+      "name": "Trench, Red",
+      "x": 467.64,
+      "y": 25.37,
+      "z": 35.00,
+      "z_rotation_degrees": 180
+    },
+    {
+      "id": 7,
+      "name": "Trench, Red",
+      "x": 470.59,
+      "y": 25.37,
+      "z": 35.00,
+      "z_rotation_degrees": 0
+    },
+    {
+      "id": 8,
+      "name": "Hub, Red",
+      "x": 483.11,
+      "y": 135.09,
+      "z": 44.25,
+      "z_rotation_degrees": 270
+    },
+    {
+      "id": 9,
+      "name": "Hub, Red",
+      "x": 492.88,
+      "y": 144.84,
+      "z": 44.25,
+      "z_rotation_degrees": 0
+    },
+    {
+      "id": 10,
+      "name": "Hub, Red",
+      "x": 492.88,
+      "y": 158.84,
+      "z": 44.25,
+      "z_rotation_degrees": 0
+    },
+    {
+      "id": 11,
+      "name": "Hub, Red",
+      "x": 483.11,
+      "y": 182.60,
+      "z": 44.25,
+      "z_rotation_degrees": 90
+    },
+    {
+      "id": 12,
+      "name": "Trench, Red",
+      "x": 470.59,
+      "y": 292.31,
+      "z": 35.00,
+      "z_rotation_degrees": 0
+    },
+    {
+      "id": 13,
+      "name": "Outpost, Red",
+      "x": 650.92,
+      "y": 158.84,
+      "z": 0.00,
+      "z_rotation_degrees": 0
+    },
+    {
+      "id": 14,
+      "name": "Outpost, Red",
+      "x": 650.92,
+      "y": 172.84,
+      "z": 0.00,
+      "z_rotation_degrees": 0
+    },
+    {
+      "id": 15,
+      "name": "Trench, Blue",
+      "x": 535.56,
+      "y": 25.37,
+      "z": 35.00,
+      "z_rotation_degrees": 180
+    },
+    {
+      "id": 16,
+      "name": "Trench, Blue",
+      "x": 538.51,
+      "y": 25.37,
+      "z": 35.00,
+      "z_rotation_degrees": 0
+    },
+    {
+      "id": 17,
+      "name": "Trench, Blue",
+      "x": 535.56,
+      "y": 292.31,
+      "z": 35.00,
+      "z_rotation_degrees": 180
+    },
+    {
+      "id": 18,
+      "name": "Trench, Blue",
+      "x": 538.51,
+      "y": 292.31,
+      "z": 35.00,
+      "z_rotation_degrees": 0
+    },
+    {
+      "id": 19,
+      "name": "Hub, Blue",
+      "x": 551.03,
+      "y": 135.09,
+      "z": 44.25,
+      "z_rotation_degrees": 270
+    },
+    {
+      "id": 20,
+      "name": "Hub, Blue",
+      "x": 560.80,
+      "y": 144.84,
+      "z": 44.25,
+      "z_rotation_degrees": 0
+    },
+    {
+      "id": 21,
+      "name": "Hub, Blue",
+      "x": 560.80,
+      "y": 158.84,
+      "z": 44.25,
+      "z_rotation_degrees": 0
+    },
+    {
+      "id": 22,
+      "name": "Hub, Blue",
+      "x": 551.03,
+      "y": 182.60,
+      "z": 44.25,
+      "z_rotation_degrees": 90
+    },
+    {
+      "id": 23,
+      "name": "Hub, Blue",
+      "x": 574.80,
+      "y": 172.84,
+      "z": 44.25,
+      "z_rotation_degrees": 180
+    },
+    {
+      "id": 24,
+      "name": "Hub, Blue",
+      "x": 574.80,
+      "y": 158.84,
+      "z": 44.25,
+      "z_rotation_degrees": 180
+    },
+    {
+      "id": 25,
+      "name": "Hub, Blue",
+      "x": 551.03,
+      "y": 135.09,
+      "z": 44.25,
+      "z_rotation_degrees": 270
+    },
+    {
+      "id": 26,
+      "name": "Trench, Blue",
+      "x": 535.56,
+      "y": 25.37,
+      "z": 35.00,
+      "z_rotation_degrees": 180
+    },
+    {
+      "id": 27,
+      "name": "Trench, Blue",
+      "x": 538.51,
+      "y": 25.37,
+      "z": 35.00,
+      "z_rotation_degrees": 0
+    },
+    {
+      "id": 28,
+      "name": "Trench, Blue",
+      "x": 535.56,
+      "y": 292.31,
+      "z": 35.00,
+      "z_rotation_degrees": 180
+    },
+    {
+      "id": 29,
+      "name": "Trench, Blue",
+      "x": 538.51,
+      "y": 292.31,
+      "z": 35.00,
+      "z_rotation_degrees": 0
+    },
+    {
+      "id": 30,
+      "name": "Outpost, Blue",
+      "x": 650.92,
+      "y": 158.84,
+      "z": 0.00,
+      "z_rotation_degrees": 0
+    },
+    {
+      "id": 31,
+      "name": "Outpost, Blue",
+      "x": 650.92,
+      "y": 172.84,
+      "z": 0.00,
+      "z_rotation_degrees": 0
+    },
+    {
+      "id": 32,
+      "name": "Loading Zone",
+      "x": 0.00,
+      "y": 0.00,
+      "z": 0.00,
+      "z_rotation_degrees": 0
+    }
+  ]
+}
