@@ -99,4 +99,15 @@ public class RobotContainer {
     // An example command will be run in autonomous
     return autoChooser.getSelected();
   }
+
+  /**
+   * Optional helper used by dynamic button mappers to retrieve commands by name.
+   * Currently a stub that returns null for unknown names. Teams should extend
+   * this to return actual commands referenced by external configs.
+   */
+  public Command getCommandForButton(String name) {
+    // TODO: map named strings to commands (e.g. "INTAKE" -> ballSubsystem.runEnd(...))
+    // Returning null is acceptable; callers already handle missing commands.
+    return null;
+  }
 }

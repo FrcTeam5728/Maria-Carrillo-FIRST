@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.FuelSubsystem;
@@ -29,7 +30,7 @@ public class ButtonManager {
     private final Map<String, Trigger> buttonMap = new HashMap<>();
 
     public ButtonManager(RobotContainer robotContainer, String controllerType, int port) {
-        this.robotController = robotContainer;
+        this.robotContainer = robotContainer;
         this.controllerType = ControllerFactory.detectControllerType(controllerType);
         this.controller = ControllerFactory.createController(this.controllerType, port);
         this.configPath = ControllerFactory.getConfigPath(controllerType);
@@ -39,25 +40,43 @@ public class ButtonManager {
     }
     
     private void initializeButtonMap() {
-        // Common buttons across all controllers
-        buttonMap.put("A", controller.a());
-        buttonMap.put("B", controller.b());
-        buttonMap.put("X", controller.x());
-        buttonMap.put("Y", controller.y());
-        buttonMap.put("START", controller.start());
-        buttonMap.put("BACK", controller.back());
-        
-        // Controller-specific buttons
+        // Initialize buttons per controller type to avoid calling methods
+        // that don't exist on CommandGenericHID.
         if (controllerType == ControllerFactory.ControllerType.XBOX) {
-            buttonMap.put("LEFT_BUMPER", ((CommandXboxController) controller).leftBumper());
-            buttonMap.put("RIGHT_BUMPER", ((CommandXboxController) controller).rightBumper());
-            buttonMap.put("LEFT_STICK", ((CommandXboxController) controller).leftStick());
-            buttonMap.put("RIGHT_STICK", ((CommandXboxController) controller).rightStick());
+            CommandXboxController xbox = (CommandXboxController) controller;
+            // Standard face buttons
+            buttonMap.put("A", xbox.a());
+            buttonMap.put("B", xbox.b());
+            buttonMap.put("X", xbox.x());
+            buttonMap.put("Y", xbox.y());
+            buttonMap.put("START", xbox.start());
+            buttonMap.put("BACK", xbox.back());
+
+            // Bumpers / sticks
+            buttonMap.put("LEFT_BUMPER", xbox.leftBumper());
+            buttonMap.put("RIGHT_BUMPER", xbox.rightBumper());
+            buttonMap.put("LEFT_STICK", xbox.leftStick());
+            buttonMap.put("RIGHT_STICK", xbox.rightStick());
         } else if (controllerType == ControllerFactory.ControllerType.PS4) {
-            buttonMap.put("LEFT_BUMPER", ((CommandPS4Controller) controller).L1());
-            buttonMap.put("RIGHT_BUMPER", ((CommandPS4Controller) controller).R1());
-            buttonMap.put("LEFT_STICK", ((CommandPS4Controller) controller).L3());
-            buttonMap.put("RIGHT_STICK", ((CommandPS4Controller) controller).R3());
+            CommandPS4Controller ps4 = (CommandPS4Controller) controller;
+            // PS4 naming differs; map common labels to PS4 equivalents where sensible
+            try {
+                buttonMap.put("A", ps4.cross());
+                buttonMap.put("B", ps4.circle());
+                buttonMap.put("X", ps4.square());
+                buttonMap.put("Y", ps4.triangle());
+            } catch (NoSuchMethodError | RuntimeException ignore) {
+                // Some WPILib versions may name methods differently; ignore if unavailable
+            }
+
+            // Bumpers / sticks
+            buttonMap.put("LEFT_BUMPER", ps4.L1());
+            buttonMap.put("RIGHT_BUMPER", ps4.R1());
+            buttonMap.put("LEFT_STICK", ps4.L3());
+            buttonMap.put("RIGHT_STICK", ps4.R3());
+        } else {
+            // For joysticks or unknown types we don't populate face buttons by name.
+            // Users can still access the raw controller via getController().
         }
         // Add more controller types as needed
     }
