@@ -26,6 +26,10 @@ public class RobotContainer {
   // The robot's subsystems
   private final DriveSubsystem driveSubsystem = RobotSubsystemFactory.createDriveSubsystem();
   private final FuelSubsystem ballSubsystem = RobotSubsystemFactory.createFuelSubsystem();
+  private final PathPlannerSubsystem pathPlannerSubsystem = new PathPlannerSubsystem(
+      driveSubsystem, 
+      DriveConstants.kTrackWidthMeters
+  );
 
   // The driver's controller
   private final CommandXboxController driverController = new CommandXboxController(
@@ -44,10 +48,8 @@ public class RobotContainer {
   public RobotContainer() {
     configureBindings();
 
-    // Set the options to show up in the Dashboard for selecting auto modes. If you
-    // add additional auto modes you can add additional lines here with
-    // autoChooser.addOption
-    autoChooser.setDefaultOption("Autonomous", Autos.exampleAuto(driveSubsystem, ballSubsystem));
+    // Configure autonomous options
+    configureAutonomous();
   }
 
   /**
@@ -60,6 +62,24 @@ public class RobotContainer {
    * controllers or
    * {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
    * joysticks}.
+   */
+  /**
+   * Configures the autonomous chooser with available autonomous routines.
+   */
+  private void configureAutonomous() {
+    // Add path planner autos to the chooser
+    autoChooser.setDefaultOption("Example Auto", Autos.exampleAuto(driveSubsystem, ballSubsystem));
+    
+    // Add PathPlanner autos - these will be automatically discovered from the deploy/pathplanner/autos directory
+    // The names here should match the filenames in the autos directory (without .auto)
+    autoChooser.addOption("Example Path", pathPlannerSubsystem.followPath("Example Path"));
+    
+    // Add more path planner autos as needed
+    // autoChooser.addOption("Another Path", pathPlannerSubsystem.followPath("Another Path"));
+  }
+
+  /**
+   * Configures the button bindings for the robot.
    */
   private void configureBindings() {
 
