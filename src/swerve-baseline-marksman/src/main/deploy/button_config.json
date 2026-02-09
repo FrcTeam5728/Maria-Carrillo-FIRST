@@ -1,0 +1,90 @@
+[
+  {
+    "port": 0,
+    "button": 1,
+    "command": "drive_field_oriented_direct_angle",
+    "whenPressed": true,
+    "whileHeld": false,
+    "whenReleased": false
+  },
+  {
+    "port": 0,
+    "button": 2,
+    "command": "drive_field_oriented_angular_velocity",
+    "whenPressed": true,
+    "whileHeld": false,
+    "whenReleased": false
+  },
+  {
+    "port": 0,
+    "button": 3,
+    "command": "drive_robot_oriented_angular_velocity",
+    "whenPressed": true,
+    "whileHeld": false,
+    "whenReleased": false
+  },
+  {
+    "port": 0,
+    "button": 5,
+    "command": "move_forward",
+    "whenPressed": false,
+    "whileHeld": true,
+    "whenReleased": true
+  },
+  {
+    "port": 0,
+    "button": 6,
+    "command": "move_backward",
+    "whenPressed": false,
+    "whileHeld": true,
+    "whenReleased": true
+  },
+  {
+    "port": 0,
+    "button": 7,
+    "command": "strafe_left",
+    "whenPressed": false,
+    "whileHeld": true,
+    "whenReleased": true
+  },
+  {
+    "port": 0,
+    "button": 8,
+    "command": "strafe_right",
+    "whenPressed": false,
+    "whileHeld": true,
+    "whenReleased": true
+  },
+  {
+    "port": 0,
+    "button": 9,
+    "command": "rotate_left",
+    "whenPressed": false,
+    "whileHeld": true,
+    "whenReleased": true
+  },
+  {
+    "port": 0,
+    "button": 10,
+    "command": "rotate_right",
+    "whenPressed": false,
+    "whileHeld": true,
+    "whenReleased": true
+  },
+  {
+    "port": 0,
+    "button": 5,
+    "command": "stop_movement",
+    "whenPressed": true,
+    "whileHeld": false,
+    "whenReleased": false
+  },
+  {
+    "port": 0,
+    "button": 6,
+    "command": "zero_gyro",
+    "whenPressed": true,
+    "whileHeld": false,
+    "whenReleased": false
+  }
+]
