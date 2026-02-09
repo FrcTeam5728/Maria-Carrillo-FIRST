@@ -2,6 +2,8 @@ package frc.robot.subsystems;
 
 import java.util.function.DoubleSupplier;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -19,6 +21,7 @@ public abstract class DriveSubsystem extends SubsystemBase {
      * Protected so subclasses can initialize it in their constructors.
      */
     protected DifferentialDrive drive;
+    protected Pose2d currentPose = new Pose2d();
 
     /**
      * Creates an arcade drive command.
@@ -32,5 +35,38 @@ public abstract class DriveSubsystem extends SubsystemBase {
     public Command driveArcade(DoubleSupplier forward, DoubleSupplier rotation) {
         return this.run(
             () -> drive.arcadeDrive(forward.getAsDouble(), rotation.getAsDouble()));
+    }
+
+    /**
+     * Drives the robot using tank drive controls with voltage output.
+     * 
+     * @param leftVolts  The commanded left output in volts
+     * @param rightVolts The commanded right output in volts
+     */
+    public abstract void tankDriveVolts(double leftVolts, double rightVolts);
+
+    /**
+     * Returns the current wheel speeds of the robot.
+     * 
+     * @return The current wheel speeds in meters per second.
+     */
+    public abstract DifferentialDriveWheelSpeeds getWheelSpeeds();
+
+    /**
+     * Returns the current estimated pose of the robot.
+     * 
+     * @return The current pose of the robot.
+     */
+    public Pose2d getPose() {
+        return currentPose;
+    }
+
+    /**
+     * Resets the odometry to the specified pose.
+     * 
+     * @param pose The pose to which to set the odometry.
+     */
+    public void resetOdometry(Pose2d pose) {
+        currentPose = pose;
     }
 }
