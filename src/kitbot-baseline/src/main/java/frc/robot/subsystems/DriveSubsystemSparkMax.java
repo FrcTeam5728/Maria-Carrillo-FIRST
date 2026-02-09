@@ -11,6 +11,7 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import static frc.robot.Constants.DriveConstants.*;
 
 public class DriveSubsystemSparkMax extends DriveSubsystem {
@@ -61,5 +62,20 @@ public class DriveSubsystemSparkMax extends DriveSubsystem {
     // so that postive values drive both sides forward
     config.inverted(true);
     leftLeader.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+  }
+
+  @Override
+  public void tankDriveVolts(double leftVolts, double rightVolts) {
+    // DifferentialDrive in this project doesn't expose a tankDriveVolts method
+    // so scale voltages to percent output (12V -> 1.0) and drive.
+    drive.tankDrive(leftVolts / 12.0, rightVolts / 12.0);
+    drive.feed();
+  }
+
+  @Override
+  public DifferentialDriveWheelSpeeds getWheelSpeeds() {
+    // No encoders implemented in this basic example; return zero speeds. Teams
+    // should replace with real encoder readings when available.
+    return new DifferentialDriveWheelSpeeds(0.0, 0.0);
   }
 }

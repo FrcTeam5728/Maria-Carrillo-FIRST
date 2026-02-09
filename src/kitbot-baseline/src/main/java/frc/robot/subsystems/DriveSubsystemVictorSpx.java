@@ -7,6 +7,7 @@ package frc.robot.subsystems;
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import static frc.robot.Constants.DriveConstants.*;
 
 public class DriveSubsystemVictorSpx extends DriveSubsystem {
@@ -48,6 +49,20 @@ public class DriveSubsystemVictorSpx extends DriveSubsystem {
     // Set watchdog timer to 2.0 seconds (TODO: adjust as needed)
     //drive.setExpiration(2.0);
     //drive.setSafetyEnabled(true);
+  }
+
+  @Override
+  public void tankDriveVolts(double leftVolts, double rightVolts) {
+    // Scale volts to percent (12V -> 1.0) and drive using DifferentialDrive
+    drive.tankDrive(leftVolts / 12.0, rightVolts / 12.0);
+    drive.feed();
+  }
+
+  @Override
+  public DifferentialDriveWheelSpeeds getWheelSpeeds() {
+    // No encoders implemented in this example; return zeros. Replace with
+    // actual encoder readings for real robots.
+    return new DifferentialDriveWheelSpeeds(0.0, 0.0);
   }
 
 }

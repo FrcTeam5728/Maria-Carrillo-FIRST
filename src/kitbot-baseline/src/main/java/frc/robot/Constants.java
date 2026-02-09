@@ -38,6 +38,12 @@ public final class Constants {
     // Current limit for drivetrain motors. 60A is a reasonable maximum to reduce
     // likelihood of tripping breakers or damaging CIM motors
     public static final int DRIVE_MOTOR_CURRENT_LIMIT = 40;
+
+    // Optional kinematics / path-following defaults. Teams should tune these
+    // values for their robot. Reasonable placeholders are provided so code
+    // depending on these constants will compile.
+    public static final double kMaxSpeedMetersPerSecond = 3.0;
+    public static final double kTrackWidthMeters = 0.6;
   }
 
   public static final class FuelConstants {
