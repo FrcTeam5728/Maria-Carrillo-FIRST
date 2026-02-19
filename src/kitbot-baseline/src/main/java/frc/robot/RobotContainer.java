@@ -14,6 +14,8 @@ import static frc.robot.Constants.FuelConstants.*;
 import frc.robot.commands.Autos;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.FuelSubsystem;
+import frc.robot.subsystems.vision.AprilTagSubsystem;
+import frc.robot.utils.TeleopControlModifier;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -39,6 +41,9 @@ public class RobotContainer {
   private final CommandXboxController operatorController = new CommandXboxController(
       OPERATOR_CONTROLLER_PORT);
 
+  // Control modifier for applying constraints
+  private final TeleopControlModifier controlModifier;
+
   // The autonomous chooser
   private final SendableChooser<Command> autoChooser = new SendableChooser<>();
 
@@ -46,8 +51,12 @@ public class RobotContainer {
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
+    // Initialize control modifier with AprilTag subsystem
+    AprilTagSubsystem aprilTagSubsystem = RobotSubsystemFactory.createAprilTagSubsystem();
+    this.controlModifier = new TeleopControlModifier(aprilTagSubsystem);
+    
     configureBindings();
-
+    
     // Configure autonomous options
     configureAutonomous();
   }
@@ -106,8 +115,22 @@ public class RobotContainer {
     // are also scaled down so the rotation is more easily controllable.
     driveSubsystem.setDefaultCommand(
         driveSubsystem.driveArcade(
-            () -> -driverController.getLeftY() * DRIVE_SCALING,
-            () -> -driverController.getRightX() * ROTATION_SCALING));
+            () -> {
+              double forward = -driverController.getLeftY() * DRIVE_SCALING;
+              double rotation = -driverController.getRightX() * ROTATION_SCALING;
+              
+              // Apply constraints to the control inputs
+              double[] modifiedControls = controlModifier.applyConstraints(forward, rotation);
+              return modifiedControls[0]; // Return modified forward
+            },
+            () -> {
+              double forward = -driverController.getLeftY() * DRIVE_SCALING;
+              double rotation = -driverController.getRightX() * ROTATION_SCALING;
+              
+              // Apply constraints to the control inputs
+              double[] modifiedControls = controlModifier.applyConstraints(forward, rotation);
+              return modifiedControls[1]; // Return modified rotation
+            }));
   }
 
   /**
