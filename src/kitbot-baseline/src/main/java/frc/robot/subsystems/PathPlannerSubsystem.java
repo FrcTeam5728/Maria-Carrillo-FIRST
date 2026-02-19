@@ -27,18 +27,20 @@ public class PathPlannerSubsystem extends SubsystemBase {
         // Configure AutoBuilder for PathPlanner
         AutoBuilder.configureRamsete(
             this::getPose, // Robot pose supplier
-            this::resetPose, // Method to reset odometry
+            this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
             this::getCurrentSpeeds, // Current ChassisSpeeds supplier
             this::drive, // Method that will drive the robot given ChassisSpeeds
             new HolonomicPathFollowerConfig(
                 new PIDConstants(5.0, 0, 0), // Translation PID constants
                 new PIDConstants(0.5, 0, 0), // Rotation PID constants
-                DriveConstants.kMaxSpeedMetersPerSecond, // Max module speed
-                Math.sqrt(2) * (DriveConstants.kTrackWidthMeters / 2.0), // Drive base radius
-                new ReplanningConfig() // Default path replanning config
+                DriveConstants.kMaxSpeedMetersPerSecond, // Max module speed, in m/s
+                Math.sqrt(2) * (DriveConstants.kTrackWidthMeters / 2.0), // Drive base radius in meters. Distance from robot center to furthest module.
+                new ReplanningConfig() // Default path replanning config. See the API for the options here
             ),
             () -> {
-                // Boolean supplier that controls path mirroring for the red alliance
+                // Boolean supplier that controls when the path will be mirrored for the red alliance
+                // This will flip the path being followed to the red side of the field.
+                // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
                 var alliance = DriverStation.getAlliance();
                 return alliance.isPresent() ? alliance.get() == DriverStation.Alliance.Red : false;
             },

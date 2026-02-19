@@ -38,6 +38,20 @@ public final class Constants {
     // Current limit for drivetrain motors. 60A is a reasonable maximum to reduce
     // likelihood of tripping breakers or damaging CIM motors
     public static final int DRIVE_MOTOR_CURRENT_LIMIT = 40;
+
+    // Physical properties of the robot
+    public static final double kWheelDiameterMeters = 0.1524; // 6 inches in meters
+    public static final double kGearRatio = 10.71; // Example: 10.71:1 gear ratio
+    public static final double kTrackWidthMeters = 0.69; // Example: 27.2 inches in meters
+    
+    // Path following constants
+    public static final double kMaxSpeedMetersPerSecond = 3.0; // Max speed of the robot in m/s
+    public static final double kMaxAccelerationMetersPerSecondSquared = 3.0; // Max acceleration in m/s²
+    
+    // PID constants for path following
+    public static final double kPDriveVel = 8.5;
+    public static final double kIDriveVel = 0.0;
+    public static final double kDDriveVel = 0.0;
   }
 
   public static final class FuelConstants {
