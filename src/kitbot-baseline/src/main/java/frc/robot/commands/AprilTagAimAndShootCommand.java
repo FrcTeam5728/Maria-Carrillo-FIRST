@@ -48,7 +48,7 @@ public class AprilTagAimAndShootCommand extends Command {
     this.aprilTagSubsystem = aprilTagSubsystem;
     this.driveSubsystem = driveSubsystem;
     this.fuelSubsystem = fuelSubsystem;
-    this.rotationConstraint = new RotationConstraint(0.1, 0.0, 0.05); // P, I, D gains
+    this.rotationConstraint = new RotationConstraint("aim", 0.1, 0.0, 0.05); // Name, P, I, D gains
     this.shootingCalculator = new ShootingCalculator();
     
     addRequirements(aprilTagSubsystem, driveSubsystem, fuelSubsystem);
@@ -166,16 +166,6 @@ public class AprilTagAimAndShootCommand extends Command {
       
       System.out.println("ShootingCalculator: Distance = " + distance + "m, RPM = " + rpm);
       return rpm;
-    }
-    
-    /**
-     * Sets the shooter RPM on the fuel subsystem.
-     * This assumes can IDs 21 and 23 are the shooter motors.
-     */
-    private void setShooterRPM(double rpm) {
-      // This would need to be implemented in FuelSubsystem
-      // For now, we'll use existing spin up method as approximation
-      fuelSubsystem.spinUp();
     }
   }
 }
