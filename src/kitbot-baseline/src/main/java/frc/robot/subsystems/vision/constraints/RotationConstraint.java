@@ -3,7 +3,7 @@ package frc.robot.subsystems.vision.constraints;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import org.photonvision.targeting.PhotonTrackedTarget;
+import frc.robot.subsystems.vision.limelight.LimelightTarget;
 
 import java.util.Optional;
 
@@ -32,13 +32,14 @@ public class RotationConstraint implements AprilTagConstraint {
     }
 
     @Override
-    public Optional<ChassisSpeeds> calculate(PhotonTrackedTarget target, Optional<Pose2d> currentPose) {
+    public Optional<ChassisSpeeds> calculate(LimelightTarget target, Optional<Pose2d> currentPose) {
         if (!isActive) {
             return Optional.empty();
         }
 
         // Get the yaw (horizontal angle) to the target
-        double yaw = target.getYaw();
+        // Get yaw from Limelight - this is a placeholder, replace with actual Limelight yaw method
+        double yaw = target.getYawDegrees() * (Math.PI / 180.0); // Convert to radians if needed
         double rotation = rotationController.calculate(yaw, 0);
         
         return Optional.of(new ChassisSpeeds(0, 0, rotation));

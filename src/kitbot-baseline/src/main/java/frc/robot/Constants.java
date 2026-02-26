@@ -47,24 +47,38 @@ public final class Constants {
     // Path following constants
     public static final double kMaxSpeedMetersPerSecond = 3.0; // Max speed of the robot in m/s
     public static final double kMaxAccelerationMetersPerSecondSquared = 3.0; // Max acceleration in m/s²
+    public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI; // Max angular speed in rad/s
     
     // PID constants for path following
     public static final double kPDriveVel = 8.5;
     public static final double kIDriveVel = 0.0;
     public static final double kDDriveVel = 0.0;
+    
+    // Feedforward constants for path following
+    public static final double ksVolts = 0.1; // Static voltage gain
+    public static final double kvVoltSecondsPerMeter = 1.5; // Velocity gain
+    public static final double kaVoltSecondsSquaredPerMeter = 0.2; // Acceleration gain
+    
+    // Drive kinematics
+    public static final double kWheelBaseMeters = kTrackWidthMeters;
   }
 
   public static final class FuelConstants {
     // Motor controller IDs for Fuel Mechanism motors
     public static final int FEEDER_MOTOR_ID_SPARKMAX = 31;
     public static final int INTAKE_LAUNCHER_MOTOR_ID_SPARKMAX = 32;
+    public static final int SHOOTER_LEFT_MOTOR_ID_SPARKMAX = 21;  // Left shooter (CAN ID 21)
+    public static final int SHOOTER_RIGHT_MOTOR_ID_SPARKMAX = 23; // Right shooter (CAN ID 23)
 
     public static final int FEEDER_MOTOR_ID_SPX = 6;
     public static final int INTAKE_LAUNCHER_MOTOR_ID_SPX = 5;
+    public static final int SHOOTER_LEFT_MOTOR_ID_SPX = 21;   // Left shooter (CAN ID 21)
+    public static final int SHOOTER_RIGHT_MOTOR_ID_SPX = 23;  // Right shooter (CAN ID 23)
 
     // Current limit and nominal voltage for fuel mechanism motors.
     public static final int FEEDER_MOTOR_CURRENT_LIMIT = 40;
     public static final int LAUNCHER_MOTOR_CURRENT_LIMIT = 40;
+    public static final int SHOOTER_MOTOR_CURRENT_LIMIT = 40;
 
     // Voltage values for various fuel operations. These values may need to be tuned
     // based on exact robot construction.

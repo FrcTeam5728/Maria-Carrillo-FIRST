@@ -14,6 +14,7 @@ import static frc.robot.Constants.FuelConstants.*;
 import frc.robot.commands.Autos;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.FuelSubsystem;
+import frc.robot.subsystems.PathPlannerSubsystem;
 import frc.robot.subsystems.vision.AprilTagSubsystem;
 import frc.robot.utils.TeleopControlModifier;
 
@@ -30,7 +31,7 @@ public class RobotContainer {
   private final FuelSubsystem ballSubsystem = RobotSubsystemFactory.createFuelSubsystem();
   private final PathPlannerSubsystem pathPlannerSubsystem = new PathPlannerSubsystem(
       driveSubsystem, 
-      DriveConstants.kTrackWidthMeters
+      Constants.DriveConstants.kTrackWidthMeters
   );
 
   // The driver's controller

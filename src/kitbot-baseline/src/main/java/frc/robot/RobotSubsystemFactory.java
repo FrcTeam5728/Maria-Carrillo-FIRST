@@ -6,6 +6,7 @@ import frc.robot.subsystems.FuelSubsystemSparkMax;
 import frc.robot.subsystems.FuelSubsystemVictorSpx;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.FuelSubsystem;
+import frc.robot.subsystems.vision.AprilTagSubsystem;
 import static frc.robot.Constants.FactoryConstants.*;
 
 /**
@@ -50,5 +51,14 @@ public class RobotSubsystemFactory {
                     "Unknown fuel subsystem type: " + FUEL_SUBSYSTEM_TYPE + 
                     ". Must be 'SPARKMAX' or 'VICTORSPX'");
         }
+    }
+    
+    /**
+     * Creates an AprilTag subsystem for vision processing.
+     * 
+     * @return A new instance of AprilTagSubsystem
+     */
+    public static AprilTagSubsystem createAprilTagSubsystem() {
+        return new AprilTagSubsystem();
     }
 }

@@ -3,7 +3,7 @@ package frc.robot.subsystems.vision.constraints;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import org.photonvision.targeting.PhotonTrackedTarget;
+import frc.robot.subsystems.vision.limelight.LimelightTarget;
 
 import java.util.Optional;
 
@@ -34,13 +34,14 @@ public class DistanceConstraint implements AprilTagConstraint {
     }
 
     @Override
-    public Optional<ChassisSpeeds> calculate(PhotonTrackedTarget target, Optional<Pose2d> currentPose) {
+    public Optional<ChassisSpeeds> calculate(LimelightTarget target, Optional<Pose2d> currentPose) {
         if (!isActive) {
             return Optional.empty();
         }
 
         // Get distance to target from the camera's perspective
-        double distance = target.getBestCameraToTarget().getTranslation().getNorm();
+        // Get distance from Limelight - this is a placeholder, replace with actual Limelight distance calculation
+        double distance = target.getDistanceMeters();
         double speed = -distanceController.calculate(distance, targetDistanceMeters);
         
         return Optional.of(new ChassisSpeeds(speed, 0, 0));
@@ -48,6 +49,10 @@ public class DistanceConstraint implements AprilTagConstraint {
 
     public void setTargetDistance(double distanceMeters) {
         this.targetDistanceMeters = distanceMeters;
+    }
+    
+    public void setSetpoint(double setpoint) {
+        this.targetDistanceMeters = setpoint;
     }
 
     public double getTargetDistance() {

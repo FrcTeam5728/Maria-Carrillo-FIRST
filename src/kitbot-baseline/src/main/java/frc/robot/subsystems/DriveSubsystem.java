@@ -24,6 +24,23 @@ public abstract class DriveSubsystem extends SubsystemBase {
     protected Pose2d currentPose = new Pose2d();
 
     /**
+     * Drives the robot using arcade drive controls.
+     * 
+     * @param forward The forward speed (-1.0 to 1.0)
+     * @param rotation The rotation speed (-1.0 to 1.0)
+     */
+    public void arcadeDrive(double forward, double rotation) {
+        drive.arcadeDrive(forward, rotation);
+    }
+    
+    /**
+     * Stops the robot by setting both drive outputs to zero.
+     */
+    public void stop() {
+        drive.arcadeDrive(0, 0);
+    }
+
+    /**
      * Creates an arcade drive command.
      * Provides a default implementation using the drive field.
      * Subclasses should initialize the drive field in their constructor before this is called.

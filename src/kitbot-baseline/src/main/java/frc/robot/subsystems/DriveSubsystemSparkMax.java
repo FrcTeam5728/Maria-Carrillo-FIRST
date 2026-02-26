@@ -9,8 +9,10 @@ import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.RelativeEncoder;
 
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import static frc.robot.Constants.DriveConstants.*;
 
 public class DriveSubsystemSparkMax extends DriveSubsystem {
@@ -18,6 +20,8 @@ public class DriveSubsystemSparkMax extends DriveSubsystem {
   private final SparkMax leftFollower;
   private final SparkMax rightLeader;
   private final SparkMax rightFollower;
+  private final RelativeEncoder leftEncoder;
+  private final RelativeEncoder rightEncoder;
 
   public DriveSubsystemSparkMax() {
     // create brushed motors for drive
@@ -28,6 +32,10 @@ public class DriveSubsystemSparkMax extends DriveSubsystem {
 
     // set up differential drive class
     drive = new DifferentialDrive(leftLeader, rightLeader);
+    
+    // Get encoders from the leader motors
+    leftEncoder = leftLeader.getEncoder();
+    rightEncoder = rightLeader.getEncoder();
 
     // Set can timeout. Because this project only sets parameters once on
     // construction, the timeout can be long without blocking robot operation. Code
@@ -61,5 +69,22 @@ public class DriveSubsystemSparkMax extends DriveSubsystem {
     // so that postive values drive both sides forward
     config.inverted(true);
     leftLeader.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+  }
+  
+  @Override
+  public void tankDriveVolts(double leftVolts, double rightVolts) {
+    leftLeader.setVoltage(leftVolts);
+    rightLeader.setVoltage(rightVolts);
+    drive.feed();
+  }
+  
+  @Override
+  public DifferentialDriveWheelSpeeds getWheelSpeeds() {
+    // Convert encoder velocity to meters per second
+    // Assuming encoder returns RPM and we need to convert to linear velocity
+    double leftVelocityMetersPerSecond = leftEncoder.getVelocity() * kWheelDiameterMeters * Math.PI / 60.0;
+    double rightVelocityMetersPerSecond = rightEncoder.getVelocity() * kWheelDiameterMeters * Math.PI / 60.0;
+    
+    return new DifferentialDriveWheelSpeeds(leftVelocityMetersPerSecond, rightVelocityMetersPerSecond);
   }
 }

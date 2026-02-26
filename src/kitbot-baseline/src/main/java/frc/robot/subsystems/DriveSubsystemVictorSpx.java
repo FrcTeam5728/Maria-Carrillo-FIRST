@@ -7,6 +7,7 @@ package frc.robot.subsystems;
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import static frc.robot.Constants.DriveConstants.*;
 
 public class DriveSubsystemVictorSpx extends DriveSubsystem {
@@ -49,5 +50,18 @@ public class DriveSubsystemVictorSpx extends DriveSubsystem {
     //drive.setExpiration(2.0);
     //drive.setSafetyEnabled(true);
   }
-
+  
+  @Override
+  public void tankDriveVolts(double leftVolts, double rightVolts) {
+    leftLeader.setVoltage(leftVolts);
+    rightLeader.setVoltage(rightVolts);
+    drive.feed();
+  }
+  
+  @Override
+  public DifferentialDriveWheelSpeeds getWheelSpeeds() {
+    // Victor SPX doesn't have built-in encoders, so we'll return zeros
+    // In a real implementation, you would add external encoders
+    return new DifferentialDriveWheelSpeeds(0.0, 0.0);
+  }
 }

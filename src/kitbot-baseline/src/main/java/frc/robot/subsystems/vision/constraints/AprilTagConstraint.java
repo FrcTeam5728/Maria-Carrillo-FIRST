@@ -3,7 +3,7 @@ package frc.robot.subsystems.vision.constraints;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import org.photonvision.targeting.PhotonTrackedTarget;
+import frc.robot.subsystems.vision.limelight.LimelightTarget;
 
 import java.util.Optional;
 
@@ -18,7 +18,7 @@ public interface AprilTagConstraint {
      * @param currentPose Current robot pose (if available)
      * @return Optional ChassisSpeeds representing the desired movement, or empty if no movement needed
      */
-    Optional<ChassisSpeeds> calculate(PhotonTrackedTarget target, Optional<Pose2d> currentPose);
+    Optional<ChassisSpeeds> calculate(LimelightTarget target, Optional<Pose2d> currentPose);
 
     /**
      * @return True if this constraint is currently active

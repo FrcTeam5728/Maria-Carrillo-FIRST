@@ -4,7 +4,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import org.photonvision.targeting.PhotonTrackedTarget;
+import frc.robot.subsystems.vision.limelight.LimelightTarget;
 
 import java.util.Optional;
 
@@ -43,17 +43,18 @@ public class PositionConstraint implements AprilTagConstraint {
     }
 
     @Override
-    public Optional<ChassisSpeeds> calculate(PhotonTrackedTarget target, Optional<Pose2d> currentPose) {
+    public Optional<ChassisSpeeds> calculate(LimelightTarget target, Optional<Pose2d> currentPose) {
         if (!isActive) {
             return Optional.empty();
         }
 
-        // Get the 3D transform from camera to target
-        var cameraToTarget = target.getBestCameraToTarget();
-        
-        // Calculate current offsets (convert from 3D to 2D)
-        double currentX = cameraToTarget.getX();
-        double currentY = cameraToTarget.getY();
+        // Get target position from Limelight - this is a placeholder, replace with actual Limelight position calculation
+        Translation2d targetPosition = new Translation2d(
+            target.getX(),  // Replace with actual method to get X from Limelight
+            target.getY()   // Replace with actual method to get Y from Limelight
+        );
+        double currentX = targetPosition.getX();
+        double currentY = targetPosition.getY();
         
         // Calculate desired movement in field coordinates
         double xSpeed = -xController.calculate(currentX, targetXOffset);

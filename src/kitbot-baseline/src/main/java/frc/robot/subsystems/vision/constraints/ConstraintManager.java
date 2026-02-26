@@ -2,7 +2,7 @@ package frc.robot.subsystems.vision.constraints;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import org.photonvision.targeting.PhotonTrackedTarget;
+import frc.robot.subsystems.vision.limelight.LimelightTarget;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -67,7 +67,7 @@ public class ConstraintManager {
      * @param currentPose Current robot pose (if available)
      * @return Combined chassis speeds from all active constraints
      */
-    public ChassisSpeeds calculate(PhotonTrackedTarget target, Optional<Pose2d> currentPose) {
+    public ChassisSpeeds calculate(LimelightTarget target, Optional<Pose2d> currentPose) {
         double vx = 0, vy = 0, omega = 0;
 
         for (AprilTagConstraint constraint : activeConstraints) {
