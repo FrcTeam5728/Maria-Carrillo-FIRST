@@ -198,21 +198,6 @@ public class AprilTagMemory {
             this.confidence = confidence;
             this.score = score;
         }
-        
-        /**
-         * Creates a new BestTarget instance.
-         * 
-         * @param tagId The AprilTag ID
-         * @param pose The pose of the target
-         * @param distance The distance to the target
-         * @param yaw The yaw angle to the target
-         * @param confidence The confidence level (0.0 to 1.0)
-         * @param score The internal score for target selection
-         * @return A new BestTarget instance
-         */
-        public static BestTarget create(int tagId, Pose2d pose, double distance, double yaw, double confidence, double score) {
-            return new BestTarget(tagId, pose, distance, yaw, confidence, score);
-        }
     }
     
     /**

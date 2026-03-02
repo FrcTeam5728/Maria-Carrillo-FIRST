@@ -335,33 +335,6 @@ public class AprilTagSubsystem extends SubsystemBase {
             return Optional.empty();
         }
     }
-    
-    /**
-     * Gets the field-relative pose of the currently detected AprilTag.
-     * 
-     * @return The AprilTag's field pose, or empty if no valid target is detected
-     */
-    public Optional<Pose2d> getTargetPose() {
-        if (!hasTarget()) return Optional.empty();
-        
-        try {
-            int tagId = getTargetId();
-            var targetPose3d = aprilTagFieldLayout.getTagPose(tagId);
-            
-            if (targetPose3d.isEmpty()) {
-                return Optional.empty();
-            }
-            
-            // Convert Pose3d to Pose2d by taking only the X, Y coordinates and rotation around Z axis
-            var pose3d = targetPose3d.get();
-            var pose2d = new Pose2d(pose3d.getX(), pose3d.getY(), pose3d.getRotation().toRotation2d());
-            return Optional.of(pose2d);
-            
-        } catch (Exception e) {
-            DriverStation.reportError("Failed to get target pose: " + e.getMessage(), false);
-            return Optional.empty();
-        }
-    }
 
     @Override
     public void periodic() {
@@ -414,11 +387,9 @@ public class AprilTagSubsystem extends SubsystemBase {
             double yaw = getTargetX();
             
             if (targetPose.isPresent()) {
-                // Create a BestTarget with current data
-                AprilTagMemory.BestTarget currentTarget = AprilTagMemory.BestTarget.create(
+                return Optional.of(new AprilTagMemory.BestTarget(
                     tagId, targetPose.get(), distance, yaw, 1.0, 1.0
-                );
-                return Optional.of(currentTarget);
+                ));
             }
         }
         
