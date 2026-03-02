@@ -27,6 +27,8 @@ public class AprilTagSubsystem extends SubsystemBase {
     private final NetworkTable limelightTable;
     private final AprilTagFieldLayout aprilTagFieldLayout;
     private final ConstraintManager constraintManager;
+    private final AprilTagMemory memory;
+    private AprilTagEnvironment environment;
     private int targetId = -1; // -1 means any visible target
     
     // Limelight NetworkTable entries
@@ -56,6 +58,8 @@ public class AprilTagSubsystem extends SubsystemBase {
     public AprilTagSubsystem(String limelightName) {
         this.limelightTable = NetworkTableInstance.getDefault().getTable(limelightName);
         this.constraintManager = new ConstraintManager();
+        this.memory = new AprilTagMemory(2.0, 8.0); // Remember for 2 seconds, up to 8 meters
+        this.environment = AprilTagEnvironment.COMPETITION; // Default to competition mode
         
         // Initialize NetworkTable entries
         tv = limelightTable.getEntry("tv");
@@ -334,12 +338,155 @@ public class AprilTagSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        // Update any periodic tasks here
+        // Update memory with current target data
+        if (hasTarget()) {
+            int tagId = getTargetId();
+            Optional<Pose2d> targetPose = getTargetPose();
+            double distance = getDistanceToTarget();
+            double yaw = getTargetX(); // tx value
+            
+            if (targetPose.isPresent()) {
+                // Store in memory regardless of environment mode
+                memory.updateTarget(tagId, targetPose.get(), distance, yaw);
+                
+                // In competition mode, update odometry if we have field localization
+                if (environment == AprilTagEnvironment.COMPETITION) {
+                    Optional<Pose2d> robotPose = getRobotPose();
+                    if (robotPose.isPresent()) {
+                        // Update drive subsystem odometry here if needed
+                        // This would require access to the drive subsystem
+                        // For now, we just log the pose
+                        System.out.println("Competition mode - Robot pose: " + robotPose.get());
+                    }
+                } else {
+                    // Foreign mode - just store positions without field localization
+                    System.out.println("Foreign mode - Remembered tag " + tagId + " at relative position");
+                }
+            }
+        }
+        
         // For example, log the current target information
         if (hasTarget()) {
             // Log target information if needed
             // SmartDashboard.putNumber("AprilTag/ID", getTargetId());
             // SmartDashboard.putNumber("AprilTag/Distance", getDistanceToTarget());
         }
+    }
+    
+    /**
+     * Gets the best remembered target (either current or from memory).
+     * 
+     * @return Optional containing the best target data
+     */
+    public Optional<AprilTagMemory.BestTarget> getBestTarget() {
+        // If we have a current target, prefer it
+        if (hasTarget()) {
+            int tagId = getTargetId();
+            Optional<Pose2d> targetPose = getTargetPose();
+            double distance = getDistanceToTarget();
+            double yaw = getTargetX();
+            
+            if (targetPose.isPresent()) {
+                return Optional.of(new AprilTagMemory.BestTarget(
+                    tagId, targetPose.get(), distance, yaw, 1.0, 1.0
+                ));
+            }
+        }
+        
+        // Fall back to remembered targets
+        return memory.getBestRememberedTarget();
+    }
+    
+    /**
+     * Gets a specific remembered target by ID.
+     * 
+     * @param tagId The AprilTag ID
+     * @return Optional containing the remembered target data
+     */
+    public Optional<AprilTagMemory.TargetData> getRememberedTarget(int tagId) {
+        return memory.getRememberedTarget(tagId);
+    }
+    
+    /**
+     * Clears all AprilTag memory.
+     */
+    public void clearMemory() {
+        memory.clearMemory();
+    }
+    
+    /**
+     * Gets the number of remembered targets.
+     * 
+     * @return Number of targets in memory
+     */
+    public int getRememberedTargetCount() {
+        return memory.getRememberedTargetCount();
+    }
+    
+    /**
+     * Gets the current environment mode.
+     * 
+     * @return Current environment (COMPETITION or FOREIGN)
+     */
+    public AprilTagEnvironment getEnvironment() {
+        return environment;
+    }
+    
+    /**
+     * Sets the environment mode.
+     * 
+     * @param environment The new environment mode
+     */
+    public void setEnvironment(AprilTagEnvironment environment) {
+        if (this.environment != environment) {
+            System.out.println("Switching AprilTag environment from " + 
+                this.environment.getDisplayName() + " to " + environment.getDisplayName());
+            
+            // Clear memory when switching modes to avoid confusion
+            if (environment == AprilTagEnvironment.FOREIGN) {
+                System.out.println("Clearing field localization data for foreign mode");
+                memory.clearMemory();
+            }
+            
+            this.environment = environment;
+        }
+    }
+    
+    /**
+     * Toggles between competition and foreign mode.
+     */
+    public void toggleEnvironment() {
+        setEnvironment(environment.getOpposite());
+    }
+    
+    /**
+     * Checks if currently in competition mode.
+     * 
+     * @return true if in competition mode
+     */
+    public boolean isCompetitionMode() {
+        return environment == AprilTagEnvironment.COMPETITION;
+    }
+    
+    /**
+     * Checks if currently in foreign mode.
+     * 
+     * @return true if in foreign mode
+     */
+    public boolean isForeignMode() {
+        return environment == AprilTagEnvironment.FOREIGN;
+    }
+    
+    /**
+     * Gets robot pose only if in competition mode.
+     * In foreign mode, this will always return empty.
+     * 
+     * @return Optional containing robot pose if in competition mode and target is visible
+     */
+    public Optional<Pose2d> getCompetitionRobotPose() {
+        if (environment == AprilTagEnvironment.COMPETITION) {
+            return getRobotPose();
+        }
+        return Optional.empty();
     }
 }
