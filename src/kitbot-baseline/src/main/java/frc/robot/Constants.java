@@ -40,8 +40,8 @@ public final class Constants {
     public static final int DRIVE_MOTOR_CURRENT_LIMIT = 40;
 
     // Physical properties of the robot
-    public static final double kWheelDiameterMeters = 0.1524; // 6 inches in meters
-    public static final double kGearRatio = 10.71; // Example: 10.71:1 gear ratio
+    public static final double kWheelDiameterMeters = 0.0951; // 6 inches in meters
+    public static final double kGearRatio = 8.4; // Example: 10.71:1 gear ratio
     public static final double kTrackWidthMeters = 0.69; // Example: 27.2 inches in meters
     
     // Path following constants
@@ -72,8 +72,8 @@ public final class Constants {
 
     public static final int FEEDER_MOTOR_ID_SPX = 6;
     public static final int INTAKE_LAUNCHER_MOTOR_ID_SPX = 5;
-    public static final int SHOOTER_LEFT_MOTOR_ID_SPX = 21;   // Left shooter (CAN ID 21)
-    public static final int SHOOTER_RIGHT_MOTOR_ID_SPX = 23;  // Right shooter (CAN ID 23)
+    public static final int SHOOTER_LEFT_MOTOR_ID_SPX = 31;   // Left shooter (CAN ID 21)
+    public static final int SHOOTER_RIGHT_MOTOR_ID_SPX = 34;  // Right shooter (CAN ID 23)
 
     // Current limit and nominal voltage for fuel mechanism motors.
     public static final int FEEDER_MOTOR_CURRENT_LIMIT = 40;
@@ -88,7 +88,7 @@ public final class Constants {
     public static final double LAUNCHING_FEEDER_VOLTAGE = 9;
     public static final double LAUNCHING_LAUNCHER_VOLTAGE = 10.6;
     public static final double SPIN_UP_FEEDER_VOLTAGE = -6;
-    public static final double SPIN_UP_SECONDS = 1;
+    public static final double SPIN_UP_SECONDS = 1.0;
   }
 
   public static final class OperatorConstants {
