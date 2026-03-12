@@ -82,7 +82,12 @@ public class RobotContainer {
     
     // Add PathPlanner autos - these will be automatically discovered from the deploy/pathplanner/autos directory
     // The names here should match the filenames in the autos directory (without .auto)
-    autoChooser.addOption("Example Path", pathPlannerSubsystem.followPath("Example Path"));
+    Command examplePathCmd = pathPlannerSubsystem.followPath("Example Path");
+    if (examplePathCmd != null) {
+      autoChooser.addOption("Example Path", examplePathCmd);
+    } else {
+      System.err.println("PathPlanner: 'Example Path' not available (followPath returned null)");
+    }
     
     // Add more path planner autos as needed
     // autoChooser.addOption("Another Path", pathPlannerSubsystem.followPath("Another Path"));
