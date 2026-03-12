@@ -25,10 +25,10 @@ public final class Constants {
 
   public static final class DriveConstants {
     // Motor controller IDs for drivetrain motors
-    public static final int LEFT_LEADER_ID_SPARKMAX = 21;
-    public static final int LEFT_FOLLOWER_ID_SPARKMAX = 22;
-    public static final int RIGHT_LEADER_ID_SPARKMAX = 23;
-    public static final int RIGHT_FOLLOWER_ID_SPARKMAX = 24;
+    public static final int LEFT_LEADER_ID_SPARKMAX = 33;
+    public static final int LEFT_FOLLOWER_ID_SPARKMAX = 32;
+    public static final int RIGHT_LEADER_ID_SPARKMAX = 31;
+    public static final int RIGHT_FOLLOWER_ID_SPARKMAX = 34;
 
     public static final int LEFT_LEADER_ID_SPX = 1;
     public static final int LEFT_FOLLOWER_ID_SPX = 2;
@@ -42,8 +42,8 @@ public final class Constants {
 
   public static final class FuelConstants {
     // Motor controller IDs for Fuel Mechanism motors
-    public static final int FEEDER_MOTOR_ID_SPARKMAX = 31;
-    public static final int INTAKE_LAUNCHER_MOTOR_ID_SPARKMAX = 32;
+    public static final int FEEDER_MOTOR_ID_SPARKMAX = 21;
+    public static final int INTAKE_LAUNCHER_MOTOR_ID_SPARKMAX = 22;
 
     public static final int FEEDER_MOTOR_ID_SPX = 6;
     public static final int INTAKE_LAUNCHER_MOTOR_ID_SPX = 5;
