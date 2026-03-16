@@ -16,8 +16,6 @@ import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.FuelSubsystem;
 import frc.robot.subsystems.PathPlannerSubsystem;
 import frc.robot.subsystems.vision.AprilTagSubsystem;
-import frc.robot.subsystems.ShootingDistanceControl;
-import frc.robot.commands.ManualShootCommand;
 import frc.robot.commands.CameraControlCommand;
 import frc.robot.commands.FieldInfoCommand;
 import frc.robot.utils.CameraFeedStreamer;
@@ -34,7 +32,6 @@ public class RobotContainer {
   // The robot's subsystems
   private final DriveSubsystem driveSubsystem = RobotSubsystemFactory.createDriveSubsystem();
   private final FuelSubsystem ballSubsystem = RobotSubsystemFactory.createFuelSubsystem();
-  private final ShootingDistanceControl shootingDistanceControl = new ShootingDistanceControl();
   private final CameraFeedStreamer cameraStreamer = CameraFeedStreamer.getInstance();
   private final PathPlannerSubsystem pathPlannerSubsystem = new PathPlannerSubsystem(
       driveSubsystem, 
@@ -122,20 +119,11 @@ public class RobotContainer {
     operatorController.a()
         .whileTrue(ballSubsystem.runEnd(() -> ballSubsystem.eject(), () -> ballSubsystem.stop()));
     
-    // D-pad controls for shooting distance (operator controller)
-    operatorController.povUp()
-        .onTrue(shootingDistanceControl.runOnce(shootingDistanceControl::increaseDistance));
-    
-    operatorController.povDown()
-        .onTrue(shootingDistanceControl.runOnce(shootingDistanceControl::decreaseDistance));
-    
-    // Manual shooting using D-pad controlled distance
+    // Simple shooting with B button
     operatorController.b()
-        .onTrue(new ManualShootCommand(ballSubsystem, shootingDistanceControl));
-    
-    // Reset distance to default with X button
-    operatorController.x()
-        .onTrue(shootingDistanceControl.runOnce(shootingDistanceControl::resetDistance));
+        .whileTrue(ballSubsystem.spinUpCommand().withTimeout(SPIN_UP_SECONDS)
+            .andThen(ballSubsystem.launchCommand())
+            .finallyDo(() -> ballSubsystem.stop()));
     
     // Camera streaming controls (driver controller)
     driverController.povUp()
@@ -146,10 +134,10 @@ public class RobotContainer {
     
     // Camera quality controls (operator controller)
     operatorController.leftTrigger()
-        .whileTrue(cameraStreamer.runOnce(() -> cameraStreamer.setCompressionLevel(30))); // High quality
+        .whileTrue(ballSubsystem.runOnce(() -> cameraStreamer.setCompressionLevel(30))); // High quality
     
     operatorController.rightTrigger()
-        .whileTrue(cameraStreamer.runOnce(() -> cameraStreamer.setCompressionLevel(70))); // Low quality
+        .whileTrue(ballSubsystem.runOnce(() -> cameraStreamer.setCompressionLevel(70))); // Low quality
     
     // Field info command (driver controller)
     driverController.start()

@@ -1,13 +1,13 @@
 package frc.robot.commands;
 
-import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.utils.FieldLayoutChecker;
 
 /**
  * Command that displays field layout and shooting target information.
  * Useful for debugging and understanding available targets.
  */
-public class FieldInfoCommand extends CommandBase {
+public class FieldInfoCommand extends Command {
     
     private boolean hasRun = false;
     

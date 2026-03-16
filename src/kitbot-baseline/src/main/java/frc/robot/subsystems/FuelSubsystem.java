@@ -112,27 +112,4 @@ public abstract class FuelSubsystem extends SubsystemBase {
         return this.run(() -> launch());
     }
     
-    /**
-     * Sets shooter RPM to specific value for can IDs 21 and 23.
-     * This method should be implemented by subclasses to control specific shooter motors.
-     * 
-     * @param rpm Target RPM for shooter motors
-     */
-    public abstract void setShooterRPM(double rpm);
-    
-    /**
-     * Gets current shooter RPM.
-     * This method should be implemented by subclasses to read shooter motor speeds.
-     * 
-     * @return Current shooter RPM
-     */
-    public abstract double getShooterRPM();
-    
-    /**
-     * Checks if the shooter is currently launching.
-     * This method should be implemented by subclasses to detect launch state.
-     * 
-     * @return True if launching, false otherwise
-     */
-    public abstract boolean isLaunching();
-}
+    }

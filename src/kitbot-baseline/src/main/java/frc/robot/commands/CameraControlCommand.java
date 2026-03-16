@@ -1,13 +1,13 @@
 package frc.robot.commands;
 
-import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.utils.CameraFeedStreamer;
 
 /**
  * Command for controlling single camera streaming.
  * Simple on/off control for one camera.
  */
-public class CameraControlCommand extends CommandBase {
+public class CameraControlCommand extends Command {
     
     private final CameraFeedStreamer streamer;
     private final boolean enableStreaming;

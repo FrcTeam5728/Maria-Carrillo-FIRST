@@ -65,26 +65,15 @@ public final class Constants {
 
   public static final class FuelConstants {
     // Motor controller IDs for Fuel Mechanism motors
-    public static final int FEEDER_MOTOR_ID_SPARKMAX = 21;
-    public static final int INTAKE_LAUNCHER_MOTOR_ID_SPARKMAX = 21;
-    public static final int SHOOTER_LEFT_MOTOR_ID_SPARKMAX = 21;  // Left shooter (CAN ID 21)
-    public static final int SHOOTER_RIGHT_MOTOR_ID_SPARKMAX = 23; // Right shooter (CAN ID 23)
+    public static final int FEEDER_MOTOR_ID_SPARKMAX = 31;
+    public static final int INTAKE_LAUNCHER_MOTOR_ID_SPARKMAX = 32;
 
     public static final int FEEDER_MOTOR_ID_SPX = 6;
     public static final int INTAKE_LAUNCHER_MOTOR_ID_SPX = 5;
-    public static final int SHOOTER_LEFT_MOTOR_ID_SPX = 31;   // Left shooter (CAN ID 21)
-    public static final int SHOOTER_RIGHT_MOTOR_ID_SPX = 34;  // Right shooter (CAN ID 23)
 
     // Current limit and nominal voltage for fuel mechanism motors.
     public static final int FEEDER_MOTOR_CURRENT_LIMIT = 40;
-    
-    // Shooting calculation constants
-    public static final double SHOOTER_SPINUP_TIME_SECONDS = 5.0; // Time to reach target RPM (calibrated)
-    public static final double MAX_SHOOTING_DISTANCE_FEET = 2.5; // Maximum effective shooting distance
-    public static final double MAX_SHOOTING_DISTANCE_METERS = MAX_SHOOTING_DISTANCE_FEET * 0.3048; // Converted to meters
-    public static final double CALIBRATION_VOLTAGE = 11.5; // Voltage used for calibration
     public static final int LAUNCHER_MOTOR_CURRENT_LIMIT = 40;
-    public static final int SHOOTER_MOTOR_CURRENT_LIMIT = 40;
 
     // Voltage values for various fuel operations. These values may need to be tuned
     // based on exact robot construction.
@@ -94,7 +83,7 @@ public final class Constants {
     public static final double LAUNCHING_FEEDER_VOLTAGE = 9;
     public static final double LAUNCHING_LAUNCHER_VOLTAGE = 10.6;
     public static final double SPIN_UP_FEEDER_VOLTAGE = -6;
-    public static final double SPIN_UP_SECONDS = 1.0;
+    public static final double SPIN_UP_SECONDS = 1;
   }
 
   public static final class OperatorConstants {
