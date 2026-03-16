@@ -140,19 +140,33 @@ public class RobotContainer {
             .andThen(ballSubsystem.launchCommand())
             .finallyDo(() -> ballSubsystem.stop()));
     
-    // Camera streaming controls (driver controller)
-    driverController.povUp()
-        .onTrue(new CameraControlCommand(cameraStreamer, true)); // Enable camera
-    
-    driverController.povDown()
-        .onTrue(new CameraControlCommand(cameraStreamer, false)); // Disable camera
+    // Camera streaming controls (driver controller) - only if camera is available
+    if (cameraStreamer != null) {
+      driverController.povUp()
+          .onTrue(new CameraControlCommand(cameraStreamer, true)); // Enable camera
+      
+      driverController.povDown()
+          .onTrue(new CameraControlCommand(cameraStreamer, false)); // Disable camera
+    }
     
     // Camera quality controls (operator controller)
     operatorController.leftTrigger()
-        .whileTrue(ballSubsystem.runOnce(() -> cameraStreamer.setCompressionLevel(30))); // High quality
+        .whileTrue(ballSubsystem.runOnce(() -> {
+          if (cameraStreamer != null) {
+            cameraStreamer.setCompressionLevel(30);
+          } else {
+            System.err.println("Camera not available - cannot set compression level");
+          }
+        })); // High quality
     
     operatorController.rightTrigger()
-        .whileTrue(ballSubsystem.runOnce(() -> cameraStreamer.setCompressionLevel(70))); // Low quality
+        .whileTrue(ballSubsystem.runOnce(() -> {
+          if (cameraStreamer != null) {
+            cameraStreamer.setCompressionLevel(70);
+          } else {
+            System.err.println("Camera not available - cannot set compression level");
+          }
+        })); // Low quality
     
     // Field info command (driver controller)
     driverController.start()

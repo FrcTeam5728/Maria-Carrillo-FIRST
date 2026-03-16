@@ -27,6 +27,11 @@ public class CameraControlCommand extends Command {
     
     @Override
     public void initialize() {
+        if (streamer == null) {
+            System.err.println("CameraFeedStreamer is null - cannot control camera");
+            return;
+        }
+        
         if (enableStreaming) {
             System.out.println("Enabling camera streaming");
             streamer.startStreaming();
