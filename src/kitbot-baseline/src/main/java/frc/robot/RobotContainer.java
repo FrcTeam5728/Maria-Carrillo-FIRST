@@ -12,6 +12,8 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import static frc.robot.Constants.OperatorConstants.*;
 import static frc.robot.Constants.FuelConstants.*;
 import frc.robot.commands.Autos;
+import frc.robot.commands.LimelightDiagnosticCommand;
+import frc.robot.commands.LimelightTestCommand;
 import frc.robot.commands.SimpleAutoShootCommand;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.FuelSubsystem;
@@ -71,6 +73,14 @@ public class RobotContainer {
    * controllers or
    */
   private void configureBindings() {
+    
+    // Limelight diagnostic with BACK button (driver controller)
+    driverController.back()
+        .onTrue(new LimelightDiagnosticCommand(limelightSubsystem));
+    
+    // Limelight connection test with START button (driver controller)
+    driverController.start()
+        .onTrue(new LimelightTestCommand(limelightSubsystem));
     
     // Simple auto-shoot with B button (uses centralized Limelight and pulsing shooter)
     operatorController.b()
