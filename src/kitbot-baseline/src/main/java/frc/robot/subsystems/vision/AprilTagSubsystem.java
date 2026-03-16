@@ -83,6 +83,61 @@ public class AprilTagSubsystem extends SubsystemBase {
         } catch (Exception e) {
             throw new RuntimeException("Failed to load AprilTag field layout", e);
         }
+        
+        // Add debugging for Limelight connection
+        System.out.println("Limelight subsystem initialized with table: " + limelightTable.getPath());
+        testLimelightConnection();
+    }
+    
+    /**
+     * Tests the Limelight connection and logs status information.
+     */
+    private void testLimelightConnection() {
+        try {
+            // Test if we can get values from the Limelight
+            double tvValue = tv.getDouble(-1);
+            double txValue = tx.getDouble(999);
+            double tyValue = ty.getDouble(999);
+            double tidValue = tid.getDouble(-1);
+            
+            System.out.println("=== LIMELIGHT CONNECTION TEST ===");
+            System.out.println("Table path: " + limelightTable.getPath());
+            System.out.println("tv (valid target): " + tvValue);
+            System.out.println("tx (horizontal offset): " + txValue);
+            System.out.println("ty (vertical offset): " + tyValue);
+            System.out.println("tid (target ID): " + tidValue);
+            
+            // Check if values are reasonable
+            if (tvValue == -1 && txValue == 999 && tyValue == 999 && tidValue == -1) {
+                System.err.println("WARNING: Limelight may not be connected or configured!");
+                System.err.println("Check:");
+                System.err.println("1. Limelight is powered on (LED should be on)");
+                System.err.println("2. USB cable is securely connected");
+                System.err.println("3. Limelight is configured with name 'limelight'");
+                System.err.println("4. NetworkTables are working");
+            } else {
+                System.out.println("Limelight connection appears to be working");
+            }
+            System.out.println("=================================");
+        } catch (Exception e) {
+            System.err.println("ERROR testing Limelight connection: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Checks if the Limelight is connected and responding.
+     * 
+     * @return true if Limelight appears to be connected, false otherwise
+     */
+    public boolean isLimelightConnected() {
+        try {
+            // Try to get a value and check if it's not the default error value
+            double testValue = tx.getDouble(999);
+            return testValue != 999;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**
@@ -367,6 +422,13 @@ public class AprilTagSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        // Add periodic connection status check (every 5 seconds)
+        if (System.currentTimeMillis() % 5000 < 20) { // Roughly every 5 seconds
+            if (!isLimelightConnected()) {
+                System.err.println("Limelight not responding - check connection");
+            }
+        }
+        
         // Update memory with current target data
         if (hasTarget()) {
             int tagId = getTargetId();
