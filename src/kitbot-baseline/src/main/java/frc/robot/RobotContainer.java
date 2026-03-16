@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import static frc.robot.Constants.OperatorConstants.*;
 import static frc.robot.Constants.FuelConstants.*;
 import frc.robot.commands.Autos;
+import frc.robot.commands.CameraDetectionCommand;
 import frc.robot.commands.LimelightDiagnosticCommand;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.FuelSubsystem;
@@ -184,6 +185,10 @@ public class RobotContainer {
     // Limelight diagnostic command (driver controller)
     driverController.back()
         .onTrue(new LimelightDiagnosticCommand(aprilTagSubsystem)); // Run Limelight diagnostic on back press
+    
+    // Camera detection command (driver controller)
+    driverController.leftStick()
+        .onTrue(new CameraDetectionCommand()); // Run camera detection when left stick is pressed
 
     // Set the default command for the drive subsystem to the command provided by
     // factory with the values provided by the joystick axes on the driver

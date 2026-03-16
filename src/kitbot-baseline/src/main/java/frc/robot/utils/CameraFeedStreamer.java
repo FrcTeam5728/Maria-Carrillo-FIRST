@@ -78,10 +78,34 @@ public class CameraFeedStreamer {
             // Stop any existing streaming
             stopStreaming();
             
-            // Create USB camera
-            camera = CameraServer.startAutomaticCapture(cameraName, cameraId);
-            camera.setResolution(width, height);
-            camera.setFPS(targetFps);
+            System.out.println("Attempting to start camera streaming...");
+            System.out.println("Camera name: " + cameraName);
+            System.out.println("Camera ID: " + cameraId);
+            System.out.println("Resolution: " + width + "x" + height);
+            System.out.println("FPS: " + targetFps);
+            
+            // Create USB camera with error handling
+            try {
+                camera = CameraServer.startAutomaticCapture(cameraName, cameraId);
+                System.out.println("Camera created successfully: " + cameraName);
+            } catch (Exception e) {
+                System.err.println("Failed to create camera with ID " + cameraId + ": " + e.getMessage());
+                System.err.println("This might be because:");
+                System.err.println("1. No camera is connected to /dev/video" + cameraId);
+                System.err.println("2. The camera is in use by another application");
+                System.err.println("3. The camera driver is not properly installed");
+                System.err.println("4. The camera permissions are incorrect");
+                throw e;
+            }
+            
+            try {
+                camera.setResolution(width, height);
+                camera.setFPS(targetFps);
+                System.out.println("Camera configured successfully");
+            } catch (Exception e) {
+                System.err.println("Failed to configure camera: " + e.getMessage());
+                throw e;
+            }
             
             // Create CvSink and CvSource
             cvSink = CameraServer.getVideo(camera);
@@ -181,6 +205,35 @@ public class CameraFeedStreamer {
      */
     public boolean isOpenCvAvailable() {
         return openCvAvailable;
+    }
+    
+    /**
+     * Detects available USB cameras and suggests the best camera ID to use.
+     * 
+     * @return Array of available camera information
+     */
+    public static String[] detectAvailableCameras() {
+        java.util.ArrayList<String> cameras = new java.util.ArrayList<>();
+        
+        System.out.println("=== DETECTING AVAILABLE CAMERAS ===");
+        
+        // Check camera IDs 0-9
+        for (int i = 0; i < 10; i++) {
+            try {
+                // Try to create a temporary camera to test availability
+                UsbCamera testCamera = new UsbCamera("TestCamera" + i, i);
+                testCamera.close();
+                cameras.add("Camera " + i + ": Available");
+                System.out.println("Camera " + i + ": Available");
+            } catch (Exception e) {
+                System.out.println("Camera " + i + ": Not available - " + e.getMessage());
+            }
+        }
+        
+        System.out.println("Found " + cameras.size() + " available cameras");
+        System.out.println("===================================");
+        
+        return cameras.toArray(new String[0]);
     }
     
     /**
