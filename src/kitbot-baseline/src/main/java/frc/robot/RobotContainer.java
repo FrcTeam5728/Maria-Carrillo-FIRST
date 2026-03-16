@@ -16,6 +16,11 @@ import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.FuelSubsystem;
 import frc.robot.subsystems.PathPlannerSubsystem;
 import frc.robot.subsystems.vision.AprilTagSubsystem;
+import frc.robot.subsystems.ShootingDistanceControl;
+import frc.robot.commands.ManualShootCommand;
+import frc.robot.commands.CameraControlCommand;
+import frc.robot.commands.FieldInfoCommand;
+import frc.robot.utils.CameraFeedStreamer;
 import frc.robot.utils.TeleopControlModifier;
 
 /**
@@ -29,6 +34,8 @@ public class RobotContainer {
   // The robot's subsystems
   private final DriveSubsystem driveSubsystem = RobotSubsystemFactory.createDriveSubsystem();
   private final FuelSubsystem ballSubsystem = RobotSubsystemFactory.createFuelSubsystem();
+  private final ShootingDistanceControl shootingDistanceControl = new ShootingDistanceControl();
+  private final CameraFeedStreamer cameraStreamer = CameraFeedStreamer.getInstance();
   private final PathPlannerSubsystem pathPlannerSubsystem = new PathPlannerSubsystem(
       driveSubsystem, 
       Constants.DriveConstants.kTrackWidthMeters
@@ -60,6 +67,9 @@ public class RobotContainer {
     
     // Configure autonomous options
     configureAutonomous();
+    
+    // Start with camera streaming by default
+    cameraStreamer.startStreaming();
   }
 
   /**
@@ -106,6 +116,39 @@ public class RobotContainer {
     // the intake
     operatorController.a()
         .whileTrue(ballSubsystem.runEnd(() -> ballSubsystem.eject(), () -> ballSubsystem.stop()));
+    
+    // D-pad controls for shooting distance (operator controller)
+    operatorController.povUp()
+        .onTrue(shootingDistanceControl.runOnce(shootingDistanceControl::increaseDistance));
+    
+    operatorController.povDown()
+        .onTrue(shootingDistanceControl.runOnce(shootingDistanceControl::decreaseDistance));
+    
+    // Manual shooting using D-pad controlled distance
+    operatorController.b()
+        .onTrue(new ManualShootCommand(ballSubsystem, shootingDistanceControl));
+    
+    // Reset distance to default with X button
+    operatorController.x()
+        .onTrue(shootingDistanceControl.runOnce(shootingDistanceControl::resetDistance));
+    
+    // Camera streaming controls (driver controller)
+    driverController.povUp()
+        .onTrue(new CameraControlCommand(cameraStreamer, true)); // Enable camera
+    
+    driverController.povDown()
+        .onTrue(new CameraControlCommand(cameraStreamer, false)); // Disable camera
+    
+    // Camera quality controls (operator controller)
+    operatorController.leftTrigger()
+        .whileTrue(cameraStreamer.runOnce(() -> cameraStreamer.setCompressionLevel(30))); // High quality
+    
+    operatorController.rightTrigger()
+        .whileTrue(cameraStreamer.runOnce(() -> cameraStreamer.setCompressionLevel(70))); // Low quality
+    
+    // Field info command (driver controller)
+    driverController.start()
+        .onTrue(new FieldInfoCommand()); // Show field info on start press
 
     // Set the default command for the drive subsystem to the command provided by
     // factory with the values provided by the joystick axes on the driver

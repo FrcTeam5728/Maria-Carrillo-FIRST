@@ -11,6 +11,7 @@ import frc.robot.subsystems.FuelSubsystem;
 import frc.robot.subsystems.vision.AprilTagSubsystem;
 import frc.robot.subsystems.vision.constraints.RotationConstraint;
 import frc.robot.Constants.FuelConstants;
+import edu.wpi.first.wpilibj.Timer;
 
 /**
  * Command that aims at the nearest AprilTag and shoots at appropriate RPM.
@@ -31,6 +32,7 @@ public class AprilTagAimAndShootCommand extends Command {
   private boolean isAimed = false;
   private boolean isAtTargetRPM = false;
   private double targetRPM = 0.0;
+  private double spinupStartTime = 0.0;
   private static final double AIM_TOLERANCE_DEGREES = 3.0;
   private static final double RPM_TOLERANCE = 50.0;
 
@@ -60,6 +62,7 @@ public class AprilTagAimAndShootCommand extends Command {
     // Reset aim and shoot states
     isAimed = false;
     isAtTargetRPM = false;
+    spinupStartTime = 0.0;
     
     // Enable rotation constraint
     rotationConstraint.setActive(true);
@@ -103,11 +106,28 @@ public class AprilTagAimAndShootCommand extends Command {
     // Step 5: Spin can IDs 21 and 23 to that RPM
     fuelSubsystem.setShooterRPM(targetRPM);
     
-    // Check if shooter is at target RPM
+    // Start spinup timer if this is the first time setting RPM
+    if (spinupStartTime == 0.0) {
+      spinupStartTime = Timer.getFPGATimestamp();
+      System.out.println("DEBUG: Starting spinup timer for target RPM: " + targetRPM);
+    }
+    
+    double currentTime = Timer.getFPGATimestamp();
+    double spinupElapsed = currentTime - spinupStartTime;
+    
+    // Check if shooter is at target RPM or spinup time has elapsed
     double currentRPM = fuelSubsystem.getShooterRPM();
-    if (Math.abs(currentRPM - targetRPM) <= RPM_TOLERANCE) {
+    boolean rpmInTolerance = Math.abs(currentRPM - targetRPM) <= RPM_TOLERANCE;
+    boolean spinupTimeElapsed = spinupElapsed >= FuelConstants.SHOOTER_SPINUP_TIME_SECONDS;
+    
+    if (rpmInTolerance) {
       isAtTargetRPM = true;
-      System.out.println("AprilTagAimAndShootCommand: Shooter at target RPM: " + currentRPM);
+      System.out.println("DEBUG: Shooter at target RPM: " + currentRPM + " (target: " + targetRPM + ") after " + String.format("%.2f", spinupElapsed) + "s");
+    } else if (spinupTimeElapsed) {
+      isAtTargetRPM = true;
+      System.out.println("DEBUG: Spinup time elapsed (" + String.format("%.2f", FuelConstants.SHOOTER_SPINUP_TIME_SECONDS) + "s), proceeding with RPM: " + currentRPM + " (target: " + targetRPM + ")");
+    } else {
+      System.out.println("DEBUG: Spinning up - Current: " + currentRPM + " RPM, Target: " + targetRPM + " RPM, Elapsed: " + String.format("%.2f", spinupElapsed) + "s");
     }
 
     // If aimed and at target RPM, shoot
@@ -146,11 +166,12 @@ public class AprilTagAimAndShootCommand extends Command {
     // These values should be calibrated for your robot
     private static final double MIN_RPM = 1000.0;
     private static final double MAX_RPM = 6000.0;
-    private static final double MIN_DISTANCE = 1.0; // meters
-    private static final double MAX_DISTANCE = 8.0; // meters
+    private static final double MIN_DISTANCE = 0.15; // meters (0.5 feet minimum)
+    private static final double MAX_DISTANCE = FuelConstants.MAX_SHOOTING_DISTANCE_METERS; // Use calibrated max distance
     
     /**
      * Calculates the appropriate shooter RPM for a given distance.
+     * Enhanced with debug logging for shooting calculations.
      * 
      * @param distance Distance to target in meters
      * @return Required RPM for shooting
@@ -164,7 +185,15 @@ public class AprilTagAimAndShootCommand extends Command {
       double ratio = (distance - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE);
       double rpm = MIN_RPM + ratio * (MAX_RPM - MIN_RPM);
       
-      System.out.println("ShootingCalculator: Distance = " + distance + "m, RPM = " + rpm);
+      // Enhanced debug logging
+      System.out.println("=== SHOOTING CALCULATION DEBUG ===");
+      System.out.println("Distance: " + String.format("%.2f", distance) + "m");
+      System.out.println("Distance ratio: " + String.format("%.3f", ratio));
+      System.out.println("Calculated RPM: " + String.format("%.0f", rpm));
+      System.out.println("Expected spinup time: " + String.format("%.2f", FuelConstants.SHOOTER_SPINUP_TIME_SECONDS) + "s");
+      System.out.println("Min RPM: " + MIN_RPM + ", Max RPM: " + MAX_RPM);
+      System.out.println("=================================");
+      
       return rpm;
     }
   }

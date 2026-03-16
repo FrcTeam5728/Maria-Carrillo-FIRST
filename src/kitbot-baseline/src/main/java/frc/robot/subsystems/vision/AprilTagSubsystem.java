@@ -77,9 +77,17 @@ public class AprilTagSubsystem extends SubsystemBase {
         
         // Load the AprilTag field layout
         try {
-            aprilTagFieldLayout = AprilTagFields.kDefaultField.loadAprilTagLayoutField();
+            // Try to load 2026 field first
+            aprilTagFieldLayout = AprilTagFields.k2026Field.loadAprilTagLayoutField();
+            System.out.println("Loaded 2026 AprilTag field layout with " + aprilTagFieldLayout.getTags().size() + " tags");
         } catch (Exception e) {
-            throw new RuntimeException("Failed to load AprilTag field layout", e);
+            try {
+                // Fall back to default field layout
+                aprilTagFieldLayout = AprilTagFields.kDefaultField.loadAprilTagLayoutField();
+                System.out.println("2026 field not available, loaded default field layout with " + aprilTagFieldLayout.getTags().size() + " tags");
+            } catch (Exception fallbackException) {
+                throw new RuntimeException("Failed to load any AprilTag field layout", fallbackException);
+            }
         }
     }
 
