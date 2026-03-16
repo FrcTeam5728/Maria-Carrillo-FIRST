@@ -72,6 +72,12 @@ public class RobotContainer {
     CameraFeedStreamer tmpCamera = null;
     try {
       tmpCamera = CameraFeedStreamer.getInstance();
+      if (tmpCamera != null) {
+        System.out.println("CameraFeedStreamer initialized successfully");
+        if (!tmpCamera.isOpenCvAvailable()) {
+          System.out.println("Camera will work without OpenCV image processing");
+        }
+      }
     } catch (UnsatisfiedLinkError ule) {
       System.err.println("Camera native library not available: " + ule.getMessage());
     } catch (Exception e) {

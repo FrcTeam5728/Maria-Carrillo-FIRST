@@ -26,6 +26,9 @@ public class CameraFeedStreamer {
     private CvSource cvSource;
     private Mat imageMat;
     
+    // Flag to track if OpenCV is available
+    private final boolean openCvAvailable;
+    
     // Streaming settings
     private boolean isStreaming = false;
     private int compressionLevel = 50; // JPEG compression (0-100)
@@ -42,7 +45,21 @@ public class CameraFeedStreamer {
      */
     public CameraFeedStreamer() {
         this.cameraTable = NetworkTableInstance.getDefault().getTable(CAMERA_TABLE_NAME);
-        this.imageMat = new Mat();
+        
+        // Test if OpenCV is available
+        boolean cvTest = false;
+        try {
+            Class.forName("org.opencv.core.Mat");
+            this.imageMat = new Mat();
+            cvTest = true;
+            System.out.println("OpenCV native libraries loaded successfully");
+        } catch (ClassNotFoundException | NoClassDefFoundError | UnsatisfiedLinkError e) {
+            this.imageMat = null;
+            cvTest = false;
+            System.err.println("OpenCV native libraries not available: " + e.getMessage());
+            System.err.println("Camera streaming will work without image processing");
+        }
+        this.openCvAvailable = cvTest;
         
         // Initialize NetworkTable entries
         cameraTable.getEntry("streaming").setBoolean(false);
@@ -158,6 +175,15 @@ public class CameraFeedStreamer {
     }
     
     /**
+     * Checks if OpenCV is available for image processing.
+     * 
+     * @return True if OpenCV native libraries are loaded
+     */
+    public boolean isOpenCvAvailable() {
+        return openCvAvailable;
+    }
+    
+    /**
      * Gets the stream URL for viewing in a browser.
      * 
      * @return Stream URL string, or empty if not streaming
@@ -185,11 +211,16 @@ public class CameraFeedStreamer {
      * Starts the image processing thread.
      */
     private void startProcessingThread() {
+        if (!openCvAvailable) {
+            System.out.println("Camera streaming started without OpenCV processing");
+            return; // No processing thread needed if OpenCV not available
+        }
+        
         Thread processingThread = new Thread(() -> {
             while (!Thread.interrupted() && isStreaming) {
                 try {
                     // Grab frame from camera
-                    if (cvSink != null && cvSink.grabFrame(imageMat) == 0) {
+                    if (cvSink != null && imageMat != null && cvSink.grabFrame(imageMat) == 0) {
                         continue; // Skip if no frame available
                     }
                     
