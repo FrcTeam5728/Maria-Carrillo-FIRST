@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import static frc.robot.Constants.OperatorConstants.*;
 import static frc.robot.Constants.FuelConstants.*;
 import frc.robot.commands.Autos;
+import frc.robot.commands.LimelightDiagnosticCommand;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.FuelSubsystem;
 import frc.robot.subsystems.PathPlannerSubsystem;
@@ -37,6 +38,7 @@ public class RobotContainer {
       driveSubsystem, 
       Constants.DriveConstants.kTrackWidthMeters
   );
+  private final AprilTagSubsystem aprilTagSubsystem;
 
   // The driver's controller
   private final CommandXboxController driverController = new CommandXboxController(
@@ -56,8 +58,9 @@ public class RobotContainer {
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
+    // Initialize AprilTag subsystem
+    aprilTagSubsystem = RobotSubsystemFactory.createAprilTagSubsystem();
     // Initialize control modifier with AprilTag subsystem
-    AprilTagSubsystem aprilTagSubsystem = RobotSubsystemFactory.createAprilTagSubsystem();
     this.controlModifier = new TeleopControlModifier(aprilTagSubsystem);
     
     configureBindings();
@@ -171,6 +174,10 @@ public class RobotContainer {
     // Field info command (driver controller)
     driverController.start()
         .onTrue(new FieldInfoCommand()); // Show field info on start press
+    
+    // Limelight diagnostic command (driver controller)
+    driverController.back()
+        .onTrue(new LimelightDiagnosticCommand(aprilTagSubsystem)); // Run Limelight diagnostic on back press
 
     // Set the default command for the drive subsystem to the command provided by
     // factory with the values provided by the joystick axes on the driver
