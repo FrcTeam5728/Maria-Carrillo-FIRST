@@ -12,8 +12,11 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import static frc.robot.Constants.OperatorConstants.*;
 import static frc.robot.Constants.FuelConstants.*;
 import frc.robot.commands.Autos;
+import frc.robot.commands.SimpleAutoShootCommand;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.FuelSubsystem;
+import frc.robot.subsystems.LimelightSubsystem;
+import frc.robot.subsystems.PulsingShooterSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -26,6 +29,8 @@ public class RobotContainer {
   // The robot's subsystems
   private final DriveSubsystem driveSubsystem = RobotSubsystemFactory.createDriveSubsystem();
   private final FuelSubsystem ballSubsystem = RobotSubsystemFactory.createFuelSubsystem();
+  private final LimelightSubsystem limelightSubsystem = new LimelightSubsystem();
+  private final PulsingShooterSubsystem shooterSubsystem = new PulsingShooterSubsystem();
 
   // The driver's controller
   private final CommandXboxController driverController = new CommandXboxController(
@@ -39,9 +44,15 @@ public class RobotContainer {
   private final SendableChooser<Command> autoChooser = new SendableChooser<>();
 
   /**
-   * The container for the robot. Contains subsystems, OI devices, and commands.
+   * The container for robot. Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
+    // Initialize subsystems (centralized Limelight handles all vision data)
+    System.out.println("=== CENTRALIZED LIMELIGHT SYSTEM ===");
+    System.out.println("Single source for all Limelight data");
+    System.out.println("Pulsing shooter: 3s ON, 0.5s OFF");
+    System.out.println("===================================");
+
     configureBindings();
 
     // Set the options to show up in the Dashboard for selecting auto modes. If you
@@ -58,24 +69,40 @@ public class RobotContainer {
    * for {@link CommandXboxController Xbox}/
    * {@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller PS4}
    * controllers or
-   * {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
-   * joysticks}.
    */
   private void configureBindings() {
-
+    
+    // Add periodic update for centralized systems
+    addPeriodicTask(this::updateCentralizedSystems);
+    
+    // Simple auto-shoot with B button (uses centralized Limelight and pulsing shooter)
+    operatorController.b()
+        .onTrue(new SimpleAutoShootCommand(driveSubsystem, limelightSubsystem, shooterSubsystem));
+    
+    // Manual shooter control with Y button
+    operatorController.y()
+        .whileTrue(shooterSubsystem.runEnd(() -> shooterSubsystem.startContinuous(), 
+                                          () -> shooterSubsystem.stop()));
+    
+    // Pulsing shooter toggle with A button
+    operatorController.a()
+        .onTrue(shooterSubsystem.runOnce(() -> {
+            if (shooterSubsystem.isPulsing()) {
+                shooterSubsystem.stop();
+                System.out.println("Pulsing shooter stopped");
+            } else {
+                shooterSubsystem.startPulsing();
+                System.out.println("Pulsing shooter started");
+            }
+        }));
+    
     // While the left bumper on operator controller is held, intake Fuel
     operatorController.leftBumper()
         .whileTrue(ballSubsystem.runEnd(() -> ballSubsystem.intake(), () -> ballSubsystem.stop()));
-    // While the right bumper on the operator controller is held, spin up for 1
-    // second, then launch fuel. When the button is released, stop.
+    
+    // While the right bumper on operator controller is held, manual spin-up
     operatorController.rightBumper()
-        .whileTrue(ballSubsystem.spinUpCommand().withTimeout(SPIN_UP_SECONDS)
-            .andThen(ballSubsystem.launchCommand())
-            .finallyDo(() -> ballSubsystem.stop()));
-    // While the A button is held on the operator controller, eject fuel back out
-    // the intake
-    operatorController.a()
-        .whileTrue(ballSubsystem.runEnd(() -> ballSubsystem.eject(), () -> ballSubsystem.stop()));
+        .whileTrue(ballSubsystem.runEnd(() -> ballSubsystem.spinUp(), () -> ballSubsystem.stop()));
 
     // Set the default command for the drive subsystem to the command provided by
     // factory with the values provided by the joystick axes on the driver
@@ -98,5 +125,26 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     // An example command will be run in autonomous
     return autoChooser.getSelected();
+  }
+
+  /**
+   * Optional helper used by dynamic button mappers to retrieve commands by name.
+   * Currently a stub that returns null for unknown names. Teams should extend
+   * this to return actual commands referenced by external configs.
+   */
+  public Command getCommandForButton(String name) {
+    // TODO: map named strings to commands (e.g. "INTAKE" -> ballSubsystem.runEnd(...))
+    // Returning null is acceptable; callers already handle missing commands.
+    return null;
+  }
+  
+  /**
+   * Updates centralized systems.
+   * Call this periodically to keep systems synchronized.
+   */
+  private void updateCentralizedSystems() {
+    // LimelightSubsystem handles its own periodic updates
+    // PulsingShooterSubsystem handles its own periodic updates
+    // No additional coordination needed for centralized approach
   }
 }
