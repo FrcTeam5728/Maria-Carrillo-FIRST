@@ -69,29 +69,24 @@ public class RobotContainer {
     // Configure autonomous options
     configureAutonomous();
     
-    // Start with camera streaming by default if the native libraries are available.
+    // Initialize camera streaming (disabled - using NetworkTables for Limelight instead)
     CameraFeedStreamer tmpCamera = null;
     try {
       tmpCamera = CameraFeedStreamer.getInstance();
       if (tmpCamera != null) {
-        System.out.println("CameraFeedStreamer initialized successfully");
+        System.out.println("CameraFeedStreamer initialized but disabled - using NetworkTables for Limelight");
         if (!tmpCamera.isOpenCvAvailable()) {
-          System.out.println("Camera will work without OpenCV image processing");
+          System.out.println("Camera would work without OpenCV image processing if needed");
         }
       }
     } catch (UnsatisfiedLinkError ule) {
       System.err.println("Camera native library not available: " + ule.getMessage());
+      System.err.println("This is expected when using NetworkTables for Limelight");
     } catch (Exception e) {
       System.err.println("Failed to initialize CameraFeedStreamer: " + e.getMessage());
     }
     this.cameraStreamer = tmpCamera;
-    if (this.cameraStreamer != null) {
-      try {
-        this.cameraStreamer.startStreaming();
-      } catch (Exception e) {
-        System.err.println("Camera streamer failed to start: " + e.getMessage());
-      }
-    }
+    // Note: Camera streaming is disabled - using NetworkTables for Limelight vision instead
   }
 
   /**
@@ -150,33 +145,8 @@ public class RobotContainer {
             .andThen(ballSubsystem.launchCommand())
             .finallyDo(() -> ballSubsystem.stop()));
     
-    // Camera streaming controls (driver controller) - only if camera is available
-    if (cameraStreamer != null) {
-      driverController.povUp()
-          .onTrue(new CameraControlCommand(cameraStreamer, true)); // Enable camera
-      
-      driverController.povDown()
-          .onTrue(new CameraControlCommand(cameraStreamer, false)); // Disable camera
-    }
-    
-    // Camera quality controls (operator controller)
-    operatorController.leftTrigger()
-        .whileTrue(ballSubsystem.runOnce(() -> {
-          if (cameraStreamer != null) {
-            cameraStreamer.setCompressionLevel(30);
-          } else {
-            System.err.println("Camera not available - cannot set compression level");
-          }
-        })); // High quality
-    
-    operatorController.rightTrigger()
-        .whileTrue(ballSubsystem.runOnce(() -> {
-          if (cameraStreamer != null) {
-            cameraStreamer.setCompressionLevel(70);
-          } else {
-            System.err.println("Camera not available - cannot set compression level");
-          }
-        })); // Low quality
+    // Camera controls are disabled - using NetworkTables for Limelight vision instead
+    // Use Limelight diagnostic command (BACK button) to check connection
     
     // Field info command (driver controller)
     driverController.start()

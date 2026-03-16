@@ -139,6 +139,53 @@ public class AprilTagSubsystem extends SubsystemBase {
             return false;
         }
     }
+    
+    /**
+     * Updates SmartDashboard with current Limelight status and target information.
+     */
+    private void updateSmartDashboard() {
+        try {
+            // Connection status
+            boolean connected = isLimelightConnected();
+            edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putBoolean("Limelight/Connected", connected);
+            
+            // Target detection
+            boolean hasTarget = hasTarget();
+            edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putBoolean("Limelight/HasTarget", hasTarget);
+            
+            if (hasTarget) {
+                // Target information
+                edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putNumber("Limelight/TargetID", getTargetId());
+                edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putNumber("Limelight/HorizontalOffset", getTargetX());
+                edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putNumber("Limelight/VerticalOffset", getTargetY());
+                edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putNumber("Limelight/TargetArea", getTargetArea());
+                edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putNumber("Limelight/Distance", getDistanceToTarget());
+                
+                // Robot pose if available
+                Optional<Pose2d> robotPose = getRobotPose();
+                if (robotPose.isPresent()) {
+                    Pose2d pose = robotPose.get();
+                    edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putNumber("Limelight/RobotX", pose.getX());
+                    edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putNumber("Limelight/RobotY", pose.getY());
+                    edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putNumber("Limelight/RobotRotation", pose.getRotation().getDegrees());
+                }
+            } else {
+                // Clear target values when no target
+                edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putNumber("Limelight/TargetID", -1);
+                edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putNumber("Limelight/HorizontalOffset", 0);
+                edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putNumber("Limelight/VerticalOffset", 0);
+                edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putNumber("Limelight/TargetArea", 0);
+                edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putNumber("Limelight/Distance", 0);
+            }
+            
+            // Environment mode
+            edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Limelight/Environment", environment.getDisplayName());
+            
+        } catch (Exception e) {
+            // Don't let SmartDashboard errors crash the subsystem
+            System.err.println("Error updating SmartDashboard: " + e.getMessage());
+        }
+    }
 
     /**
      * Configures the default constraints for the subsystem.
@@ -428,6 +475,9 @@ public class AprilTagSubsystem extends SubsystemBase {
                 System.err.println("Limelight not responding - check connection");
             }
         }
+        
+        // Update SmartDashboard with Limelight status
+        updateSmartDashboard();
         
         // Update memory with current target data
         if (hasTarget()) {
