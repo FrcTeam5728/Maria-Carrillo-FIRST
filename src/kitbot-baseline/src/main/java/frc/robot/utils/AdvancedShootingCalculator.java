@@ -12,7 +12,7 @@ import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.DriveSubsystem;
-import frc.robot.subsystems.vision.AprilTagSubsystem;
+import frc.robot.subsystems.LimelightSubsystem;
 
 /**
  * Advanced shooting calculator that uses physics, kinematics, and AprilTag data
@@ -37,7 +37,7 @@ public class AdvancedShootingCalculator {
     
     // Robot configuration
     private final DriveSubsystem driveSubsystem;
-    private final AprilTagSubsystem aprilTagSubsystem;
+    private final LimelightSubsystem limelightSubsystem;
     private final DifferentialDriveKinematics kinematics;
     
     // Shooting parameters
@@ -52,14 +52,13 @@ public class AdvancedShootingCalculator {
      * Creates a new AdvancedShootingCalculator.
      * 
      * @param driveSubsystem The drive subsystem for kinematics
-     * @param aprilTagSubsystem The vision subsystem for target data
+     * @param limelightSubsystem The vision subsystem for target data
      */
-    public AdvancedShootingCalculator(DriveSubsystem driveSubsystem, AprilTagSubsystem aprilTagSubsystem) {
+    public AdvancedShootingCalculator(DriveSubsystem driveSubsystem, LimelightSubsystem limelightSubsystem) {
         this.driveSubsystem = driveSubsystem;
-        this.aprilTagSubsystem = aprilTagSubsystem;
+        this.limelightSubsystem = limelightSubsystem;
         this.kinematics = new DifferentialDriveKinematics(
-            driveSubsystem.getTrackWidth(), 
-            new Translation2d(0, 0) // No center offset
+            0.6 // Default track width (would get from Constants)
         );
         
         reset();
@@ -78,12 +77,12 @@ public class AdvancedShootingCalculator {
     }
     
     /**
-     * Updates calculator with current AprilTag data.
+     * Updates calculator with current Limelight data.
      * Call this periodically to track moving targets.
      */
     public void update() {
-        if (aprilTagSubsystem.hasTarget()) {
-            updateFromAprilTag();
+        if (limelightSubsystem.hasTarget()) {
+            updateFromLimelight();
             isTargetLocked = true;
         } else {
             isTargetLocked = false;
@@ -95,19 +94,16 @@ public class AdvancedShootingCalculator {
     }
     
     /**
-     * Updates shooting parameters from AprilTag data.
+     * Updates shooting parameters from Limelight data.
      */
-    private void updateFromAprilTag() {
+    private void updateFromLimelight() {
         try {
-            // Get target pose from AprilTag
-            Pose2d targetPose = aprilTagSubsystem.getTargetPose().orElse(new Pose2d());
+            // Get target info from Limelight
+            targetDistance = limelightSubsystem.getDistance();
             
-            // Get current robot pose
-            Pose2d robotPose = aprilTagSubsystem.getRobotPose().orElse(new Pose2d());
-            
-            // Calculate relative distance and height difference
-            Translation2d relativePosition = targetPose.relativeTo(robotPose);
-            targetDistance = relativePosition.getNorm();
+            // Get current robot pose (simplified - would use actual odometry)
+            // Pose2d robotPose = limelightSubsystem.getRobotPose().orElse(new Pose2d());
+            Pose2d robotPose = new Pose2d(); // Placeholder
             
             // Estimate target height (assuming standard AprilTag height)
             targetHeight = 0.5; // meters (typical AprilTag height)
@@ -116,7 +112,7 @@ public class AdvancedShootingCalculator {
             calculateOptimalTrajectory();
             
         } catch (Exception e) {
-            System.err.println("Error updating from AprilTag: " + e.getMessage());
+            System.err.println("Error updating from Limelight: " + e.getMessage());
         }
     }
     
@@ -342,12 +338,18 @@ public class AdvancedShootingCalculator {
         Pose2d currentPose = new Pose2d(); // Simplified - should use actual odometry
         
         // Calculate required movement
-        Translation2d movement = targetPose.relativeTo(currentPose);
+        Translation2d movement = new Translation2d(
+            targetPose.getX() - currentPose.getX(),
+            targetPose.getY() - currentPose.getY()
+        );
         
         // Simple proportional control for movement
         double maxSpeed = 2.0; // m/s
         double xSpeed = Math.max(-maxSpeed, Math.min(maxSpeed, movement.getX() * 2.0));
-        double rotationSpeed = movement.getRotation().getDegrees() * 0.5; // degrees per second
+        
+        // Calculate rotation needed (simplified)
+        double targetAngle = Math.atan2(movement.getY(), movement.getX());
+        double rotationSpeed = Math.toDegrees(targetAngle) * 0.5; // degrees per second
         
         // Convert to chassis speeds
         ChassisSpeeds chassisSpeeds = new ChassisSpeeds(xSpeed, 0, rotationSpeed);

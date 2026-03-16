@@ -72,9 +72,6 @@ public class RobotContainer {
    */
   private void configureBindings() {
     
-    // Add periodic update for centralized systems
-    addPeriodicTask(this::updateCentralizedSystems);
-    
     // Simple auto-shoot with B button (uses centralized Limelight and pulsing shooter)
     operatorController.b()
         .onTrue(new SimpleAutoShootCommand(driveSubsystem, limelightSubsystem, shooterSubsystem));
@@ -136,15 +133,5 @@ public class RobotContainer {
     // TODO: map named strings to commands (e.g. "INTAKE" -> ballSubsystem.runEnd(...))
     // Returning null is acceptable; callers already handle missing commands.
     return null;
-  }
-  
-  /**
-   * Updates centralized systems.
-   * Call this periodically to keep systems synchronized.
-   */
-  private void updateCentralizedSystems() {
-    // LimelightSubsystem handles its own periodic updates
-    // PulsingShooterSubsystem handles its own periodic updates
-    // No additional coordination needed for centralized approach
   }
 }

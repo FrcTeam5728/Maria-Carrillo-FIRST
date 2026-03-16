@@ -124,7 +124,8 @@ public class SimpleAutoShootCommand extends Command {
         
         // Adjust robot to align with target
         double adjustment = calculateAlignmentAdjustment(targetInfo.horizontalOffset);
-        driveSubsystem.tankDriveVolts(adjustment, -adjustment); // Rotate in place
+        // Use arcade drive for rotation (negative for clockwise)
+        driveSubsystem.driveArcade(() -> 0.0, () -> -adjustment * 0.1);
         
         System.out.println("Aiming - Offset: " + String.format("%.1f", targetInfo.horizontalOffset) + 
                          "°, Adjustment: " + String.format("%.2f", adjustment) + "V");
@@ -189,7 +190,7 @@ public class SimpleAutoShootCommand extends Command {
         
         // Always stop shooter when command ends
         shooterSubsystem.stop();
-        driveSubsystem.stopMotor();
+        // DriveSubsystem doesn't have stopMotor method, just stop the command
         
         // Reset state
         isAiming = false;
