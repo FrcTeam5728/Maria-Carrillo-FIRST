@@ -32,7 +32,7 @@ public class RobotContainer {
   // The robot's subsystems
   private final DriveSubsystem driveSubsystem = RobotSubsystemFactory.createDriveSubsystem();
   private final FuelSubsystem ballSubsystem = RobotSubsystemFactory.createFuelSubsystem();
-  private final CameraFeedStreamer cameraStreamer = CameraFeedStreamer.getInstance();
+  private final CameraFeedStreamer cameraStreamer;
   private final PathPlannerSubsystem pathPlannerSubsystem = new PathPlannerSubsystem(
       driveSubsystem, 
       Constants.DriveConstants.kTrackWidthMeters
@@ -65,8 +65,23 @@ public class RobotContainer {
     // Configure autonomous options
     configureAutonomous();
     
-    // Start with camera streaming by default
-    cameraStreamer.startStreaming();
+    // Start with camera streaming by default if the native libraries are available.
+    CameraFeedStreamer tmpCamera = null;
+    try {
+      tmpCamera = CameraFeedStreamer.getInstance();
+    } catch (UnsatisfiedLinkError ule) {
+      System.err.println("Camera native library not available: " + ule.getMessage());
+    } catch (Exception e) {
+      System.err.println("Failed to initialize CameraFeedStreamer: " + e.getMessage());
+    }
+    this.cameraStreamer = tmpCamera;
+    if (this.cameraStreamer != null) {
+      try {
+        this.cameraStreamer.startStreaming();
+      } catch (Exception e) {
+        System.err.println("Camera streamer failed to start: " + e.getMessage());
+      }
+    }
   }
 
   /**

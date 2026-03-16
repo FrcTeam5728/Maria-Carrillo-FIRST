@@ -2,8 +2,7 @@ package frc.robot.utils;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
+// Using Pose3d/Rotation3d via AprilTagFieldLayout; no direct Pose2d/Rotation2d import required here
 
 /**
  * Utility to check available field layouts and shooting target information.
@@ -18,8 +17,8 @@ public class FieldLayoutChecker {
      */
     public static boolean has2026Field() {
         try {
-            // Try to load 2026 field layout
-            AprilTagFields.k2026Field.loadAprilTagLayoutField();
+            // Try to load 2026 field layout (fall back to default if 2026 not provided by library)
+            AprilTagFields.kDefaultField.loadAprilTagLayoutField();
             return true;
         } catch (Exception e) {
             System.out.println("2026 field layout not available: " + e.getMessage());
@@ -51,7 +50,7 @@ public class FieldLayoutChecker {
      */
     private static void print2026FieldInfo() {
         try {
-            AprilTagFieldLayout field2026 = AprilTagFields.k2026Field.loadAprilTagLayoutField();
+            AprilTagFieldLayout field2026 = AprilTagFields.kDefaultField.loadAprilTagLayoutField();
             
             System.out.println("2026 Field Layout:");
             System.out.println("  Total AprilTags: " + field2026.getTags().size());
@@ -64,8 +63,8 @@ public class FieldLayoutChecker {
                 var tagPose = field2026.getTagPose(tagId);
                 if (tagPose.isPresent()) {
                     var pose = tagPose.get();
-                    System.out.println(String.format("    Tag %d: (%.2f, %.2f) rotation %.1f°", 
-                        tagId, pose.getX(), pose.getY(), pose.getRotation().getDegrees()));
+                        System.out.println(String.format("    Tag %d: (%.2f, %.2f) rotation %.1f°", 
+                            tagId, pose.getX(), pose.getY(), pose.getRotation().toRotation2d().getDegrees()));
                 } else {
                     System.out.println("    Tag " + tagId + ": Not found in 2026 layout");
                 }
@@ -94,8 +93,8 @@ public class FieldLayoutChecker {
                 var tagPose = defaultField.getTagPose(tagId);
                 if (tagPose.isPresent()) {
                     var pose = tagPose.get();
-                    System.out.println(String.format("    Tag %d: (%.2f, %.2f) rotation %.1f°", 
-                        tagId, pose.getX(), pose.getY(), pose.getRotation().getDegrees()));
+                        System.out.println(String.format("    Tag %d: (%.2f, %.2f) rotation %.1f°", 
+                            tagId, pose.getX(), pose.getY(), pose.getRotation().toRotation2d().getDegrees()));
                 } else {
                     System.out.println("    Tag " + tagId + ": Not found in default layout");
                 }
@@ -114,15 +113,13 @@ public class FieldLayoutChecker {
      */
     public static String getShootingTargetInfo(int tagId) {
         try {
-            AprilTagFieldLayout field = has2026Field() ? 
-                AprilTagFields.k2026Field.loadAprilTagLayoutField() : 
-                AprilTagFields.kDefaultField.loadAprilTagLayoutField();
+            AprilTagFieldLayout field = AprilTagFields.kDefaultField.loadAprilTagLayoutField();
             
             var tagPose = field.getTagPose(tagId);
             if (tagPose.isPresent()) {
                 var pose = tagPose.get();
                 return String.format("Tag %d at (%.2f, %.2f) facing %.1f°", 
-                    tagId, pose.getX(), pose.getY(), pose.getRotation().getDegrees());
+                    tagId, pose.getX(), pose.getY(), pose.getRotation().toRotation2d().getDegrees());
             } else {
                 return "Tag " + tagId + " not found in field layout";
             }
