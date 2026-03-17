@@ -31,6 +31,7 @@ import frc.robot.subsystems.PulsingShooterSubsystem;
 import frc.robot.utils.CameraFeedBroadcaster;
 import frc.robot.utils.FieldPositionSystem;
 import frc.robot.utils.LimelightCameraServer;
+import frc.robot.utils.USBCameraServer;
 import frc.robot.utils.ShootingPositionManager;
 
 /**
@@ -97,6 +98,9 @@ public class RobotContainer {
     
     // Initialize Limelight CameraServer for video feed
     LimelightCameraServer.initialize();
+    
+    // Initialize USB CameraServer for driver camera
+    USBCameraServer.initialize();
     
     // Configure Shuffleboard controls
     SimpleShuffleboardControls.initialize(limelightSubsystem, fieldPositionSystem, 
@@ -223,6 +227,9 @@ public class RobotContainer {
   public void periodic() {
     // Update Limelight CameraServer status
     LimelightCameraServer.updateStatus();
+    
+    // Update USB CameraServer status
+    USBCameraServer.updateStatus();
     
     // Update camera feed broadcaster
     cameraFeedBroadcaster.periodic();
