@@ -94,17 +94,18 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotPeriodic() {
-    // Update field position system
+    // Runs the Scheduler. This is responsible for polling buttons, adding
+    // newly-scheduled commands, running already-scheduled commands, removing
+    // finished or interrupted commands, and running subsystem periodic() methods.
+    // This must be called from the robot's periodic block in order for anything
+    // in the Command-based framework to work.
+    CommandScheduler.getInstance().run();
+    
+    // Update field position and shooting position systems
     m_robotContainer.updateFieldPosition();
     
-    // Runs the Scheduler. This is responsible for polling buttons, adding
-    // newly-scheduled
-    // commands, running already-scheduled commands, removing finished or
-    // interrupted commands,
-    // and running subsystem periodic() methods. This must be called from the
-    // robot's periodic
-    // block in order for anything in the Command-based framework to work.
-    CommandScheduler.getInstance().run();
+    // Update camera server status for Shuffleboard
+    updateCameraStatus();
     
     // Update robot visualization
     updateRobotVisualization();
@@ -249,23 +250,19 @@ public class Robot extends TimedRobot {
         RobotVisualization.updateRobotPosition(new edu.wpi.first.math.geometry.Pose2d());
       }
     } else {
-      System.out.println("RobotContainer is null");
     }
-  }
-  
-  /**
-   * Update robot pose for AdvantageScope NetworkTables
-   */
-  private void updateRobotPose() {
-    // Get current pose from drivetrain/odometry
-    Pose2d currentPose = m_robotPose; // Use the pose we already retrieved in updateRobotVisualization()
-    
-    // Publish as [x, y, rotation_radians]
-    m_robotPosePub.set(new double[] {
-        currentPose.getX(),
-        currentPose.getY(),
-        currentPose.getRotation().getRadians()
-    });
+        } catch (Exception e) {
+          // Fallback: send default position if pose can't be retrieved
+          System.out.println("Failed to get pose from drive subsystem: " + e.getMessage());
+          RobotVisualization.updateRobotPosition(new edu.wpi.first.math.geometry.Pose2d());
+        }
+      } else {
+        System.out.println("Drive subsystem is null");
+      }
+    } catch (Exception e) {
+      // Field access failed, send default position
+      System.out.println("Failed to access drive subsystem field: " + e.getMessage());
+      RobotVisualization.updateRobotPosition(new edu.wpi.first.math.geometry.Pose2d());
   }
   
   /**
@@ -290,6 +287,28 @@ public class Robot extends TimedRobot {
       m_mechanismViz.updateAutonomousState(autoState, autoAction);
     } else {
       System.out.println("MechanismVisualization is null");
+    }
+  }
+  
+  /**
+   * Updates camera server status for Shuffleboard.
+   */
+  private void updateCameraStatus() {
+    var cameraServer = m_robotContainer.getCameraServer();
+    
+    // Publish camera status to SmartDashboard
+    SmartDashboard.putBoolean("Camera/USB_Available", cameraServer.isUsbCameraAvailable());
+    SmartDashboard.putBoolean("Camera/Limelight_Available", cameraServer.isLimelightStreamAvailable());
+    SmartDashboard.putString("Camera/Limelight_URL", cameraServer.getLimelightStreamUrl());
+    
+    // Debug: Print camera status every 10 seconds
+    long currentTime = System.currentTimeMillis();
+    if (currentTime % 10000 < 100) {
+      System.out.println("Camera Server Status:");
+      System.out.println("  USB Camera: " + (cameraServer.isUsbCameraAvailable() ? "AVAILABLE" : "NOT AVAILABLE"));
+      System.out.println("  Limelight Stream: " + (cameraServer.isLimelightStreamAvailable() ? "AVAILABLE" : "NOT AVAILABLE"));
+      System.out.println("  Limelight URL: " + cameraServer.getLimelightStreamUrl());
+      System.out.println("  Add Camera widgets to Shuffleboard to view feeds");
     }
   }
 }

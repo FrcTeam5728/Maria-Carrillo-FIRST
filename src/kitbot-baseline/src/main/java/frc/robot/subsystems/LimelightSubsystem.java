@@ -112,6 +112,10 @@ public class LimelightSubsystem extends SubsystemBase {
             double ts = tsEntry.getDouble(0.0);
             double tl = tlEntry.getDouble(0.0);
             
+            // Update lastUpdateTime whenever we get any data from NetworkTables
+            // This indicates the Limelight is connected and responding
+            lastUpdateTime = System.currentTimeMillis();
+            
             // Apply filtering and validation
             if (tv > 0.5 && ta > MIN_TARGET_AREA && Math.abs(tx) < MAX_HORIZONTAL_OFFSET) {
                 // Valid target detected
@@ -122,14 +126,13 @@ public class LimelightSubsystem extends SubsystemBase {
                 targetId = (int) tid;
                 timestamp = ts;
                 latency = tl;
-                lastUpdateTime = System.currentTimeMillis();
             } else {
-                // No valid target
+                // No valid target (but Limelight is still connected)
                 hasTarget = false;
-                horizontalOffset = 0.0;
-                verticalOffset = 0.0;
-                targetArea = 0.0;
-                targetId = -1;
+                horizontalOffset = tx; // Keep raw values for debugging
+                verticalOffset = ty;
+                targetArea = ta;
+                targetId = (int) tid;
             }
             
         } catch (Exception e) {
@@ -153,6 +156,13 @@ public class LimelightSubsystem extends SubsystemBase {
         boolean nowConnected = timeSinceUpdate < CONNECTION_TIMEOUT_MS;
         isConnected = nowConnected;
 
+        // Debug: Print connection status every 5 seconds
+        if (currentTime % 5000 < 100) {
+            System.out.println("Limelight connection status: " + 
+                (nowConnected ? "CONNECTED" : "DISCONNECTED") + 
+                " (last update: " + String.format("%.1f", timeSinceUpdate/1000.0) + "s ago)");
+        }
+
         // Only show connection warnings in real robot mode, not simulation.
         // Print only when the connection state changes or at most once per interval.
         if (!RobotBase.isSimulation()) {
@@ -169,8 +179,14 @@ public class LimelightSubsystem extends SubsystemBase {
 
                 if (shouldWarn) {
                     System.err.println("Limelight not responding - check connection");
+                    System.err.println("  Time since last update: " + String.format("%.1f", timeSinceUpdate/1000.0) + "s");
+                    System.err.println("  Connection timeout: " + String.format("%.1f", CONNECTION_TIMEOUT_MS/1000.0) + "s");
+                    System.err.println("  Check: Limelight power, Ethernet, IP address");
                     lastConnectionWarning = now;
                 }
+            } else if (!previousConnectedState) {
+                // Just connected
+                System.out.println("Limelight connected and responding");
             }
             previousConnectedState = nowConnected;
         }
@@ -248,13 +264,48 @@ public class LimelightSubsystem extends SubsystemBase {
     }
     
     /**
-     * Sets the Limelight pipeline.
+     * Tests raw NetworkTables connection to Limelight.
+     * Useful for debugging connection issues.
      * 
-     * @param pipeline Pipeline number (0-9)
+     * @return True if NetworkTables can access Limelight table
      */
-    public void setPipeline(int pipeline) {
-        limelightTable.getEntry("pipeline").setNumber(pipeline);
-        System.out.println("Limelight pipeline set to: " + pipeline);
+    public boolean testRawConnection() {
+        try {
+            // Try to access the limelight table directly
+            NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
+            
+            // Test if we can get a value (even if it's default)
+            double testValue = table.getEntry("tv").getDouble(-999.0);
+            
+            // If we got any value (not the error value), NetworkTables is working
+            boolean networkTablesWorking = testValue != -999.0;
+            
+            System.out.println("=== Limelight Raw Connection Test ===");
+            System.out.println("NetworkTables access: " + (networkTablesWorking ? "WORKING" : "FAILED"));
+            System.out.println("Test value (tv): " + testValue);
+            System.out.println("Limelight table exists: " + (table != null ? "YES" : "NO"));
+            System.out.println("Connection status: " + (isConnected ? "CONNECTED" : "DISCONNECTED"));
+            
+            if (networkTablesWorking) {
+                System.out.println("✅ NetworkTables connection is working");
+                System.out.println("❓ If still showing disconnected, check Limelight device");
+                System.out.println("   - Power: Is Limelight powered on?");
+                System.out.println("   - Network: Is Ethernet cable connected?");
+                System.out.println("   - IP: Is Limelight on correct IP (10.57.28.11)?");
+                System.out.println("   - Team: Is Limelight configured for team 5728?");
+            } else {
+                System.out.println("❌ NetworkTables connection failed");
+                System.out.println("   Check: NetworkTables server configuration");
+                System.out.println("   Check: Robot network connection");
+                System.out.println("   Check: Limelight network connection");
+            }
+            
+            return networkTablesWorking;
+            
+        } catch (Exception e) {
+            System.err.println("Error testing Limelight connection: " + e.getMessage());
+            return false;
+        }
     }
     
     /**

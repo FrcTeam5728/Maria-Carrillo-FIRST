@@ -19,6 +19,7 @@ import frc.robot.commands.SelectShootingPositionCommand;
 import frc.robot.commands.ShootAtPositionCommand;
 import frc.robot.commands.SimpleAutoShootCommand;
 import frc.robot.commands.VirtualLimelightTestCommand;
+import frc.robot.subsystems.CameraServerSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.FuelSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
@@ -40,7 +41,7 @@ public class RobotContainer {
   private final LimelightSubsystem limelightSubsystem = new LimelightSubsystem();
   private final PulsingShooterSubsystem shooterSubsystem = new PulsingShooterSubsystem();
   private final FieldPositionSystem fieldPositionSystem = new FieldPositionSystem(driveSubsystem, limelightSubsystem);
-  private final ShootingPositionManager shootingPositionManager = new ShootingPositionManager(limelightSubsystem);
+  private final CameraServerSubsystem cameraServerSubsystem = new CameraServerSubsystem();
 
   // The driver's controller
   private final CommandXboxController driverController = new CommandXboxController(
@@ -186,11 +187,20 @@ public class RobotContainer {
   }
   
   /**
-   * Updates field position system.
-   * Call this periodically to keep position tracking current.
+   * Updates field position and shooting position systems.
+   * Call this periodically (usually in robotPeriodic()).
    */
   public void updateFieldPosition() {
     fieldPositionSystem.update();
-    shootingPositionManager.update();
+    // shootingPositionManager.update(); // Uncomment if needed
+  }
+  
+  /**
+   * Gets camera server information for Shuffleboard.
+   * 
+   * @return Camera server subsystem
+   */
+  public CameraServerSubsystem getCameraServer() {
+    return cameraServerSubsystem;
   }
 }
