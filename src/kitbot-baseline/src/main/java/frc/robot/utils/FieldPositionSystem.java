@@ -11,7 +11,6 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.LimelightSubsystem;
-import frc.robot.utils.AprilTagPositionUpdater;
 
 /**
  * Field position system that publishes robot position to NetworkTables.

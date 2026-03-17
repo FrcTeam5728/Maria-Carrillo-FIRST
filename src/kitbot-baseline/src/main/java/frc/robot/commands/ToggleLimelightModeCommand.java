@@ -5,7 +5,6 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.LimelightSubsystem;
 import frc.robot.utils.AprilTagPositionUpdater;
 
 /**
@@ -15,28 +14,19 @@ import frc.robot.utils.AprilTagPositionUpdater;
  */
 public class ToggleLimelightModeCommand extends Command {
     
-    private final LimelightSubsystem limelightSubsystem;
     private final AprilTagPositionUpdater positionUpdater;
-    
-    private boolean originalMode;
     
     /**
      * Creates a new ToggleLimelightModeCommand.
      * 
-     * @param limelightSubsystem Limelight subsystem
      * @param positionUpdater Position updater for mode tracking
      */
-    public ToggleLimelightModeCommand(LimelightSubsystem limelightSubsystem, 
-                                    AprilTagPositionUpdater positionUpdater) {
-        this.limelightSubsystem = limelightSubsystem;
+    public ToggleLimelightModeCommand(AprilTagPositionUpdater positionUpdater) {
         this.positionUpdater = positionUpdater;
     }
     
     @Override
     public void initialize() {
-        // Store original mode for potential restoration
-        originalMode = positionUpdater.isStreaming();
-        
         // Toggle the mode
         positionUpdater.toggleMode();
     }

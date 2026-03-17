@@ -6,7 +6,6 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.utils.AprilTagPositionUpdater;
-import frc.robot.utils.FieldPositionSystem;
 
 /**
  * Command that tests AprilTag position updating.
@@ -14,7 +13,6 @@ import frc.robot.utils.FieldPositionSystem;
  */
 public class AprilTagPositionTestCommand extends Command {
     
-    private final FieldPositionSystem fieldPositionSystem;
     private final AprilTagPositionUpdater positionUpdater;
     
     private int updateCount = 0;
@@ -23,12 +21,9 @@ public class AprilTagPositionTestCommand extends Command {
     /**
      * Creates a new AprilTagPositionTestCommand.
      * 
-     * @param fieldPositionSystem Field position system
      * @param positionUpdater AprilTag position updater
      */
-    public AprilTagPositionTestCommand(FieldPositionSystem fieldPositionSystem, 
-                                     AprilTagPositionUpdater positionUpdater) {
-        this.fieldPositionSystem = fieldPositionSystem;
+    public AprilTagPositionTestCommand(AprilTagPositionUpdater positionUpdater) {
         this.positionUpdater = positionUpdater;
     }
     

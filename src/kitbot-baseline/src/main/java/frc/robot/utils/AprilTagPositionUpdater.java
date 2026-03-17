@@ -24,7 +24,6 @@ public class AprilTagPositionUpdater {
     
     // Position update settings
     private static final double MIN_CONFIDENCE = 0.5; // Lowered threshold for more updates
-    private static final double MAX_DISTANCE_ERROR = 1.0; // Increased tolerance
     private static final double HEADING_WEIGHT = 0.3; // weight for heading correction
     private static final double MIN_TARGET_AREA = 0.1; // Minimum area to consider
     

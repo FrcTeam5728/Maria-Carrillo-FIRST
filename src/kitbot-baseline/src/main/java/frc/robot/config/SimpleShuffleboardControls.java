@@ -8,16 +8,11 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import frc.robot.commands.AprilTagPositionTestCommand;
+import frc.robot.commands.AutoAimCommand;
 import frc.robot.commands.ImmediateAprilTagUpdateCommand;
 import frc.robot.commands.LimelightTroubleshootCommand;
 import frc.robot.commands.ResetFieldPositionCommand;
 import frc.robot.commands.ToggleLimelightModeCommand;
-import frc.robot.commands.AutoAimCommand;
-import frc.robot.commands.Autos;
-import frc.robot.commands.LimelightTestCommand;
-import frc.robot.commands.SelectShootingPositionCommand;
-import frc.robot.commands.ShootAtPositionCommand;
-import frc.robot.commands.SimpleAutoShootCommand;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
 import frc.robot.subsystems.PulsingShooterSubsystem;
@@ -167,10 +162,10 @@ public class SimpleShuffleboardControls {
     private static void createCommandControls(LimelightSubsystem limelightSubsystem, 
                                             FieldPositionSystem fieldPositionSystem) {
         // Command controls
-        tab.add("Toggle Limelight Mode", new ToggleLimelightModeCommand(limelightSubsystem, fieldPositionSystem.getPositionUpdater()))
+        tab.add("Toggle Limelight Mode", new ToggleLimelightModeCommand(fieldPositionSystem.getPositionUpdater()))
             .withWidget(BuiltInWidgets.kCommand);
         
-        tab.add("Run AprilTag Test", new AprilTagPositionTestCommand(fieldPositionSystem, fieldPositionSystem.getPositionUpdater()))
+        tab.add("Run AprilTag Test", new AprilTagPositionTestCommand(fieldPositionSystem.getPositionUpdater()))
             .withWidget(BuiltInWidgets.kCommand);
         
         tab.add("Auto-Aim", new AutoAimCommand(limelightSubsystem, fieldPositionSystem))

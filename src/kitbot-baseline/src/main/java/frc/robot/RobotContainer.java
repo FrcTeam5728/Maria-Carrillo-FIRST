@@ -11,12 +11,12 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 import static frc.robot.Constants.OperatorConstants.*;
 import frc.robot.commands.AprilTagPositionTestCommand;
+import frc.robot.commands.AutoAimCommand;
 import frc.robot.commands.ImmediateAprilTagUpdateCommand;
 import frc.robot.commands.LimelightTroubleshootCommand;
+import frc.robot.commands.LimelightVideoTestCommand;
 import frc.robot.commands.ToggleLimelightModeCommand;
-import frc.robot.commands.AutoAimCommand;
 import frc.robot.commands.Autos;
-import frc.robot.commands.LimelightTestCommand;
 import frc.robot.commands.ResetFieldPositionCommand;
 import frc.robot.commands.SelectShootingPositionCommand;
 import frc.robot.commands.ShootAtPositionCommand;
@@ -102,9 +102,9 @@ public class RobotContainer {
     driverController.back()
         .onTrue(new LimelightTroubleshootCommand());
     
-    // Limelight connection test with START button (driver controller)
+    // Limelight video test with START button (driver controller)
     driverController.start()
-        .onTrue(new LimelightTestCommand(limelightSubsystem));
+        .onTrue(new LimelightVideoTestCommand(limelightSubsystem));
     
     // Reset field position with RIGHT STICK button (driver controller)
     driverController.rightStick()
@@ -112,8 +112,11 @@ public class RobotContainer {
     
     // Toggle Limelight mode with X button (driver controller)
     driverController.x()
-        .onTrue(new ToggleLimelightModeCommand(limelightSubsystem, 
-                                                 fieldPositionSystem.getPositionUpdater()));
+        .onTrue(new ToggleLimelightModeCommand(fieldPositionSystem.getPositionUpdater()));
+    
+    // Limelight video test with LEFT BUMPER button (driver controller)
+    driverController.leftBumper()
+        .onTrue(new LimelightVideoTestCommand(limelightSubsystem));
     
     // Auto-aim with A button (driver controller)
     driverController.a()
@@ -126,8 +129,7 @@ public class RobotContainer {
     
     // AprilTag position test with Y button (driver controller)
     driverController.y()
-        .onTrue(new AprilTagPositionTestCommand(fieldPositionSystem, 
-                                                  fieldPositionSystem.getPositionUpdater()));
+        .onTrue(new AprilTagPositionTestCommand(fieldPositionSystem.getPositionUpdater()));
     
     // Field position reset with LEFT BUMPER button (driver controller)
     driverController.leftBumper()
