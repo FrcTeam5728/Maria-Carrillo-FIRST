@@ -287,7 +287,7 @@ public class Robot extends TimedRobot {
     
     // Publish camera status to SmartDashboard
     SmartDashboard.putBoolean("Camera/USB_Available", cameraServer.isUsbCameraAvailable());
-    SmartDashboard.putBoolean("Camera/Limelight_Available", cameraServer.isLimelightStreamAvailable());
+    SmartDashboard.putBoolean("Camera/Limelight_Available", cameraServer.isLimelightAvailable());
     SmartDashboard.putString("Camera/Limelight_URL", cameraServer.getLimelightStreamUrl());
     
     // Debug: Print camera status every 10 seconds
@@ -295,9 +295,9 @@ public class Robot extends TimedRobot {
     if (currentTime % 10000 < 100) {
       System.out.println("Camera Server Status:");
       System.out.println("  USB Camera: " + (cameraServer.isUsbCameraAvailable() ? "AVAILABLE" : "NOT AVAILABLE"));
-      System.out.println("  Limelight Stream: " + (cameraServer.isLimelightStreamAvailable() ? "AVAILABLE" : "NOT AVAILABLE"));
+      System.out.println("  Limelight Stream: " + (cameraServer.isLimelightAvailable() ? "AVAILABLE" : "NOT AVAILABLE"));
       System.out.println("  Limelight URL: " + cameraServer.getLimelightStreamUrl());
-      System.out.println("  Add Camera widgets to Shuffleboard to view feeds");
+      System.out.println("  Add Camera widgets to Shuffleboard using NetworkTables entries");
     }
   }
 }

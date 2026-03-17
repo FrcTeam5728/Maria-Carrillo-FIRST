@@ -55,7 +55,7 @@ public class ShootAtPositionCommand extends Command {
         this.shooterSubsystem = shooterSubsystem;
         this.positionManager = positionManager;
         
-        addRequirements(driveSubsystem, limelightSubsystem, shooterSubsystem);
+        addRequirements(limelightSubsystem, shooterSubsystem);
     }
     
     @Override
