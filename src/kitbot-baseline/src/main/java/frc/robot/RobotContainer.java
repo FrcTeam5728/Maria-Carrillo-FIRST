@@ -102,8 +102,8 @@ public class RobotContainer {
     driverController.leftStick()
         .onTrue(new VirtualLimelightTestCommand(limelightSubsystem));
     
-    // Odometry diagnostic with RIGHT BUMPER button (driver controller)
-    driverController.rightBumper()
+    // Odometry diagnostic with LEFT BUMPER button (driver controller)
+    driverController.leftBumper()
         .onTrue(new OdometryDiagnosticCommand(driveSubsystem, limelightSubsystem, fieldPositionSystem));
     
     // === OPERATOR CONTROLLER - SHOOTING CONTROLS ===
@@ -162,9 +162,15 @@ public class RobotContainer {
     // value). The X-axis is also inverted so a positive value (stick to the right)
     // results in clockwise rotation (front of the robot turning right). Both axes
     // are also scaled down so the rotation is more easily controllable.
+    // 
+    // Right trigger provides speed boost (up to 50% additional speed)
     driveSubsystem.setDefaultCommand(
         driveSubsystem.driveArcade(
-            () -> -driverController.getLeftY() * DRIVE_SCALING,
+            () -> {
+              double baseSpeed = -driverController.getLeftY() * DRIVE_SCALING;
+              double triggerBoost = driverController.getRightTriggerAxis() * 0.5; // 50% boost
+              return baseSpeed + triggerBoost;
+            },
             () -> -driverController.getRightX() * ROTATION_SCALING));
   }
 
