@@ -1,9 +1,4 @@
 {
-  "System Joysticks": {
-    "window": {
-      "enabled": false
-    }
-  },
   "keyboardJoysticks": [
     {
       "axisConfig": [
@@ -93,5 +88,11 @@
       "buttonCount": 0,
       "povCount": 0
     }
-  ]
+  ],
+  "robotJoysticks": [
+    {
+      "guid": "03000000d620000011a7000011010000"
+    }
+  ],
+  "zeroDisconnectedJoysticks": false
 }

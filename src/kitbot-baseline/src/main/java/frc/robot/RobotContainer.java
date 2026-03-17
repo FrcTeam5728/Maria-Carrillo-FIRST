@@ -15,6 +15,7 @@ import frc.robot.commands.Autos;
 import frc.robot.commands.LimelightDiagnosticCommand;
 import frc.robot.commands.LimelightTestCommand;
 import frc.robot.commands.SimpleAutoShootCommand;
+import frc.robot.commands.VirtualLimelightTestCommand;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.FuelSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
@@ -81,6 +82,10 @@ public class RobotContainer {
     // Limelight connection test with START button (driver controller)
     driverController.start()
         .onTrue(new LimelightTestCommand(limelightSubsystem));
+    
+    // Virtual Limelight test with LEFT STICK button (driver controller)
+    driverController.leftStick()
+        .onTrue(new VirtualLimelightTestCommand(limelightSubsystem));
     
     // Simple auto-shoot with B button (uses centralized Limelight and pulsing shooter)
     operatorController.b()

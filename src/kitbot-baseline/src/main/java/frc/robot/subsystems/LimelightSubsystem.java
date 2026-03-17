@@ -11,6 +11,7 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.RobotBase;
 
 /**
  * Centralized Limelight subsystem that handles all Limelight communication.
@@ -139,7 +140,8 @@ public class LimelightSubsystem extends SubsystemBase {
         
         isConnected = timeSinceUpdate < CONNECTION_TIMEOUT_MS;
         
-        if (!isConnected && timeSinceUpdate > CONNECTION_TIMEOUT_MS * 2) {
+        // Only show connection warnings in real robot mode, not simulation
+        if (!isConnected && timeSinceUpdate > CONNECTION_TIMEOUT_MS * 2 && !RobotBase.isSimulation()) {
             System.err.println("Limelight not responding - check connection");
         }
     }
