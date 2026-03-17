@@ -5,7 +5,6 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /**
  * Pulsing shooter subsystem that fires with a 3-second ON, 0.5-second OFF pattern.
@@ -45,8 +44,7 @@ public class PulsingShooterSubsystem extends SubsystemBase {
      * Creates a new PulsingShooterSubsystem.
      */
     public PulsingShooterSubsystem() {
-        System.out.println("PulsingShooterSubsystem initialized");
-        System.out.println("Pulse pattern: " + PULSE_ON_TIME + "s ON, " + PULSE_OFF_TIME + "s OFF");
+        // Initialize subsystem
     }
     
     @Override
@@ -56,8 +54,7 @@ public class PulsingShooterSubsystem extends SubsystemBase {
             updatePulsing();
         }
         
-        // Update SmartDashboard
-        updateSmartDashboard();
+        // Update internal status
         
         // Apply motor speeds (would control actual motors)
         applyMotorSpeeds();
@@ -82,7 +79,6 @@ public class PulsingShooterSubsystem extends SubsystemBase {
             if (cyclePosition < 0.1) { // First 100ms of ON phase
                 pulseCount++;
                 totalShotsFired++;
-                System.out.println("Pulse #" + pulseCount + " firing");
             }
         } else {
             // Pulse OFF phase - stop firing
@@ -118,7 +114,6 @@ public class PulsingShooterSubsystem extends SubsystemBase {
             isPulsing = true;
             pulseStartTime = System.currentTimeMillis() / 1000.0;
             pulseCount = 0;
-            System.out.println("Started pulsing shooter");
         }
     }
     
@@ -130,7 +125,6 @@ public class PulsingShooterSubsystem extends SubsystemBase {
             isPulsing = false;
             shooterSpeed = 0.0;
             feederSpeed = 0.0;
-            System.out.println("Stopped pulsing shooter. Total pulses: " + pulseCount);
         }
     }
     
@@ -142,7 +136,6 @@ public class PulsingShooterSubsystem extends SubsystemBase {
         isPulsing = false;
         shooterSpeed = MAX_SHOOTER_SPEED;
         feederSpeed = MAX_FEEDER_SPEED;
-        System.out.println("Started continuous shooting");
     }
     
     /**
@@ -153,7 +146,6 @@ public class PulsingShooterSubsystem extends SubsystemBase {
         isPulsing = false;
         shooterSpeed = 0.0;
         feederSpeed = 0.0;
-        System.out.println("Stopped shooter");
     }
     
     /**
@@ -253,39 +245,6 @@ public class PulsingShooterSubsystem extends SubsystemBase {
      */
     public double getTotalShotsFired() {
         return totalShotsFired;
-    }
-    
-    /**
-     * Updates SmartDashboard with shooter status.
-     */
-    private void updateSmartDashboard() {
-        SmartDashboard.putBoolean("Shooter/IsShooting", isShooting());
-        SmartDashboard.putBoolean("Shooter/IsPulsing", isPulsing);
-        SmartDashboard.putBoolean("Shooter/IsPulseOn", isPulseOn());
-        SmartDashboard.putNumber("Shooter/ShooterSpeed", shooterSpeed);
-        SmartDashboard.putNumber("Shooter/FeederSpeed", feederSpeed);
-        SmartDashboard.putNumber("Shooter/PulseCount", pulseCount);
-        SmartDashboard.putNumber("Shooter/TotalShots", totalShotsFired);
-        SmartDashboard.putNumber("Shooter/CyclePosition", getPulseCyclePosition());
-        
-        // Calculate and display shots per second
-        double shotsPerSecond = 0.0;
-        if (isPulsing && pulseCount > 0) {
-            double totalTime = (System.currentTimeMillis() / 1000.0) - pulseStartTime;
-            if (totalTime > 0) {
-                shotsPerSecond = pulseCount / totalTime;
-            }
-        }
-        SmartDashboard.putNumber("Shooter/ShotsPerSecond", shotsPerSecond);
-    }
-    
-    /**
-     * Resets shooter statistics.
-     */
-    public void resetStatistics() {
-        pulseCount = 0;
-        totalShotsFired = 0.0;
-        System.out.println("Shooter statistics reset");
     }
     
     /**

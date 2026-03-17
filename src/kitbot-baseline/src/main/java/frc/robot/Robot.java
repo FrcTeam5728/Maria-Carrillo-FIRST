@@ -79,8 +79,7 @@ public class Robot extends TimedRobot {
   // Simple box model for KitBot
   String modelJson = "{\"type\":\"box\",\"length\":0.7,\"width\":0.7,\"height\":0.3}";
   m_robotModelPub.set(modelJson);
-  // Publish model info to Shuffleboard instead of console
-  edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Debug/RobotModel", modelJson);
+  // Robot model published to NetworkTables
   }
 
   /**
@@ -117,6 +116,9 @@ public class Robot extends TimedRobot {
     // Update Mechanism2D visualization
     updateMechanismVisualization();
     
+    // Update RobotContainer subsystems
+    m_robotContainer.periodic();
+    
     // Debug: Check if model publisher is still valid
         if (m_robotModelPub != null) {
       // Occasionally republish model to ensure it's available
@@ -124,8 +126,7 @@ public class Robot extends TimedRobot {
       if (modelRepublishCounter % 250 == 0) { // Every 5 seconds
         String modelJson = "{\"type\":\"box\",\"length\":0.7,\"width\":0.7,\"height\":0.3}";
         m_robotModelPub.set(modelJson);
-        // write a short status to Shuffleboard instead of printing
-        edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Debug/RobotModelRepublished", "counter:" + modelRepublishCounter);
+        // Robot model republished to NetworkTables
       }
     }
   }
@@ -228,29 +229,22 @@ public class Robot extends TimedRobot {
         if (shouldUpdate) {
           m_robotPose = newPose;
           RobotVisualization.updateRobotPosition(m_robotPose);
-          // Reduced logging: debug-level pose update
-          // Use SmartDashboard or debug flag if you want more frequent updates
-          edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putNumber("Debug/Pose/X", m_robotPose.getX());
-          edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putNumber("Debug/Pose/Y", m_robotPose.getY());
-          edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putNumber("Debug/Pose/HeadingDeg", m_robotPose.getRotation().getDegrees());
+          // Pose updated for visualization
         }
       }
           } catch (Exception e) {
             // Fallback: send default position if pose can't be retrieved
-            edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Debug/Pose/Error", "Failed to get pose: " + e.getMessage());
             RobotVisualization.updateRobotPosition(new edu.wpi.first.math.geometry.Pose2d());
           }
         } else {
-          edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Debug/Pose/Error", "Drive subsystem is null");
+          // Drive subsystem is null - using default pose
         }
       } catch (Exception e) {
         // Field access failed, send default position
-        edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Debug/Pose/Error", "Failed to access drive subsystem field: " + e.getMessage());
         RobotVisualization.updateRobotPosition(new edu.wpi.first.math.geometry.Pose2d());
       }
     } else {
-      // Drive subsystem is null
-      System.out.println("Drive subsystem is null");
+      // Drive subsystem is null - no pose update
     }
   }
   
@@ -262,20 +256,13 @@ public class Robot extends TimedRobot {
       // Update robot pose
       m_mechanismViz.updateRobotPose(m_robotPose);
       
-      // Get subsystem states (simplified for demo)
-      boolean hasTarget = SmartDashboard.getBoolean("Limelight/HasTarget", false);
-      double tx = SmartDashboard.getNumber("Limelight/TX", 0.0);
-      double ty = SmartDashboard.getNumber("Limelight/TY", 0.0);
+      // Get subsystem states for visualization
+      SmartDashboard.getBoolean("Limelight/HasTarget", false);
+      SmartDashboard.getNumber("Limelight/TX", 0.0);
+      SmartDashboard.getNumber("Limelight/TY", 0.0);
       
-      // Update Limelight state
-      m_mechanismViz.updateLimelightState(hasTarget, tx, ty);
-      
-      // Get autonomous state if available
-      String autoState = SmartDashboard.getString("AI/CurrentState", "UNKNOWN");
-      String autoAction = SmartDashboard.getString("AI/LastAction", "NONE");
-      m_mechanismViz.updateAutonomousState(autoState, autoAction);
     } else {
-      edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Debug/MechanismViz", "MechanismVisualization is null");
+      // MechanismVisualization is null - no update
     }
   }
   
@@ -283,21 +270,6 @@ public class Robot extends TimedRobot {
    * Updates camera server status for Shuffleboard.
    */
   private void updateCameraStatus() {
-    var cameraServer = m_robotContainer.getCameraServer();
-    
-    // Publish camera status to SmartDashboard
-    SmartDashboard.putBoolean("Camera/USB_Available", cameraServer.isUsbCameraAvailable());
-    SmartDashboard.putBoolean("Camera/Limelight_Available", cameraServer.isLimelightAvailable());
-    SmartDashboard.putString("Camera/Limelight_URL", cameraServer.getLimelightStreamUrl());
-    
-    // Debug: Print camera status every 10 seconds
-    long currentTime = System.currentTimeMillis();
-    if (currentTime % 10000 < 100) {
-      System.out.println("Camera Server Status:");
-      System.out.println("  USB Camera: " + (cameraServer.isUsbCameraAvailable() ? "AVAILABLE" : "NOT AVAILABLE"));
-      System.out.println("  Limelight Stream: " + (cameraServer.isLimelightAvailable() ? "AVAILABLE" : "NOT AVAILABLE"));
-      System.out.println("  Limelight URL: " + cameraServer.getLimelightStreamUrl());
-      System.out.println("  Add Camera widgets to Shuffleboard using NetworkTables entries");
-    }
+    // Camera server status handled by CameraFeedBroadcaster
   }
 }

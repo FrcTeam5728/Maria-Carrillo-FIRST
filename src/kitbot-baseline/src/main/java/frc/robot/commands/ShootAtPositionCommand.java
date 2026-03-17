@@ -76,8 +76,6 @@ public class ShootAtPositionCommand extends Command {
     public void execute() {
         // Get current shooting parameters
         double[] params = positionManager.getShootingParameters();
-        double distance = params[0];
-        double angle = params[1];
         double confidence = params[2];
         
         // Check if we have a valid target

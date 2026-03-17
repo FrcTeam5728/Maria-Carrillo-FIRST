@@ -33,7 +33,6 @@ public class VirtualLimelightTestCommand extends Command {
     testStartTime = edu.wpi.first.wpilibj.Timer.getFPGATimestamp();
     
     DriverStation.reportWarning("=== VIRTUAL LIMELIGHT TEST STARTED ===", false);
-    System.out.println("Virtual Limelight Test Command initialized");
     
     // Add test targets
     addTestTargets();
@@ -51,7 +50,6 @@ public class VirtualLimelightTestCommand extends Command {
           runBasicDetectionTest();
         } else {
           testPhase = 1;
-          System.out.println("Phase 1 complete, starting Phase 2...");
         }
         break;
         
@@ -61,7 +59,6 @@ public class VirtualLimelightTestCommand extends Command {
           runPipelineTest(elapsedTime);
         } else {
           testPhase = 2;
-          System.out.println("Phase 2 complete, starting Phase 3...");
         }
         break;
         
@@ -71,7 +68,6 @@ public class VirtualLimelightTestCommand extends Command {
           runDynamicTargetTest(elapsedTime);
         } else {
           testPhase = 3;
-          System.out.println("Phase 3 complete, finishing test...");
         }
         break;
         
@@ -100,7 +96,7 @@ public class VirtualLimelightTestCommand extends Command {
     SmartDashboard.putNumber("Test/TA", ta);
     
     if (hasTarget) {
-      System.out.printf("Target detected: TX=%.2f, TY=%.2f, TA=%.2f%n", tx, ty, ta);
+      // Target detected - values published to SmartDashboard
     }
   }
   
@@ -110,7 +106,6 @@ public class VirtualLimelightTestCommand extends Command {
     simulationManager.setVirtualLimelightPipeline(pipeline);
     
     SmartDashboard.putNumber("Test/Pipeline", pipeline);
-    System.out.println("Testing pipeline: " + pipeline);
   }
   
   private void runDynamicTargetTest(double elapsedTime) {
@@ -148,8 +143,6 @@ public class VirtualLimelightTestCommand extends Command {
     simulationManager.addSimulationTarget(3.0, 1.0, 0.8, 0.6, "TEST_SPEAKER");
     simulationManager.addSimulationTarget(3.0, -1.0, 0.6, 0.4, "TEST_AMP");
     simulationManager.addSimulationTarget(1.5, 0.5, 0.3, 0.2, "TEST_FUEL");
-    
-    System.out.println("Test targets added to simulation");
   }
   
   @Override
@@ -164,7 +157,6 @@ public class VirtualLimelightTestCommand extends Command {
     simulationManager.setVirtualLimelightPipeline(0);
     
     DriverStation.reportWarning("=== VIRTUAL LIMELIGHT TEST COMPLETED ===", false);
-    System.out.println("Virtual Limelight Test Command ended");
   }
   
   @Override

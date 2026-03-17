@@ -79,9 +79,5 @@ public class DriveSubsystemSparkMax extends DriveSubsystem {
     // For now, use the existing DIO encoder initialization from DriveSubsystem
     // This maintains compatibility with existing odometry system
     initializeEncoders(0, 2); // Use DIO ports 0 and 2
-    
-    System.out.println("SparkMax drive initialized with DIO encoders:");
-    System.out.println("  Using external encoders on DIO ports 0 and 2");
-    System.out.println("  Note: Built-in SparkMax encoders available but not used yet");
   }
 }

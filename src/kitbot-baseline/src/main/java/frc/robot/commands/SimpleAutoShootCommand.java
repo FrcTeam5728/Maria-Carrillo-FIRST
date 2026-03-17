@@ -29,10 +29,12 @@ public class SimpleAutoShootCommand extends Command {
     private boolean isAiming = false;
     private boolean isShooting = false;
     private double aimStartTime = 0;
+    private double shootingStartTime = 0;
     
     // Timing constants
-    private static final double AIM_TIMEOUT = 2.0; // seconds
-    private static final double ALIGNMENT_TOLERANCE = 3.0; // degrees
+    private static final double AIM_TIMEOUT = 3.0; // seconds
+    private static final double SHOOTING_TIMEOUT = 5.0; // seconds
+    private static final double ALIGNMENT_TOLERANCE = 5.0; // degrees
     
     /**
      * Creates a new SimpleAutoShootCommand.
@@ -53,11 +55,7 @@ public class SimpleAutoShootCommand extends Command {
     
     @Override
     public void initialize() {
-        System.out.println("=== SIMPLE AUTO SHOOT COMMAND ===");
-        System.out.println("Using centralized Limelight data");
-        System.out.println("Pulsing shooter: 3s ON, 0.5s OFF");
-        System.out.println("================================");
-        
+        // Simple auto shoot command initialized
         isAiming = false;
         isShooting = false;
         aimStartTime = 0;
@@ -65,13 +63,14 @@ public class SimpleAutoShootCommand extends Command {
     
     @Override
     public void execute() {
-        // Get current target info from centralized Limelight
-        LimelightSubsystem.TargetInfo targetInfo = limelightSubsystem.getTargetInfo();
+        // Get current target status from centralized Limelight
+        boolean hasTarget = limelightSubsystem.hasTarget();
+        double horizontalOffset = limelightSubsystem.getHorizontalOffset();
+        double targetArea = limelightSubsystem.getTargetArea();
         
-        if (!targetInfo.hasTarget) {
+        if (!hasTarget) {
             // No target - stop shooting and wait
             if (isShooting) {
-                System.out.println("Target lost - stopping shooter");
                 shooterSubsystem.stop();
                 isShooting = false;
             }
@@ -84,10 +83,10 @@ public class SimpleAutoShootCommand extends Command {
             startAiming();
         } else if (isAiming) {
             // Continue aiming or start shooting if aligned
-            performAiming(targetInfo);
+            performAiming(horizontalOffset, targetArea);
         } else if (isShooting) {
             // Continue shooting
-            performShooting(targetInfo);
+            performShooting();
         }
     }
     
@@ -97,108 +96,84 @@ public class SimpleAutoShootCommand extends Command {
     private void startAiming() {
         isAiming = true;
         aimStartTime = System.currentTimeMillis() / 1000.0;
-        System.out.println("Started aiming at target: " + limelightSubsystem.getTargetInfo().toString());
     }
     
     /**
-     * Performs aiming using drive system.
+     * Performs the aiming process.
      * 
-     * @param targetInfo Current target information
+     * @param horizontalOffset Horizontal offset to target
+     * @param targetArea Target area for distance estimation
      */
-    private void performAiming(LimelightSubsystem.TargetInfo targetInfo) {
+    private void performAiming(double horizontalOffset, double targetArea) {
         double aimDuration = (System.currentTimeMillis() / 1000.0) - aimStartTime;
         
         // Check for timeout
         if (aimDuration > AIM_TIMEOUT) {
-            System.out.println("Aiming timeout - proceeding with shot");
-            startShooting();
+            isAiming = false;
             return;
         }
         
-        // Check if aligned with target
-        if (Math.abs(targetInfo.horizontalOffset) < ALIGNMENT_TOLERANCE) {
-            System.out.println("Target aligned - starting shooter");
-            startShooting();
+        // Check if aligned (within tolerance)
+        if (Math.abs(horizontalOffset) <= ALIGNMENT_TOLERANCE) {
+            // Aligned - start shooting
+            isAiming = false;
+            isShooting = true;
+            shooterSubsystem.startPulsing();
+            shootingStartTime = System.currentTimeMillis() / 1000.0;
             return;
         }
         
-        // Adjust robot to align with target
-        double adjustment = calculateAlignmentAdjustment(targetInfo.horizontalOffset);
-        // Use arcade drive for rotation (negative for clockwise)
-        driveSubsystem.driveArcade(() -> 0.0, () -> -adjustment * 0.1);
-        
-        System.out.println("Aiming - Offset: " + String.format("%.1f", targetInfo.horizontalOffset) + 
-                         "°, Adjustment: " + String.format("%.2f", adjustment) + "V");
+        // Continue aiming - drive to align with target
+        double driveCorrection = calculateDriveCorrection(horizontalOffset);
+        // Use driveSubsystem's drive command method
+        driveSubsystem.driveArcade(() -> 0.0, () -> driveCorrection).execute();
     }
     
     /**
-     * Calculates alignment adjustment for drive system.
+     * Calculates drive correction for aiming.
      * 
-     * @param horizontalOffset Horizontal offset to target in degrees
-     * @return Voltage adjustment for tank drive
+     * @param horizontalOffset Horizontal offset to target
+     * @return Drive correction value
      */
-    private double calculateAlignmentAdjustment(double horizontalOffset) {
+    private double calculateDriveCorrection(double horizontalOffset) {
         // Simple proportional control
         double kP = 0.1; // Proportional gain
-        double adjustment = horizontalOffset * kP;
+        double correction = horizontalOffset * kP;
         
         // Limit to reasonable voltage range
-        return Math.max(-3.0, Math.min(3.0, adjustment));
+        return Math.max(-3.0, Math.min(3.0, correction));
     }
     
     /**
-     * Starts the shooting process.
+     * Performs the shooting process.
      */
-    private void startShooting() {
-        isAiming = false;
-        isShooting = true;
-        
-        // Start pulsing shooter
-        shooterSubsystem.startPulsing();
-        
-        System.out.println("Started shooting with pulsing pattern");
-        System.out.println("Target info: " + limelightSubsystem.getTargetInfo().toString());
-    }
-    
-    /**
-     * Continues shooting process.
-     * 
-     * @param targetInfo Current target information
-     */
-    private void performShooting(LimelightSubsystem.TargetInfo targetInfo) {
+    private void performShooting() {
         // Check if target is still valid and aligned
-        if (!targetInfo.hasTarget || Math.abs(targetInfo.horizontalOffset) > 10.0) {
-            System.out.println("Target lost during shooting - stopping");
+        if (!limelightSubsystem.hasTarget() || Math.abs(limelightSubsystem.getHorizontalOffset()) > 10.0) {
+            // Target lost - stop shooting
             shooterSubsystem.stop();
             isShooting = false;
             return;
         }
         
-        // Pulsing shooter handles the 3s ON / 0.5s OFF pattern automatically
-        // Just monitor and provide feedback
+        double shootingDuration = (System.currentTimeMillis() / 1000.0) - shootingStartTime;
         
-        if (shooterSubsystem.getPulseCount() % 5 == 0 && shooterSubsystem.getPulseCount() > 0) {
-            // Log every 5 pulses
-            System.out.println("Shooting progress - Pulses: " + shooterSubsystem.getPulseCount() + 
-                             ", Status: " + shooterSubsystem.getStatus());
+        // Check for shooting timeout
+        if (shootingDuration > SHOOTING_TIMEOUT) {
+            shooterSubsystem.stop();
+            isShooting = false;
+            return;
         }
+        
+        // Continue shooting - pulsing shooter handles the rest
     }
     
     @Override
     public void end(boolean interrupted) {
-        System.out.println("Simple auto shoot command ended" + (interrupted ? " (interrupted)" : ""));
-        
         // Always stop shooter when command ends
         shooterSubsystem.stop();
-        // DriveSubsystem doesn't have stopMotor method, just stop the command
-        
-        // Reset state
         isAiming = false;
         isShooting = false;
-        
-        // Log final statistics
-        System.out.println("Final stats - Pulses: " + shooterSubsystem.getPulseCount() + 
-                         ", Total shots: " + shooterSubsystem.getTotalShotsFired());
     }
     
     @Override

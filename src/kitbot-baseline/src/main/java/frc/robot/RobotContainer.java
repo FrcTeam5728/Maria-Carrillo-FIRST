@@ -11,9 +11,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 import static frc.robot.Constants.OperatorConstants.*;
 import frc.robot.commands.Autos;
-import frc.robot.commands.LimelightDiagnosticCommand;
 import frc.robot.commands.LimelightTestCommand;
-import frc.robot.commands.OdometryDiagnosticCommand;
 import frc.robot.commands.ResetFieldPositionCommand;
 import frc.robot.commands.SelectShootingPositionCommand;
 import frc.robot.commands.ShootAtPositionCommand;
@@ -25,6 +23,7 @@ import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.FuelSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
 import frc.robot.subsystems.PulsingShooterSubsystem;
+import frc.robot.utils.CameraFeedBroadcaster;
 import frc.robot.utils.FieldPositionSystem;
 import frc.robot.utils.ShootingPositionManager;
 
@@ -41,9 +40,10 @@ public class RobotContainer {
   private final FuelSubsystem ballSubsystem = RobotSubsystemFactory.createFuelSubsystem();
   private final LimelightSubsystem limelightSubsystem = new LimelightSubsystem();
   private final PulsingShooterSubsystem shooterSubsystem = new PulsingShooterSubsystem();
-  private final FieldPositionSystem fieldPositionSystem = new FieldPositionSystem(driveSubsystem, limelightSubsystem);
+  private final FieldPositionSystem fieldPositionSystem = new FieldPositionSystem(limelightSubsystem);
   private final ShootingPositionManager shootingPositionManager = new ShootingPositionManager(limelightSubsystem);
   private final SimpleCameraSubsystem cameraServerSubsystem = new SimpleCameraSubsystem();
+  private final CameraFeedBroadcaster cameraFeedBroadcaster = new CameraFeedBroadcaster();
   private final ShuffleboardManager shuffleboardManager = new ShuffleboardManager();
 
   // The driver's controller
@@ -86,9 +86,9 @@ public class RobotContainer {
    */
   private void configureBindings() {
     
-    // Limelight diagnostic with BACK button (driver controller)
+    // Limelight test with BACK button (driver controller)
     driverController.back()
-        .onTrue(new LimelightDiagnosticCommand(limelightSubsystem));
+        .onTrue(new LimelightTestCommand(limelightSubsystem));
     
     // Limelight connection test with START button (driver controller)
     driverController.start()
@@ -102,9 +102,9 @@ public class RobotContainer {
     driverController.leftStick()
         .onTrue(new VirtualLimelightTestCommand(limelightSubsystem));
     
-    // Odometry diagnostic with LEFT BUMPER button (driver controller)
+    // Field position reset with LEFT BUMPER button (driver controller)
     driverController.leftBumper()
-        .onTrue(new OdometryDiagnosticCommand(driveSubsystem, limelightSubsystem, fieldPositionSystem));
+        .onTrue(new ResetFieldPositionCommand(fieldPositionSystem));
     
     // === OPERATOR CONTROLLER - SHOOTING CONTROLS ===
     
@@ -182,6 +182,14 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     // An example command will be run in autonomous
     return autoChooser.getSelected();
+  }
+  
+  /**
+   * Updates all subsystems that need periodic updates.
+   */
+  public void periodic() {
+    // Update camera feed broadcaster
+    cameraFeedBroadcaster.periodic();
   }
 
   /**

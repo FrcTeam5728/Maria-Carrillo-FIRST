@@ -28,7 +28,6 @@ public class ResetFieldPositionCommand extends Command {
     
     @Override
     public void initialize() {
-        System.out.println("=== RESET FIELD POSITION ===");
         completed = false;
     }
     
@@ -36,19 +35,12 @@ public class ResetFieldPositionCommand extends Command {
     public void execute() {
         // Reset position to field center
         fieldPositionSystem.resetPosition();
-        
-        // Print current status
-        System.out.println("Field position reset!");
-        System.out.println("Current status: " + fieldPositionSystem.getStatus());
-        System.out.println("Field dimensions: " + fieldPositionSystem.getFieldDimensions()[0] + 
-                         "m x " + fieldPositionSystem.getFieldDimensions()[1] + "m");
-        
         completed = true;
     }
     
     @Override
     public void end(boolean interrupted) {
-        System.out.println("Field position reset complete" + (interrupted ? " (interrupted)" : ""));
+        // Field position reset complete
     }
     
     @Override

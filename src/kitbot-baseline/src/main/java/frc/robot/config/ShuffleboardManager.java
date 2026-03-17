@@ -11,7 +11,6 @@ import edu.wpi.first.wpilibj.shuffleboard.SimpleWidget;
 import frc.robot.subsystems.SimpleCameraSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
-import frc.robot.subsystems.PulsingShooterSubsystem;
 import frc.robot.utils.FieldPositionSystem;
 import frc.robot.utils.ShootingPositionManager;
 import java.util.Map;

@@ -5,12 +5,10 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.RobotBase;
 
 /**
@@ -21,9 +19,9 @@ import edu.wpi.first.wpilibj.RobotBase;
  * Features:
  * - Single point of contact for Limelight data
  * - Automatic data polling and caching
- * - SmartDashboard integration
  * - Connection monitoring
  * - Target tracking and filtering
+ * - Camera stream broadcasting
  */
 public class LimelightSubsystem extends SubsystemBase {
     
@@ -34,10 +32,9 @@ public class LimelightSubsystem extends SubsystemBase {
     private final NetworkTableEntry tyEntry;    // Vertical offset (-20.5 to 20.5)
     private final NetworkTableEntry taEntry;    // Target area (0 to 100)
     private final NetworkTableEntry tidEntry;   // Target ID
-    private final NetworkTableEntry tsEntry;    // Timestamp
     private final NetworkTableEntry tlEntry;    // Latency
     
-    // Camera feed entries for Shuffleboard
+    // Camera feed entries for broadcasting
     private final NetworkTableEntry cameraStreamEntry;
     
     // Cached data (updated in periodic)
@@ -46,44 +43,31 @@ public class LimelightSubsystem extends SubsystemBase {
     private double verticalOffset = 0.0;
     private double targetArea = 0.0;
     private int targetId = -1;
-    private double timestamp = 0.0;
     private double latency = 0.0;
+    
+    // Connection monitoring
     private boolean isConnected = false;
-    
-    // Connection tracking
     private long lastUpdateTime = 0;
-    private static final long CONNECTION_TIMEOUT_MS = 2000; // 2 seconds
-    // Track previous connection state to avoid noisy repeated logs
-    private boolean previousConnectedState = true;
-    // Minimum interval between connection warnings (ms)
-    private static final long CONNECTION_WARNING_INTERVAL_MS = 10000; // 10s
     private long lastConnectionWarning = 0;
-    
-    // Target filtering
-    private static final double MIN_TARGET_AREA = 0.5; // Minimum area to consider valid
-    private static final double MAX_HORIZONTAL_OFFSET = 25.0; // Maximum reasonable offset
+    private boolean previousConnectedState = false;
+    private static final long CONNECTION_TIMEOUT_MS = 1000; // 1 second timeout
     
     /**
      * Creates a new LimelightSubsystem.
      */
     public LimelightSubsystem() {
-        // Initialize NetworkTable
+        // Initialize NetworkTable entries
         limelightTable = NetworkTableInstance.getDefault().getTable("limelight");
-        
-        // Get NetworkTable entries
         tvEntry = limelightTable.getEntry("tv");
         txEntry = limelightTable.getEntry("tx");
         tyEntry = limelightTable.getEntry("ty");
         taEntry = limelightTable.getEntry("ta");
         tidEntry = limelightTable.getEntry("tid");
-        tsEntry = limelightTable.getEntry("ts");
         tlEntry = limelightTable.getEntry("tl");
         
-        // Initialize camera stream entry for Shuffleboard
+        // Initialize camera stream entry for broadcasting
         cameraStreamEntry = NetworkTableInstance.getDefault().getTable("CameraPublisher")
             .getEntry("LimelightCamera");
-        
-        System.out.println("LimelightSubsystem initialized");
     }
     
     @Override
@@ -91,53 +75,29 @@ public class LimelightSubsystem extends SubsystemBase {
         // Update cached data from NetworkTables
         updateLimelightData();
         
-        // Update SmartDashboard with current data
-        updateSmartDashboard();
-        
         // Check connection status
         checkConnection();
+        
+        // Update camera stream for broadcasting
+        updateCameraStream();
     }
     
     /**
-     * Updates cached data from Limelight NetworkTables.
+     * Updates cached data from NetworkTables.
      */
     private void updateLimelightData() {
         try {
-            // Get raw values from NetworkTables
-            double tv = tvEntry.getDouble(0.0);
-            double tx = txEntry.getDouble(0.0);
-            double ty = tyEntry.getDouble(0.0);
-            double ta = taEntry.getDouble(0.0);
-            double tid = tidEntry.getDouble(-1.0);
-            double ts = tsEntry.getDouble(0.0);
-            double tl = tlEntry.getDouble(0.0);
+            hasTarget = tvEntry.getDouble(0.0) > 0.5;
+            horizontalOffset = txEntry.getDouble(0.0);
+            verticalOffset = tyEntry.getDouble(0.0);
+            targetArea = taEntry.getDouble(0.0);
+            targetId = (int) tidEntry.getDouble(-1.0);
+            latency = tlEntry.getDouble(0.0);
             
-            // Update lastUpdateTime whenever we get any data from NetworkTables
-            // This indicates the Limelight is connected and responding
             lastUpdateTime = System.currentTimeMillis();
             
-            // Apply filtering and validation
-            if (tv > 0.5 && ta > MIN_TARGET_AREA && Math.abs(tx) < MAX_HORIZONTAL_OFFSET) {
-                // Valid target detected
-                hasTarget = true;
-                horizontalOffset = tx;
-                verticalOffset = ty;
-                targetArea = ta;
-                targetId = (int) tid;
-                timestamp = ts;
-                latency = tl;
-            } else {
-                // No valid target (but Limelight is still connected)
-                hasTarget = false;
-                horizontalOffset = tx; // Keep raw values for debugging
-                verticalOffset = ty;
-                targetArea = ta;
-                targetId = (int) tid;
-            }
-            
         } catch (Exception e) {
-            System.err.println("Error updating Limelight data: " + e.getMessage());
-            // Reset to safe values on error
+            // Handle errors silently - reset to safe values
             hasTarget = false;
             horizontalOffset = 0.0;
             verticalOffset = 0.0;
@@ -156,166 +116,52 @@ public class LimelightSubsystem extends SubsystemBase {
         boolean nowConnected = timeSinceUpdate < CONNECTION_TIMEOUT_MS;
         isConnected = nowConnected;
 
-        // Debug: Print connection status every 5 seconds
-        if (currentTime % 5000 < 100) {
-            System.out.println("Limelight connection status: " + 
-                (nowConnected ? "CONNECTED" : "DISCONNECTED") + 
-                " (last update: " + String.format("%.1f", timeSinceUpdate/1000.0) + "s ago)");
-        }
-
-        // Only show connection warnings in real robot mode, not simulation.
-        // Print only when the connection state changes or at most once per interval.
+        // Only show connection warnings in real robot mode, not simulation
         if (!RobotBase.isSimulation()) {
-            long now = System.currentTimeMillis();
-            if (!nowConnected) {
-                boolean shouldWarn = false;
-                if (previousConnectedState && timeSinceUpdate > CONNECTION_TIMEOUT_MS * 2) {
-                    // just lost connection
-                    shouldWarn = true;
-                } else if (now - lastConnectionWarning > CONNECTION_WARNING_INTERVAL_MS && timeSinceUpdate > CONNECTION_TIMEOUT_MS * 2) {
-                    // rate-limited periodic warning
-                    shouldWarn = true;
-                }
-
-                if (shouldWarn) {
+            if (!nowConnected && previousConnectedState && timeSinceUpdate > CONNECTION_TIMEOUT_MS * 2) {
+                // Just lost connection
+                if (currentTime - lastConnectionWarning > 5000) { // Max once per 5 seconds
                     System.err.println("Limelight not responding - check connection");
-                    System.err.println("  Time since last update: " + String.format("%.1f", timeSinceUpdate/1000.0) + "s");
-                    System.err.println("  Connection timeout: " + String.format("%.1f", CONNECTION_TIMEOUT_MS/1000.0) + "s");
-                    System.err.println("  Check: Limelight power, Ethernet, IP address");
-                    lastConnectionWarning = now;
+                    lastConnectionWarning = currentTime;
                 }
-            } else if (!previousConnectedState) {
-                // Just connected
-                System.out.println("Limelight connected and responding");
             }
-            previousConnectedState = nowConnected;
         }
+        previousConnectedState = nowConnected;
     }
     
     /**
-     * Updates SmartDashboard with current data.
+     * Updates camera stream for broadcasting.
      */
-    private void updateSmartDashboard() {
-        SmartDashboard.putBoolean("Limelight/Connected", isConnected);
-        SmartDashboard.putBoolean("Limelight/HasTarget", hasTarget);
-        SmartDashboard.putNumber("Limelight/HorizontalOffset", horizontalOffset);
-        SmartDashboard.putNumber("Limelight/VerticalOffset", verticalOffset);
-        SmartDashboard.putNumber("Limelight/TargetArea", targetArea);
-        SmartDashboard.putNumber("Limelight/TargetID", targetId);
-        SmartDashboard.putNumber("Limelight/Latency", latency);
-        
-        // Calculate and display distance (simplified)
-        if (hasTarget) {
-            double distance = calculateDistance();
-            SmartDashboard.putNumber("Limelight/Distance", distance);
-        } else {
-            SmartDashboard.putNumber("Limelight/Distance", 0.0);
-        }
-        
-        // Publish camera stream URL for Shuffleboard
-        publishCameraStream();
-    }
-    
-    /**
-     * Calculates approximate distance to target.
-     * This is a simplified calculation - real implementation would use
-     * actual target height and camera mounting angle.
-     * 
-     * @return Approximate distance in meters
-     */
-    private double calculateDistance() {
-        // Simplified distance calculation
-        // In reality, this would use: distance = (targetHeight - cameraHeight) / tan(ty)
-        // For now, use target area as a rough proxy
-        if (targetArea > 0) {
-            return 10.0 / Math.sqrt(targetArea); // Rough approximation
-        }
-        return 0.0;
-    }
-    
-    /**
-     * Publishes camera stream URL for Shuffleboard.
-     * Allows viewing Limelight camera feed in Shuffleboard.
-     */
-    private void publishCameraStream() {
+    private void updateCameraStream() {
         try {
-            // Get Limelight IP (would normally get from NetworkTables or config)
-            String limelightIP = "10.57.28.11"; // Default Limelight IP
+            // Generate camera stream URL for broadcasting
+            String streamUrl = generateCameraStreamUrl();
             
-            // Create mjpeg stream URL
-            String streamUrl = "http://" + limelightIP + ":5800/stream.mjpg";
-            
-            // Publish to NetworkTables for Shuffleboard
+            // Publish to CameraPublisher table for broadcasting
             cameraStreamEntry.setString(streamUrl);
             
-            // Also publish to SmartDashboard for easy access
-            SmartDashboard.putString("Limelight/CameraStream", streamUrl);
-            
-            // Debug: Print stream URL (only once per 5 seconds to avoid spam)
-            long currentTime = System.currentTimeMillis();
-            if (currentTime % 5000 < 100) {
-                System.out.println("Limelight camera stream: " + streamUrl);
-                System.out.println("Add this URL to Shuffleboard Camera widget");
-            }
-            
         } catch (Exception e) {
-            System.err.println("Error publishing camera stream: " + e.getMessage());
+            // Handle stream generation errors silently
         }
     }
     
     /**
-     * Tests raw NetworkTables connection to Limelight.
-     * Useful for debugging connection issues.
+     * Generates camera stream URL for broadcasting.
      * 
-     * @return True if NetworkTables can access Limelight table
+     * @return Stream URL string
      */
-    public boolean testRawConnection() {
-        try {
-            // Try to access the limelight table directly
-            NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
-            
-            // Test if we can get a value (even if it's default)
-            double testValue = table.getEntry("tv").getDouble(-999.0);
-            
-            // If we got any value (not the error value), NetworkTables is working
-            boolean networkTablesWorking = testValue != -999.0;
-            
-            System.out.println("=== Limelight Raw Connection Test ===");
-            System.out.println("NetworkTables access: " + (networkTablesWorking ? "WORKING" : "FAILED"));
-            System.out.println("Test value (tv): " + testValue);
-            System.out.println("Limelight table exists: " + (table != null ? "YES" : "NO"));
-            System.out.println("Connection status: " + (isConnected ? "CONNECTED" : "DISCONNECTED"));
-            
-            if (networkTablesWorking) {
-                System.out.println("✅ NetworkTables connection is working");
-                System.out.println("❓ If still showing disconnected, check Limelight device");
-                System.out.println("   - Power: Is Limelight powered on?");
-                System.out.println("   - Network: Is Ethernet cable connected?");
-                System.out.println("   - IP: Is Limelight on correct IP (10.57.28.11)?");
-                System.out.println("   - Team: Is Limelight configured for team 5728?");
-            } else {
-                System.out.println("❌ NetworkTables connection failed");
-                System.out.println("   Check: NetworkTables server configuration");
-                System.out.println("   Check: Robot network connection");
-                System.out.println("   Check: Limelight network connection");
-            }
-            
-            return networkTablesWorking;
-            
-        } catch (Exception e) {
-            System.err.println("Error testing Limelight connection: " + e.getMessage());
-            return false;
-        }
+    private String generateCameraStreamUrl() {
+        // Standard Limelight stream URL format
+        return "http://10.57.28.11:5800/stream";
     }
     
     /**
-     * Sets the camera mode (vision or driver).
+     * Sets the camera mode.
      * 
      * @param driverMode True for driver camera, false for vision processing
      */
     public void setCameraMode(boolean driverMode) {
         limelightTable.getEntry("camMode").setNumber(driverMode ? 1 : 0);
-        System.out.println("Limelight camera mode set to: " + (driverMode ? "Driver" : "Vision"));
     }
     
     /**
@@ -325,7 +171,6 @@ public class LimelightSubsystem extends SubsystemBase {
      */
     public void setLedMode(int ledMode) {
         limelightTable.getEntry("ledMode").setNumber(ledMode);
-        System.out.println("Limelight LED mode set to: " + ledMode);
     }
     
     /**
@@ -333,7 +178,6 @@ public class LimelightSubsystem extends SubsystemBase {
      */
     public void takeSnapshot() {
         limelightTable.getEntry("snapshot").setNumber(1);
-        System.out.println("Limelight snapshot taken");
     }
     
     /**
@@ -375,32 +219,14 @@ public class LimelightSubsystem extends SubsystemBase {
     /**
      * Gets the target ID.
      * 
-     * @return Target ID (AprilTag number)
+     * @return Target ID, or -1 if no target
      */
     public int getTargetId() {
         return targetId;
     }
     
     /**
-     * Gets the distance to target.
-     * 
-     * @return Approximate distance in meters
-     */
-    public double getDistance() {
-        return calculateDistance();
-    }
-    
-    /**
-     * Checks if Limelight is connected.
-     * 
-     * @return True if connected and responding
-     */
-    public boolean isConnected() {
-        return isConnected;
-    }
-    
-    /**
-     * Gets the current latency.
+     * Gets the pipeline latency.
      * 
      * @return Latency in milliseconds
      */
@@ -409,45 +235,58 @@ public class LimelightSubsystem extends SubsystemBase {
     }
     
     /**
-     * Gets comprehensive target information.
+     * Gets the connection status.
      * 
-     * @return Target info object
+     * @return True if Limelight is connected and responding
      */
-    public TargetInfo getTargetInfo() {
-        return new TargetInfo(hasTarget, targetId, horizontalOffset, verticalOffset, 
-                            targetArea, calculateDistance(), latency);
+    public boolean isConnected() {
+        return isConnected;
     }
     
     /**
-     * Data class for target information.
+     * Calculates estimated distance to target.
+     * 
+     * @return Estimated distance in meters
      */
-    public static class TargetInfo {
-        public final boolean hasTarget;
-        public final int targetId;
-        public final double horizontalOffset;
-        public final double verticalOffset;
-        public final double targetArea;
-        public final double distance;
-        public final double latency;
-        
-        public TargetInfo(boolean hasTarget, int targetId, double horizontalOffset, 
-                        double verticalOffset, double targetArea, double distance, double latency) {
-            this.hasTarget = hasTarget;
-            this.targetId = targetId;
-            this.horizontalOffset = horizontalOffset;
-            this.verticalOffset = verticalOffset;
-            this.targetArea = targetArea;
-            this.distance = distance;
-            this.latency = latency;
+    public double getDistance() {
+        // Simplified distance calculation based on target area
+        // In reality, this would use: distance = (targetHeight - cameraHeight) / tan(ty)
+        if (targetArea > 0) {
+            return 10.0 / Math.sqrt(targetArea); // Rough approximation
         }
-        
-        @Override
-        public String toString() {
-            if (!hasTarget) {
-                return "No target";
-            }
-            return String.format("Target %d: %.1fm, H:%.1f° V:%.1f°, Area:%.1f, Latency:%.1fms", 
-                                targetId, distance, horizontalOffset, verticalOffset, targetArea, latency);
+        return 0.0;
+    }
+    
+    /**
+     * Gets robot pose from AprilTag detection.
+     * 
+     * @return Robot pose, or null if no valid target
+     */
+    public Pose2d getRobotPose() {
+        if (hasTarget && targetId > 0) {
+            // This would use the actual AprilTag pose calculation
+            // For now, return a placeholder
+            return new Pose2d();
+        }
+        return null;
+    }
+    
+    /**
+     * Tests raw Limelight connection.
+     * 
+     * @return true if NetworkTables connection is working
+     */
+    public boolean testRawConnection() {
+        try {
+            var table = NetworkTableInstance.getDefault().getTable("limelight");
+            var testEntry = table.getEntry("tv");
+            double testValue = testEntry.getDouble(-999.0);
+            
+            // If we got any value (not the error value), NetworkTables is working
+            return testValue != -999.0;
+            
+        } catch (Exception e) {
+            return false;
         }
     }
 }

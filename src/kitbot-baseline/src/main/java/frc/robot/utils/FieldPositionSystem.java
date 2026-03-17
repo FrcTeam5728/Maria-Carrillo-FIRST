@@ -10,7 +10,6 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
 
 /**
@@ -42,7 +41,6 @@ public class FieldPositionSystem {
     private Pose2d robotPose = new Pose2d();
     private double confidence = 0.0;
     private String positionSource = "UNKNOWN";
-    private long lastUpdate = 0;
     
     // Field dimensions (2024 FRC field: ~16.54m x 8.21m)
     private static final double FIELD_LENGTH_METERS = 16.54;
@@ -51,17 +49,14 @@ public class FieldPositionSystem {
     private static final double FIELD_CENTER_Y = FIELD_WIDTH_METERS / 2.0;
     
     // Subsystems
-    private final DriveSubsystem driveSubsystem;
     private final LimelightSubsystem limelightSubsystem;
     
     /**
      * Creates a new FieldPositionSystem.
      * 
-     * @param driveSubsystem Drive subsystem for encoder data
-     * @param limelightSubsystem Vision subsystem for position data
+     * @param limelightSubsystem Limelight subsystem for vision data
      */
-    public FieldPositionSystem(DriveSubsystem driveSubsystem, LimelightSubsystem limelightSubsystem) {
-        this.driveSubsystem = driveSubsystem;
+    public FieldPositionSystem(LimelightSubsystem limelightSubsystem) {
         this.limelightSubsystem = limelightSubsystem;
         
         // Initialize NetworkTable
@@ -95,8 +90,6 @@ public class FieldPositionSystem {
         
         // Update SmartDashboard
         updateSmartDashboard();
-        
-        lastUpdate = System.currentTimeMillis();
     }
     
     /**
@@ -157,8 +150,6 @@ public class FieldPositionSystem {
         try {
             // This is simplified - would use actual odometry
             // For now, maintain last known position with slight drift
-            double currentTime = System.currentTimeMillis() / 1000.0;
-            double deltaTime = 0.02; // 50Hz update rate
             
             // Simulate small movement (would use actual encoder data)
             double deltaX = 0.01 * Math.cos(robotPose.getRotation().getRadians());
