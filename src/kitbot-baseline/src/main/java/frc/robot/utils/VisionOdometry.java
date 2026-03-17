@@ -75,12 +75,18 @@ public class VisionOdometry {
      * Updates odometry using wheel encoder data.
      */
     private void updateEncoderOdometry() {
-        // Get wheel speeds (would come from drive subsystem)
-        double leftSpeed = 0; // Placeholder - would get from encoders
-        double rightSpeed = 0; // Placeholder - would get from encoders
-        
-        // Update odometry with wheel data
-        // robotPose = odometry.update(leftSpeed, rightSpeed, driveSubsystem.getGyroAngle());
+        // Use the DriveSubsystem's built-in odometry system
+        if (driveSubsystem != null) {
+            robotPose = driveSubsystem.getPose();
+            
+            // Debug: Print encoder odometry updates (every 2 seconds to avoid spam)
+            long currentTime = System.currentTimeMillis();
+            if (currentTime % 2000 < 50) { // Roughly every 2 seconds
+                System.out.println("Encoder odometry: X=" + String.format("%.3f", robotPose.getX()) + 
+                                 ", Y=" + String.format("%.3f", robotPose.getY()) + 
+                                 ", Heading=" + String.format("%.1f", robotPose.getRotation().getDegrees()));
+            }
+        }
     }
     
     /**
@@ -91,34 +97,50 @@ public class VisionOdometry {
             return; // No vision data available
         }
         
-        // Get vision-based robot pose (simplified)
-        // Pose2d visionPose = limelightSubsystem.getRobotPose().orElse(null);
-        Pose2d visionPose = new Pose2d(); // Placeholder - would get from Limelight
+        // Get vision-based robot pose (simplified - would get from Limelight)
+        // In reality, this would use Limelight's 3D pose estimation
+        double distance = limelightSubsystem.getDistance();
+        double horizontalOffset = limelightSubsystem.getHorizontalOffset();
         
-        if (visionPose == null) {
-            return; // Invalid vision data
-        }
-        
-        double currentTime = System.currentTimeMillis() / 1000.0;
-        
-        // Check if this is a high-confidence update
-        boolean highConfidence = isHighConfidenceUpdate();
-        
-        if (highConfidence) {
-            // Use vision data directly for high-confidence updates
-            robotPose = visionPose;
-            lastVisionUpdate = currentTime;
-            visionUpdateCount++;
+        if (distance > 0) {
+            // Calculate position based on target and offset
+            // This is a simplified calculation - real implementation would use
+            // actual field coordinates and target positions
+            double targetX = 8.02; // Speaker center X position
+            double targetY = 0.22; // Speaker center Y position
             
-            // Calculate and compensate for drift
-            calculateDriftCompensation();
+            // Calculate robot position from target
+            double angle = Math.toRadians(horizontalOffset);
+            Pose2d visionPose = new Pose2d(
+                targetX - distance * Math.cos(angle),
+                targetY - distance * Math.sin(angle),
+                new Rotation2d(angle)
+            );
             
-            System.out.println("Vision odometry update: (" + 
-                String.format("%.2f, %.2f", visionPose.getX(), visionPose.getY()) + 
-                ") - Confidence: High");
-        } else {
-            // Low confidence - blend with encoder data
-            blendVisionWithEncoders(visionPose, currentTime);
+            double currentTime = System.currentTimeMillis() / 1000.0;
+            
+            // Check if this is a high-confidence update
+            boolean highConfidence = isHighConfidenceUpdate();
+            
+            if (highConfidence) {
+                // Use vision data directly for high-confidence updates
+                robotPose = visionPose;
+                lastVisionUpdate = currentTime;
+                visionUpdateCount++;
+                
+                // Update DriveSubsystem odometry with vision correction
+                driveSubsystem.resetOdometry(visionPose);
+                
+                // Calculate and compensate for drift
+                calculateDriftCompensation();
+                
+                System.out.println("Vision odometry update: (" + 
+                    String.format("%.2f, %.2f", visionPose.getX(), visionPose.getY()) + 
+                    ") - Confidence: High");
+            } else {
+                // Low confidence - blend with encoder data
+                blendVisionWithEncoders(visionPose, currentTime);
+            }
         }
     }
     

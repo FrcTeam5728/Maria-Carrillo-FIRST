@@ -13,6 +13,7 @@ import static frc.robot.Constants.OperatorConstants.*;
 import frc.robot.commands.Autos;
 import frc.robot.commands.LimelightDiagnosticCommand;
 import frc.robot.commands.LimelightTestCommand;
+import frc.robot.commands.OdometryDiagnosticCommand;
 import frc.robot.commands.ResetFieldPositionCommand;
 import frc.robot.commands.SelectShootingPositionCommand;
 import frc.robot.commands.ShootAtPositionCommand;
@@ -96,6 +97,10 @@ public class RobotContainer {
     // Virtual Limelight test with LEFT STICK button (driver controller)
     driverController.leftStick()
         .onTrue(new VirtualLimelightTestCommand(limelightSubsystem));
+    
+    // Odometry diagnostic with RIGHT BUMPER button (driver controller)
+    driverController.rightBumper()
+        .onTrue(new OdometryDiagnosticCommand(driveSubsystem, limelightSubsystem, fieldPositionSystem));
     
     // === OPERATOR CONTROLLER - SHOOTING CONTROLS ===
     
