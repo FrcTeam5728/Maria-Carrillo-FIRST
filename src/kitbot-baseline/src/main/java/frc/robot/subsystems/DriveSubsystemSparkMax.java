@@ -9,6 +9,8 @@ import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.RelativeEncoder;
+import edu.wpi.first.wpilibj.Encoder;
 
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import static frc.robot.Constants.DriveConstants.*;
@@ -35,8 +37,8 @@ public class DriveSubsystemSparkMax extends DriveSubsystem {
     // Initialize gyro
     initializeGyro();
     
-    // Initialize encoders (using DIO ports 0-3 for demo)
-    initializeEncoders(0, 2);
+    // Initialize SparkMax built-in encoders
+    initializeSparkMaxEncoders();
 
     // Set can timeout. Because this project only sets parameters once on
     // construction, the timeout can be long without blocking robot operation. Code
@@ -70,5 +72,16 @@ public class DriveSubsystemSparkMax extends DriveSubsystem {
     // so that postive values drive both sides forward
     config.inverted(true);
     leftLeader.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+  }
+  
+    // Initialize SparkMax built-in encoders for odometry
+    private void initializeSparkMaxEncoders() {
+    // For now, use the existing DIO encoder initialization from DriveSubsystem
+    // This maintains compatibility with existing odometry system
+    initializeEncoders(0, 2); // Use DIO ports 0 and 2
+    
+    System.out.println("SparkMax drive initialized with DIO encoders:");
+    System.out.println("  Using external encoders on DIO ports 0 and 2");
+    System.out.println("  Note: Built-in SparkMax encoders available but not used yet");
   }
 }

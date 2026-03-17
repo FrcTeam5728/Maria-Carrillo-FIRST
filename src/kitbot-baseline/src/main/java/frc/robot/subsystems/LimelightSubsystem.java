@@ -37,6 +37,9 @@ public class LimelightSubsystem extends SubsystemBase {
     private final NetworkTableEntry tsEntry;    // Timestamp
     private final NetworkTableEntry tlEntry;    // Latency
     
+    // Camera feed entries for Shuffleboard
+    private final NetworkTableEntry cameraStreamEntry;
+    
     // Cached data (updated in periodic)
     private boolean hasTarget = false;
     private double horizontalOffset = 0.0;
@@ -75,6 +78,10 @@ public class LimelightSubsystem extends SubsystemBase {
         tidEntry = limelightTable.getEntry("tid");
         tsEntry = limelightTable.getEntry("ts");
         tlEntry = limelightTable.getEntry("tl");
+        
+        // Initialize camera stream entry for Shuffleboard
+        cameraStreamEntry = NetworkTableInstance.getDefault().getTable("CameraPublisher")
+            .getEntry("LimelightCamera");
         
         System.out.println("LimelightSubsystem initialized");
     }
@@ -170,7 +177,7 @@ public class LimelightSubsystem extends SubsystemBase {
     }
     
     /**
-     * Updates SmartDashboard with current Limelight status.
+     * Updates SmartDashboard with current data.
      */
     private void updateSmartDashboard() {
         SmartDashboard.putBoolean("Limelight/Connected", isConnected);
@@ -188,6 +195,9 @@ public class LimelightSubsystem extends SubsystemBase {
         } else {
             SmartDashboard.putNumber("Limelight/Distance", 0.0);
         }
+        
+        // Publish camera stream URL for Shuffleboard
+        publishCameraStream();
     }
     
     /**
@@ -205,6 +215,36 @@ public class LimelightSubsystem extends SubsystemBase {
             return 10.0 / Math.sqrt(targetArea); // Rough approximation
         }
         return 0.0;
+    }
+    
+    /**
+     * Publishes camera stream URL for Shuffleboard.
+     * Allows viewing Limelight camera feed in Shuffleboard.
+     */
+    private void publishCameraStream() {
+        try {
+            // Get Limelight IP (would normally get from NetworkTables or config)
+            String limelightIP = "10.57.28.11"; // Default Limelight IP
+            
+            // Create mjpeg stream URL
+            String streamUrl = "http://" + limelightIP + ":5800/stream.mjpg";
+            
+            // Publish to NetworkTables for Shuffleboard
+            cameraStreamEntry.setString(streamUrl);
+            
+            // Also publish to SmartDashboard for easy access
+            SmartDashboard.putString("Limelight/CameraStream", streamUrl);
+            
+            // Debug: Print stream URL (only once per 5 seconds to avoid spam)
+            long currentTime = System.currentTimeMillis();
+            if (currentTime % 5000 < 100) {
+                System.out.println("Limelight camera stream: " + streamUrl);
+                System.out.println("Add this URL to Shuffleboard Camera widget");
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Error publishing camera stream: " + e.getMessage());
+        }
     }
     
     /**
