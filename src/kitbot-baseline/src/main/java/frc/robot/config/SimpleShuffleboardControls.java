@@ -12,6 +12,11 @@ import frc.robot.commands.ImmediateAprilTagUpdateCommand;
 import frc.robot.commands.LimelightTroubleshootCommand;
 import frc.robot.commands.ResetFieldPositionCommand;
 import frc.robot.commands.ToggleLimelightModeCommand;
+import frc.robot.commands.Autos;
+import frc.robot.commands.LimelightTestCommand;
+import frc.robot.commands.SelectShootingPositionCommand;
+import frc.robot.commands.ShootAtPositionCommand;
+import frc.robot.commands.SimpleAutoShootCommand;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
 import frc.robot.subsystems.PulsingShooterSubsystem;
@@ -158,19 +163,22 @@ public class SimpleShuffleboardControls {
     /**
      * Creates command controls.
      */
-    private static void createCommandControls(LimelightSubsystem limelight, 
-                                            FieldPositionSystem fieldPosition) {
-        // Limelight commands
-        tab.add("Toggle Limelight Mode", new ToggleLimelightModeCommand(limelight, fieldPosition.getPositionUpdater()))
+    private static void createCommandControls(LimelightSubsystem limelightSubsystem, 
+                                            FieldPositionSystem fieldPositionSystem) {
+        // Command controls
+        tab.add("Toggle Limelight Mode", new ToggleLimelightModeCommand(limelightSubsystem, fieldPositionSystem.getPositionUpdater()))
             .withWidget(BuiltInWidgets.kCommand);
         
-        tab.add("Run AprilTag Test", new AprilTagPositionTestCommand(fieldPosition, fieldPosition.getPositionUpdater()))
+        tab.add("Run AprilTag Test", new AprilTagPositionTestCommand(fieldPositionSystem, fieldPositionSystem.getPositionUpdater()))
             .withWidget(BuiltInWidgets.kCommand);
         
-        tab.add("Immediate Updates", new ImmediateAprilTagUpdateCommand(limelight, fieldPosition.getPositionUpdater()))
+        tab.add("Auto-Aim", new AutoAimCommand(limelightSubsystem, fieldPositionSystem))
             .withWidget(BuiltInWidgets.kCommand);
         
-        tab.add("Reset Position", new ResetFieldPositionCommand(fieldPosition))
+        tab.add("Immediate Updates", new ImmediateAprilTagUpdateCommand(limelightSubsystem, fieldPositionSystem.getPositionUpdater()))
+            .withWidget(BuiltInWidgets.kCommand);
+        
+        tab.add("Reset Position", new ResetFieldPositionCommand(fieldPositionSystem))
             .withWidget(BuiltInWidgets.kCommand);
         
         tab.add("Run Diagnostics", new LimelightTroubleshootCommand())

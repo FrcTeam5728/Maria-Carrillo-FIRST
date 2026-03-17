@@ -114,6 +114,10 @@ public class RobotContainer {
         .onTrue(new ToggleLimelightModeCommand(limelightSubsystem, 
                                                  fieldPositionSystem.getPositionUpdater()));
     
+    // Auto-aim with A button (driver controller)
+    driverController.a()
+        .onTrue(new AutoAimCommand(limelightSubsystem, fieldPositionSystem));
+    
     // Immediate AprilTag update with B button (driver controller)
     driverController.b()
         .onTrue(new ImmediateAprilTagUpdateCommand(limelightSubsystem, 
