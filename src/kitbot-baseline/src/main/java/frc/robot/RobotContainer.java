@@ -20,7 +20,7 @@ import frc.robot.commands.ShootAtPositionCommand;
 import frc.robot.commands.SimpleAutoShootCommand;
 import frc.robot.commands.VirtualLimelightTestCommand;
 import frc.robot.config.ShuffleboardManager;
-import frc.robot.subsystems.NetworkTablesCameraSubsystem;
+import frc.robot.subsystems.SimpleCameraSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.FuelSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
@@ -43,7 +43,7 @@ public class RobotContainer {
   private final PulsingShooterSubsystem shooterSubsystem = new PulsingShooterSubsystem();
   private final FieldPositionSystem fieldPositionSystem = new FieldPositionSystem(driveSubsystem, limelightSubsystem);
   private final ShootingPositionManager shootingPositionManager = new ShootingPositionManager(limelightSubsystem);
-  private final NetworkTablesCameraSubsystem cameraServerSubsystem = new NetworkTablesCameraSubsystem();
+  private final SimpleCameraSubsystem cameraServerSubsystem = new SimpleCameraSubsystem();
   private final ShuffleboardManager shuffleboardManager = new ShuffleboardManager();
 
   // The driver's controller
@@ -212,7 +212,7 @@ public class RobotContainer {
    * 
    * @return Camera server subsystem
    */
-  public NetworkTablesCameraSubsystem getCameraServer() {
+  public SimpleCameraSubsystem getCameraServer() {
     return cameraServerSubsystem;
   }
 }

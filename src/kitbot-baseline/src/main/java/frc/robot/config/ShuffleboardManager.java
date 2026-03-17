@@ -8,7 +8,7 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.shuffleboard.SimpleWidget;
-import frc.robot.subsystems.NetworkTablesCameraSubsystem;
+import frc.robot.subsystems.SimpleCameraSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
 import frc.robot.subsystems.PulsingShooterSubsystem;
@@ -280,7 +280,7 @@ public class ShuffleboardManager {
     /**
      * Updates camera widgets with current status.
      */
-    public void updateCameraWidgets(NetworkTablesCameraSubsystem cameraServer) {
+    public void updateCameraWidgets(SimpleCameraSubsystem cameraServer) {
         usbCameraStatus.getEntry().setBoolean(cameraServer.isUsbCameraAvailable());
         limelightCameraStatus.getEntry().setBoolean(cameraServer.isLimelightAvailable());
         limelightUrl.getEntry().setString(cameraServer.getLimelightStreamUrl());
@@ -341,7 +341,7 @@ public class ShuffleboardManager {
      * Updates all widgets with current subsystem data.
      */
     public void updateAllWidgets(
-        NetworkTablesCameraSubsystem cameraServer,
+        SimpleCameraSubsystem cameraServer,
         LimelightSubsystem limelight,
         DriveSubsystem drive,
         FieldPositionSystem fieldPosition,
