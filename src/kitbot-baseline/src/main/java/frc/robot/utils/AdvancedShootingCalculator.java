@@ -223,8 +223,8 @@ public class AdvancedShootingCalculator {
      * @return Magnus force in m/s^2
      */
     private double calculateMagnusForce() {
-        // Magnus force = 2 * ρ * r * ω * v
-        // where ρ = air density, r = radius, ω = angular velocity, v = linear velocity
+    // Magnus force = 2 * rho * r * omega * v
+    // where rho = air density, r = radius, omega = angular velocity, v = linear velocity
         
         double radius = FUEL_DIAMETER / 2.0; // meters
         double angularVelocity = spinRate * 2 * Math.PI; // rad/s

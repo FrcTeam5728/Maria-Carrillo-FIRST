@@ -188,9 +188,6 @@ public class Robot extends TimedRobot {
   }
 
   /** This function is called periodically whilst in simulation. */
-  @Override
-  public void simulationPeriodic() {
-  }
   
   /**
    * Update robot position in 3D visualization
@@ -210,15 +207,31 @@ public class Robot extends TimedRobot {
             java.lang.reflect.Method getPoseMethod = driveSubsystem.getClass().getMethod("getPose");
             Object pose = getPoseMethod.invoke(driveSubsystem);
             
-            if (pose instanceof edu.wpi.first.math.geometry.Pose2d) {
-              m_robotPose = (edu.wpi.first.math.geometry.Pose2d) pose;
-              RobotVisualization.updateRobotPosition(m_robotPose);
-              
-              // Debug: Print pose updates
-              System.out.println("Robot pose updated: X=" + m_robotPose.getX() + 
-                               ", Y=" + m_robotPose.getY() + 
-                               ", Heading=" + m_robotPose.getRotation().getDegrees());
-            }
+      if (pose instanceof edu.wpi.first.math.geometry.Pose2d) {
+        edu.wpi.first.math.geometry.Pose2d newPose = (edu.wpi.first.math.geometry.Pose2d) pose;
+        // Only update visualization/print when pose has changed significantly to avoid spamming logs
+        boolean shouldUpdate = false;
+        if (m_robotPose == null) {
+          shouldUpdate = true;
+        } else {
+          double dx = Math.abs(newPose.getX() - m_robotPose.getX());
+          double dy = Math.abs(newPose.getY() - m_robotPose.getY());
+          double dheading = Math.abs(newPose.getRotation().getDegrees() - m_robotPose.getRotation().getDegrees());
+          if (dx > 0.05 || dy > 0.05 || dheading > 1.0) { // thresholds: 5cm, 1deg
+            shouldUpdate = true;
+          }
+        }
+
+        if (shouldUpdate) {
+          m_robotPose = newPose;
+          RobotVisualization.updateRobotPosition(m_robotPose);
+          // Reduced logging: debug-level pose update
+          // Use SmartDashboard or debug flag if you want more frequent updates
+          System.out.println("Robot pose updated: X=" + m_robotPose.getX() + 
+                   ", Y=" + m_robotPose.getY() + 
+                   ", Heading=" + m_robotPose.getRotation().getDegrees());
+        }
+      }
           } catch (Exception e) {
             // Fallback: send default position if pose can't be retrieved
             System.out.println("Failed to get pose from drive subsystem: " + e.getMessage());
@@ -272,6 +285,8 @@ public class Robot extends TimedRobot {
       String autoState = SmartDashboard.getString("AI/CurrentState", "UNKNOWN");
       String autoAction = SmartDashboard.getString("AI/LastAction", "NONE");
       m_mechanismViz.updateAutonomousState(autoState, autoAction);
+    } else {
+      System.out.println("MechanismVisualization is null");
     }
   }
 }
