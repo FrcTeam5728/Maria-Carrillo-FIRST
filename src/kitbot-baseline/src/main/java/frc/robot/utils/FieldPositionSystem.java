@@ -11,6 +11,7 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.LimelightSubsystem;
+import frc.robot.utils.AprilTagPositionUpdater;
 
 /**
  * Field position system that publishes robot position to NetworkTables.
@@ -48,8 +49,9 @@ public class FieldPositionSystem {
     private static final double FIELD_CENTER_X = FIELD_LENGTH_METERS / 2.0;
     private static final double FIELD_CENTER_Y = FIELD_WIDTH_METERS / 2.0;
     
-    // Subsystems
+    // Subsystems and utilities
     private final LimelightSubsystem limelightSubsystem;
+    private final AprilTagPositionUpdater positionUpdater;
     
     /**
      * Creates a new FieldPositionSystem.
@@ -58,6 +60,7 @@ public class FieldPositionSystem {
      */
     public FieldPositionSystem(LimelightSubsystem limelightSubsystem) {
         this.limelightSubsystem = limelightSubsystem;
+        this.positionUpdater = new AprilTagPositionUpdater(null, limelightSubsystem);
         
         // Initialize NetworkTable
         fieldTable = NetworkTableInstance.getDefault().getTable("fieldPosition");
@@ -82,7 +85,7 @@ public class FieldPositionSystem {
      * Call this periodically (usually in Robot periodic or subsystem periodic).
      */
     public void update() {
-        // Get current position from available sources
+        // Update position from available sources
         updatePositionFromSources();
         
         // Publish to NetworkTables
@@ -98,49 +101,23 @@ public class FieldPositionSystem {
     private void updatePositionFromSources() {
         // Priority: Vision > Encoders > Last Known
         
-        // Try vision position first (highest accuracy)
+        // Always try vision position first when AprilTag detected
         if (limelightSubsystem.hasTarget()) {
-            updateFromVision();
-        } else {
-            // Fall back to encoder-based position
-            updateFromEncoders();
+            int targetId = limelightSubsystem.getTargetId();
+            if (targetId > 0 && positionUpdater.updatePosition()) {
+                // Successfully updated position from AprilTag
+                robotPose = positionUpdater.getLastKnownPosition();
+                confidence = 0.9; // High confidence for vision-based position
+                positionSource = "APRILTAG";
+                return;
+            }
         }
+        
+        // Fallback to encoder-based position
+        updateFromEncoders();
         
         // Ensure position is within field bounds
         constrainToField();
-    }
-    
-    /**
-     * Updates position from Limelight vision data.
-     */
-    private void updateFromVision() {
-        try {
-            // Get vision-based position (simplified - would use actual Limelight pose)
-            // In reality, this would use Limelight's 3D pose estimation
-            double distance = limelightSubsystem.getDistance();
-            double horizontalOffset = limelightSubsystem.getHorizontalOffset();
-            
-            // Calculate position based on target and offset
-            // This is a simplified calculation - real implementation would use
-            // actual field coordinates and target positions
-            double targetX = FIELD_LENGTH_METERS - 2.0; // Example target position
-            double targetY = FIELD_CENTER_Y;
-            
-            // Calculate robot position from target
-            double angle = Math.toRadians(horizontalOffset);
-            robotPose = new Pose2d(
-                targetX - distance * Math.cos(angle),
-                targetY - distance * Math.sin(angle),
-                new Rotation2d(angle)
-            );
-            
-            confidence = 0.9; // High confidence for vision
-            positionSource = "VISION";
-            
-        } catch (Exception e) {
-            System.err.println("Error updating from vision: " + e.getMessage());
-            updateFromEncoders(); // Fall back to encoders
-        }
     }
     
     /**
@@ -274,6 +251,24 @@ public class FieldPositionSystem {
         confidence = 1.0;
         positionSource = "MANUAL";
         System.out.println("Field position set manually: (" + x + ", " + y + ", " + rotation + "°)");
+    }
+    
+    /**
+     * Gets the AprilTag position updater.
+     * 
+     * @return AprilTag position updater instance
+     */
+    public AprilTagPositionUpdater getPositionUpdater() {
+        return positionUpdater;
+    }
+    
+    /**
+     * Gets the AprilTag position updater status.
+     * 
+     * @return Status string from the position updater
+     */
+    public String getAprilTagStatus() {
+        return positionUpdater.getStatus();
     }
     
     /**

@@ -174,6 +174,15 @@ public class LimelightSubsystem extends SubsystemBase {
     }
     
     /**
+     * Sets the pipeline.
+     * 
+     * @param pipeline Pipeline number (0-9)
+     */
+    public void setPipeline(int pipeline) {
+        limelightTable.getEntry("pipeline").setNumber(pipeline);
+    }
+    
+    /**
      * Forces the Limelight to take a snapshot.
      */
     public void takeSnapshot() {

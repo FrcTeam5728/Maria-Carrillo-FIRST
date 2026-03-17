@@ -10,14 +10,18 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 import static frc.robot.Constants.OperatorConstants.*;
+import frc.robot.commands.AprilTagPositionTestCommand;
+import frc.robot.commands.ImmediateAprilTagUpdateCommand;
+import frc.robot.commands.LimelightTroubleshootCommand;
+import frc.robot.commands.ToggleLimelightModeCommand;
 import frc.robot.commands.Autos;
 import frc.robot.commands.LimelightTestCommand;
 import frc.robot.commands.ResetFieldPositionCommand;
 import frc.robot.commands.SelectShootingPositionCommand;
 import frc.robot.commands.ShootAtPositionCommand;
 import frc.robot.commands.SimpleAutoShootCommand;
-import frc.robot.commands.VirtualLimelightTestCommand;
 import frc.robot.config.ShuffleboardManager;
+import frc.robot.config.SimpleShuffleboardControls;
 import frc.robot.subsystems.SimpleCameraSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.FuelSubsystem;
@@ -45,6 +49,9 @@ public class RobotContainer {
   private final SimpleCameraSubsystem cameraServerSubsystem = new SimpleCameraSubsystem();
   private final CameraFeedBroadcaster cameraFeedBroadcaster = new CameraFeedBroadcaster();
   private final ShuffleboardManager shuffleboardManager = new ShuffleboardManager();
+
+  // Static field for periodic diagnostics timing
+  private static long lastDiagnosticTime = 0;
 
   // The driver's controller
   private final CommandXboxController driverController = new CommandXboxController(
@@ -86,9 +93,13 @@ public class RobotContainer {
    */
   private void configureBindings() {
     
-    // Limelight test with BACK button (driver controller)
+    // Configure Shuffleboard controls
+    SimpleShuffleboardControls.initialize(limelightSubsystem, fieldPositionSystem, 
+                                       shooterSubsystem, driveSubsystem);
+    
+    // Limelight troubleshoot with MENU button (driver controller)
     driverController.back()
-        .onTrue(new LimelightTestCommand(limelightSubsystem));
+        .onTrue(new LimelightTroubleshootCommand());
     
     // Limelight connection test with START button (driver controller)
     driverController.start()
@@ -98,9 +109,20 @@ public class RobotContainer {
     driverController.rightStick()
         .onTrue(new ResetFieldPositionCommand(fieldPositionSystem));
     
-    // Virtual Limelight test with LEFT STICK button (driver controller)
-    driverController.leftStick()
-        .onTrue(new VirtualLimelightTestCommand(limelightSubsystem));
+    // Toggle Limelight mode with X button (driver controller)
+    driverController.x()
+        .onTrue(new ToggleLimelightModeCommand(limelightSubsystem, 
+                                                 fieldPositionSystem.getPositionUpdater()));
+    
+    // Immediate AprilTag update with B button (driver controller)
+    driverController.b()
+        .onTrue(new ImmediateAprilTagUpdateCommand(limelightSubsystem, 
+                                                   fieldPositionSystem.getPositionUpdater()));
+    
+    // AprilTag position test with Y button (driver controller)
+    driverController.y()
+        .onTrue(new AprilTagPositionTestCommand(fieldPositionSystem, 
+                                                  fieldPositionSystem.getPositionUpdater()));
     
     // Field position reset with LEFT BUMPER button (driver controller)
     driverController.leftBumper()
@@ -190,6 +212,51 @@ public class RobotContainer {
   public void periodic() {
     // Update camera feed broadcaster
     cameraFeedBroadcaster.periodic();
+    
+    // Update field position system
+    fieldPositionSystem.update();
+    
+    // Update Shuffleboard values
+    SimpleShuffleboardControls.updateValues(limelightSubsystem, fieldPositionSystem, 
+                                          shooterSubsystem, driveSubsystem);
+    
+    // Run periodic Limelight diagnostics (every 5 seconds)
+    runPeriodicDiagnostics();
+  }
+  
+  /**
+   * Runs periodic diagnostics for Limelight and other systems.
+   */
+  private void runPeriodicDiagnostics() {
+    long currentTime = System.currentTimeMillis();
+    
+    // Run diagnostics every 5 seconds
+    if (currentTime - lastDiagnosticTime > 5000) {
+      lastDiagnosticTime = currentTime;
+      
+      // Check Limelight connection status
+      if (!limelightSubsystem.isConnected()) {
+        edu.wpi.first.wpilibj.DriverStation.reportWarning(
+          "⚠️ LIMELIGHT DISCONNECTED - Check power and network", false);
+      }
+      
+      // Check if we have recent position updates
+      if (fieldPositionSystem.getPositionUpdater().hasValidPosition()) {
+        double timeSinceUpdate = (currentTime / 1000.0) - 
+                               fieldPositionSystem.getPositionUpdater().getLastUpdateTime();
+        if (timeSinceUpdate > 10.0) {
+          edu.wpi.first.wpilibj.DriverStation.reportWarning(
+            "⚠️ NO APRILTAG UPDATES FOR " + (int)timeSinceUpdate + "s - Check visibility", false);
+        }
+      }
+      
+      // Report current status
+      String status = fieldPositionSystem.getAprilTagStatus();
+      if (!status.equals("No valid position")) {
+        edu.wpi.first.wpilibj.DriverStation.reportWarning(
+          "📍 " + status, false);
+      }
+    }
   }
 
   /**
