@@ -151,8 +151,9 @@ public class LimelightSubsystem extends SubsystemBase {
      * @return Stream URL string
      */
     private String generateCameraStreamUrl() {
-        // Standard Limelight stream URL format
-        return "http://10.57.28.11:5800/stream";
+        // USB CONNECTION - working solution
+        // Change to "10.57.28.11" when ethernet network is fixed
+        return "http://172.22.11.2:5800/stream";
     }
     
     /**

@@ -12,9 +12,11 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import static frc.robot.Constants.OperatorConstants.*;
 import frc.robot.commands.AprilTagPositionTestCommand;
 import frc.robot.commands.AutoAimCommand;
+import frc.robot.commands.FindLimelightCommand;
 import frc.robot.commands.ImmediateAprilTagUpdateCommand;
 import frc.robot.commands.LimelightTroubleshootCommand;
 import frc.robot.commands.LimelightVideoTestCommand;
+import frc.robot.commands.TestLimelightStreamCommand;
 import frc.robot.commands.ToggleLimelightModeCommand;
 import frc.robot.commands.Autos;
 import frc.robot.commands.ResetFieldPositionCommand;
@@ -109,6 +111,14 @@ public class RobotContainer {
     // Limelight troubleshoot with MENU button (driver controller)
     driverController.back()
         .onTrue(new LimelightTroubleshootCommand());
+    
+    // Find Limelight with Y button (driver controller)
+    driverController.y()
+        .onTrue(new FindLimelightCommand());
+    
+    // Test Limelight stream with B button (driver controller)
+    driverController.b()
+        .onTrue(new TestLimelightStreamCommand());
     
     // Limelight video test with START button (driver controller)
     driverController.start()

@@ -16,8 +16,8 @@ public class SimpleCameraSubsystem extends SubsystemBase {
     private boolean usbCameraAvailable = false;
     private boolean limelightAvailable = false;
     
-    // Constants
-    private static final String LIMELIGHT_IP = "10.57.28.11";
+    // Constants - USB CONNECTION (working solution)
+    private static final String LIMELIGHT_IP = "172.22.11.2"; // USB connection to roboRIO
     private static final String LIMELIGHT_STREAM_URL = "http://" + LIMELIGHT_IP + ":5800/stream.mjpg";
     
     /**

@@ -14,7 +14,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  */
 public class LimelightCameraServer {
     
-    private static final String LIMELIGHT_IP = "10.57.28.11";
+    private static final String LIMELIGHT_IP = "172.22.11.2"; // USB connection to roboRIO
     private static final String STREAM_URL = "http://" + LIMELIGHT_IP + ":5800/stream";
     private static final String WEB_INTERFACE_URL = "http://" + LIMELIGHT_IP + ":5801";
     
