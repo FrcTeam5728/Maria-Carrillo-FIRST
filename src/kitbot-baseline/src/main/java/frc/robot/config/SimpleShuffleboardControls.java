@@ -12,6 +12,7 @@ import frc.robot.commands.ImmediateAprilTagUpdateCommand;
 import frc.robot.commands.LimelightTroubleshootCommand;
 import frc.robot.commands.ResetFieldPositionCommand;
 import frc.robot.commands.ToggleLimelightModeCommand;
+import frc.robot.commands.AutoAimCommand;
 import frc.robot.commands.Autos;
 import frc.robot.commands.LimelightTestCommand;
 import frc.robot.commands.SelectShootingPositionCommand;

@@ -268,7 +268,7 @@ public class AutoAimCommand extends Command {
         
         // Stop any ongoing movements
         if (driveSubsystem != null) {
-            driveSubsystem.driveArcade(0.0, 0.0);
+            driveSubsystem.driveArcade(() -> 0.0, () -> 0.0);
         }
     }
     
