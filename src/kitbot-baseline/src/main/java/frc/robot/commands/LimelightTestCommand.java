@@ -6,6 +6,7 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.LimelightSubsystem;
+import frc.robot.util.DashboardLogger;
 
 /**
  * Simple command to test Limelight connectivity.
@@ -28,7 +29,7 @@ public class LimelightTestCommand extends Command {
     
     @Override
     public void initialize() {
-        System.out.println("=== LIMELIGHT CONNECTION TEST ===");
+        DashboardLogger.putString("Limelight/TestStatus", "=== LIMELIGHT CONNECTION TEST ===");
         completed = false;
     }
     
@@ -76,12 +77,23 @@ public class LimelightTestCommand extends Command {
             System.out.println("\n✅ Limelight fully operational!");
         }
         
+        // Add DashboardLogger integration from remote version
+        DashboardLogger.putNumber("Limelight/Distance", limelightSubsystem.getDistance());
+        DashboardLogger.putNumber("Limelight/Latency", limelightSubsystem.getLatency());
+        
+        if (connected) {
+            DashboardLogger.putString("Limelight/StatusMessage", "connected");
+            DashboardLogger.putBoolean("Limelight/HasTarget", hasTarget);
+        } else {
+            DashboardLogger.putString("Limelight/StatusMessage", "not connected - check physical connection");
+        }
+        
         completed = true;
     }
     
     @Override
     public void end(boolean interrupted) {
-        System.out.println("=== LIMELIGHT TEST COMPLETE ===");
+        DashboardLogger.putString("Limelight/TestStatus", "=== LIMELIGHT TEST COMPLETE ===");
     }
     
     @Override
