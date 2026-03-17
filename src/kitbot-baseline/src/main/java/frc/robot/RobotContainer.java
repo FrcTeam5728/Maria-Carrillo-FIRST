@@ -14,11 +14,16 @@ import static frc.robot.Constants.FuelConstants.*;
 import frc.robot.commands.Autos;
 import frc.robot.commands.LimelightDiagnosticCommand;
 import frc.robot.commands.LimelightTestCommand;
+import frc.robot.commands.ResetFieldPositionCommand;
+import frc.robot.commands.SelectShootingPositionCommand;
+import frc.robot.commands.ShootAtPositionCommand;
 import frc.robot.commands.SimpleAutoShootCommand;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.FuelSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
 import frc.robot.subsystems.PulsingShooterSubsystem;
+import frc.robot.utils.FieldPositionSystem;
+import frc.robot.utils.ShootingPositionManager;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -33,6 +38,8 @@ public class RobotContainer {
   private final FuelSubsystem ballSubsystem = RobotSubsystemFactory.createFuelSubsystem();
   private final LimelightSubsystem limelightSubsystem = new LimelightSubsystem();
   private final PulsingShooterSubsystem shooterSubsystem = new PulsingShooterSubsystem();
+  private final FieldPositionSystem fieldPositionSystem = new FieldPositionSystem(driveSubsystem, limelightSubsystem);
+  private final ShootingPositionManager shootingPositionManager = new ShootingPositionManager(limelightSubsystem);
 
   // The driver's controller
   private final CommandXboxController driverController = new CommandXboxController(
@@ -81,6 +88,30 @@ public class RobotContainer {
     // Limelight connection test with START button (driver controller)
     driverController.start()
         .onTrue(new LimelightTestCommand(limelightSubsystem));
+    
+    // Reset field position with LEFT STICK button (driver controller)
+    driverController.leftStick()
+        .onTrue(new ResetFieldPositionCommand(fieldPositionSystem));
+    
+    // === OPERATOR CONTROLLER - SHOOTING CONTROLS ===
+    
+    // D-pad controls for shooting position selection
+    operatorController.povUp()
+        .onTrue(new SelectShootingPositionCommand(shootingPositionManager, 0)); // Up - Speaker positions
+    
+    operatorController.povRight()
+        .onTrue(new SelectShootingPositionCommand(shootingPositionManager, 90)); // Right - Next position
+    
+    operatorController.povDown()
+        .onTrue(new SelectShootingPositionCommand(shootingPositionManager, 180)); // Down - Stage positions
+    
+    operatorController.povLeft()
+        .onTrue(new SelectShootingPositionCommand(shootingPositionManager, 270)); // Left - Previous position
+    
+    // Shoot at selected position with X button
+    operatorController.x()
+        .onTrue(new ShootAtPositionCommand(driveSubsystem, limelightSubsystem, 
+                                         shooterSubsystem, shootingPositionManager));
     
     // Simple auto-shoot with B button (uses centralized Limelight and pulsing shooter)
     operatorController.b()
@@ -143,5 +174,14 @@ public class RobotContainer {
     // TODO: map named strings to commands (e.g. "INTAKE" -> ballSubsystem.runEnd(...))
     // Returning null is acceptable; callers already handle missing commands.
     return null;
+  }
+  
+  /**
+   * Updates field position system.
+   * Call this periodically to keep position tracking current.
+   */
+  public void updateFieldPosition() {
+    fieldPositionSystem.update();
+    shootingPositionManager.update();
   }
 }
