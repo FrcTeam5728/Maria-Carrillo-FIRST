@@ -76,10 +76,11 @@ public class Robot extends TimedRobot {
     m_robotModelPub = NetworkTableInstance.getDefault()
         .getStringTopic("/AdvantageScope/Robot/Model").publish();
     
-    // Simple box model for KitBot
-    String modelJson = "{\"type\":\"box\",\"length\":0.7,\"width\":0.7,\"height\":0.3}";
-    m_robotModelPub.set(modelJson);
-    System.out.println("AdvantageScope Robot Model Published: " + modelJson);
+  // Simple box model for KitBot
+  String modelJson = "{\"type\":\"box\",\"length\":0.7,\"width\":0.7,\"height\":0.3}";
+  m_robotModelPub.set(modelJson);
+  // Publish model info to Shuffleboard instead of console
+  edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Debug/RobotModel", modelJson);
   }
 
   /**
@@ -119,13 +120,14 @@ public class Robot extends TimedRobot {
     updateMechanismVisualization();
     
     // Debug: Check if model publisher is still valid
-    if (m_robotModelPub != null) {
+        if (m_robotModelPub != null) {
       // Occasionally republish model to ensure it's available
       modelRepublishCounter++;
       if (modelRepublishCounter % 250 == 0) { // Every 5 seconds
         String modelJson = "{\"type\":\"box\",\"length\":0.7,\"width\":0.7,\"height\":0.3}";
         m_robotModelPub.set(modelJson);
-        System.out.println("AdvantageScope Robot Model Republished: " + modelJson + " (counter: " + modelRepublishCounter + ")");
+        // write a short status to Shuffleboard instead of printing
+        edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Debug/RobotModelRepublished", "counter:" + modelRepublishCounter);
       }
     }
   }
@@ -230,26 +232,26 @@ public class Robot extends TimedRobot {
           RobotVisualization.updateRobotPosition(m_robotPose);
           // Reduced logging: debug-level pose update
           // Use SmartDashboard or debug flag if you want more frequent updates
-          System.out.println("Robot pose updated: X=" + m_robotPose.getX() + 
-                   ", Y=" + m_robotPose.getY() + 
-                   ", Heading=" + m_robotPose.getRotation().getDegrees());
+          edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putNumber("Debug/Pose/X", m_robotPose.getX());
+          edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putNumber("Debug/Pose/Y", m_robotPose.getY());
+          edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putNumber("Debug/Pose/HeadingDeg", m_robotPose.getRotation().getDegrees());
         }
       }
           } catch (Exception e) {
             // Fallback: send default position if pose can't be retrieved
-            System.out.println("Failed to get pose from drive subsystem: " + e.getMessage());
+            edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Debug/Pose/Error", "Failed to get pose: " + e.getMessage());
             RobotVisualization.updateRobotPosition(new edu.wpi.first.math.geometry.Pose2d());
           }
         } else {
-          System.out.println("Drive subsystem is null");
+          edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Debug/Pose/Error", "Drive subsystem is null");
         }
       } catch (Exception e) {
         // Field access failed, send default position
-        System.out.println("Failed to access drive subsystem field: " + e.getMessage());
+        edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Debug/Pose/Error", "Failed to access drive subsystem field: " + e.getMessage());
         RobotVisualization.updateRobotPosition(new edu.wpi.first.math.geometry.Pose2d());
       }
     } else {
-      System.out.println("RobotContainer is null");
+      edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Debug/Pose/Error", "RobotContainer is null");
     }
   }
   
@@ -289,7 +291,7 @@ public class Robot extends TimedRobot {
       String autoAction = SmartDashboard.getString("AI/LastAction", "NONE");
       m_mechanismViz.updateAutonomousState(autoState, autoAction);
     } else {
-      System.out.println("MechanismVisualization is null");
+      edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Debug/MechanismViz", "MechanismVisualization is null");
     }
   }
 }

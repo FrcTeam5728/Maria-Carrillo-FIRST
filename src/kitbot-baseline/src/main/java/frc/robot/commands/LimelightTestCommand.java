@@ -6,6 +6,7 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.LimelightSubsystem;
+import frc.robot.util.DashboardLogger;
 
 /**
  * Simple command to test Limelight connectivity.
@@ -28,7 +29,7 @@ public class LimelightTestCommand extends Command {
     
     @Override
     public void initialize() {
-        System.out.println("=== LIMELIGHT CONNECTION TEST ===");
+        DashboardLogger.putString("Limelight/TestStatus", "=== LIMELIGHT CONNECTION TEST ===");
         completed = false;
     }
     
@@ -38,31 +39,21 @@ public class LimelightTestCommand extends Command {
         boolean connected = limelightSubsystem.isConnected();
         boolean hasTarget = limelightSubsystem.hasTarget();
         
-        System.out.println("Limelight Connection Status:");
-        System.out.println("- Connected: " + connected);
-        System.out.println("- Has Target: " + hasTarget);
-        System.out.println("- Target ID: " + limelightSubsystem.getTargetId());
-        System.out.println("- Horizontal Offset: " + limelightSubsystem.getHorizontalOffset() + "°");
-        System.out.println("- Vertical Offset: " + limelightSubsystem.getVerticalOffset() + "°");
-        System.out.println("- Target Area: " + limelightSubsystem.getTargetArea());
-        System.out.println("- Distance: " + String.format("%.2f", limelightSubsystem.getDistance()) + "m");
-        System.out.println("- Latency: " + String.format("%.1f", limelightSubsystem.getLatency()) + "ms");
+    DashboardLogger.putString("Limelight/ConnectionStatus", "");
+    DashboardLogger.putBoolean("Limelight/Connected", connected);
+    DashboardLogger.putBoolean("Limelight/HasTarget", hasTarget);
+    DashboardLogger.putNumber("Limelight/TargetID", limelightSubsystem.getTargetId());
+    DashboardLogger.putNumber("Limelight/TX", limelightSubsystem.getHorizontalOffset());
+    DashboardLogger.putNumber("Limelight/TY", limelightSubsystem.getVerticalOffset());
+    DashboardLogger.putNumber("Limelight/TargetArea", limelightSubsystem.getTargetArea());
+    DashboardLogger.putNumber("Limelight/Distance", limelightSubsystem.getDistance());
+    DashboardLogger.putNumber("Limelight/Latency", limelightSubsystem.getLatency());
         
         if (connected) {
-            System.out.println("Limelight is connected and responding.");
-
-            if (hasTarget) {
-                System.out.println("Target detected.");
-            } else {
-                System.out.println("No target detected - point Limelight at AprilTag");
-            }
+            DashboardLogger.putString("Limelight/StatusMessage", "connected");
+            DashboardLogger.putBoolean("Limelight/HasTarget", hasTarget);
         } else {
-            System.out.println("Limelight not connected - check physical connection");
-            System.out.println("Troubleshooting:");
-            System.out.println("1. Check USB/Ethernet cable to Limelight");
-            System.out.println("2. Verify Limelight power (LED should be on)");
-            System.out.println("3. Check NetworkTables connection");
-            System.out.println("4. Verify Limelight IP: 10.TE.AM.XX");
+            DashboardLogger.putString("Limelight/StatusMessage", "not connected - check physical connection");
         }
         
         completed = true;
@@ -70,7 +61,7 @@ public class LimelightTestCommand extends Command {
     
     @Override
     public void end(boolean interrupted) {
-        System.out.println("=== LIMELIGHT TEST COMPLETE ===");
+        DashboardLogger.putString("Limelight/TestStatus", "=== LIMELIGHT TEST COMPLETE ===");
     }
     
     @Override
