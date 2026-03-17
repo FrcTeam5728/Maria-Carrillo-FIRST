@@ -113,9 +113,6 @@ public class Robot extends TimedRobot {
     // Update simulation systems
     SimulationManager.getInstance().update();
     
-    // Update robot pose for AdvantageScope
-    updateRobotPose();
-    
     // Update Mechanism2D visualization
     updateMechanismVisualization();
     
@@ -250,19 +247,9 @@ public class Robot extends TimedRobot {
         RobotVisualization.updateRobotPosition(new edu.wpi.first.math.geometry.Pose2d());
       }
     } else {
+      // Drive subsystem is null
+      System.out.println("Drive subsystem is null");
     }
-        } catch (Exception e) {
-          // Fallback: send default position if pose can't be retrieved
-          System.out.println("Failed to get pose from drive subsystem: " + e.getMessage());
-          RobotVisualization.updateRobotPosition(new edu.wpi.first.math.geometry.Pose2d());
-        }
-      } else {
-        System.out.println("Drive subsystem is null");
-      }
-    } catch (Exception e) {
-      // Field access failed, send default position
-      System.out.println("Failed to access drive subsystem field: " + e.getMessage());
-      RobotVisualization.updateRobotPosition(new edu.wpi.first.math.geometry.Pose2d());
   }
   
   /**

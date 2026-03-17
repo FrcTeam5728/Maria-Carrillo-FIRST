@@ -41,6 +41,7 @@ public class RobotContainer {
   private final LimelightSubsystem limelightSubsystem = new LimelightSubsystem();
   private final PulsingShooterSubsystem shooterSubsystem = new PulsingShooterSubsystem();
   private final FieldPositionSystem fieldPositionSystem = new FieldPositionSystem(driveSubsystem, limelightSubsystem);
+  private final ShootingPositionManager shootingPositionManager = new ShootingPositionManager(limelightSubsystem);
   private final CameraServerSubsystem cameraServerSubsystem = new CameraServerSubsystem();
 
   // The driver's controller

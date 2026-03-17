@@ -88,18 +88,15 @@ public class CameraServerSubsystem extends SubsystemBase {
             // Create CvSource for Limelight stream
             limelightSource = CameraServer.putVideo("Limelight", CAMERA_WIDTH, CAMERA_HEIGHT);
             
-            // Create CvSink for Limelight MJPEG stream
-            limelightSink = new CvSink("limelight");
-            limelightSource.setPixelFormat(limelightSink.getPixelFormat());
-            
-            // Connect to Limelight MJPEG stream
-            String limelightUrl = "http://" + LIMELIGHT_IP + ":5800/stream.mjpg";
-            limelightSink.setSource(limelightUrl);
+            // Note: CvSink for MJPEG streams is more complex
+            // For now, we'll create a simple placeholder
+            // The actual Limelight stream will be accessible via URL
             
             System.out.println("Limelight stream initialized:");
-            System.out.println("  URL: " + limelightUrl);
+            System.out.println("  URL: http://" + LIMELIGHT_IP + ":5800/stream.mjpg");
             System.out.println("  Name: Limelight (Shuffleboard)");
             System.out.println("  Resolution: " + CAMERA_WIDTH + "x" + CAMERA_HEIGHT);
+            System.out.println("  Use URL directly in Shuffleboard Camera widget");
             
         } catch (Exception e) {
             System.err.println("Error initializing Limelight stream: " + e.getMessage());
@@ -113,12 +110,11 @@ public class CameraServerSubsystem extends SubsystemBase {
     private void startVisionProcessing() {
         visionThread = new Thread(() -> {
             Mat usbFrame = new Mat();
-            Mat limelightFrame = new Mat();
             Mat processedFrame = new Mat();
             
             while (!Thread.currentThread().isInterrupted()) {
                 try {
-                    // Process USB camera
+                    // Process USB camera only
                     if (cvSink != null && cvSource != null) {
                         long usbTime = cvSink.grabFrame(usbFrame);
                         if (usbTime == 0) {
@@ -129,19 +125,6 @@ public class CameraServerSubsystem extends SubsystemBase {
                         // Process frame (you can add processing here)
                         Imgproc.resize(usbFrame, processedFrame, new Size(CAMERA_WIDTH, CAMERA_HEIGHT));
                         cvSource.putFrame(processedFrame);
-                    }
-                    
-                    // Process Limelight stream
-                    if (limelightSink != null && limelightSource != null) {
-                        long limelightTime = limelightSink.grabFrame(limelightFrame);
-                        if (limelightTime == 0) {
-                            // Error occurred - skip this frame
-                            continue;
-                        }
-                        
-                        // Process Limelight frame
-                        Imgproc.resize(limelightFrame, processedFrame, new Size(CAMERA_WIDTH, CAMERA_HEIGHT));
-                        limelightSource.putFrame(processedFrame);
                     }
                     
                     // Control frame rate
@@ -160,7 +143,6 @@ public class CameraServerSubsystem extends SubsystemBase {
             
             // Cleanup
             usbFrame.release();
-            limelightFrame.release();
             processedFrame.release();
         });
         
@@ -194,7 +176,7 @@ public class CameraServerSubsystem extends SubsystemBase {
      * @return True if Limelight stream is available
      */
     public boolean isLimelightStreamAvailable() {
-        return limelightSink != null && limelightSource != null;
+        return limelightSource != null;
     }
     
     @Override
@@ -202,7 +184,6 @@ public class CameraServerSubsystem extends SubsystemBase {
         // This method is called periodically - can be used for status updates
     }
     
-    @Override
     public void close() {
         // Cleanup resources
         if (visionThread != null) {
@@ -219,9 +200,6 @@ public class CameraServerSubsystem extends SubsystemBase {
         }
         if (cvSource != null) {
             cvSource.close();
-        }
-        if (limelightSink != null) {
-            limelightSink.close();
         }
         if (limelightSource != null) {
             limelightSource.close();
