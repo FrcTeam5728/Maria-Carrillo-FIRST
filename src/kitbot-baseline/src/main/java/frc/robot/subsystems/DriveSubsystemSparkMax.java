@@ -28,6 +28,15 @@ public class DriveSubsystemSparkMax extends DriveSubsystem {
 
     // set up differential drive class
     drive = new DifferentialDrive(leftLeader, rightLeader);
+    
+    // Initialize odometry system
+    initializeOdometry();
+    
+    // Initialize gyro
+    initializeGyro();
+    
+    // Initialize encoders (using DIO ports 0-3 for demo)
+    initializeEncoders(0, 2);
 
     // Set can timeout. Because this project only sets parameters once on
     // construction, the timeout can be long without blocking robot operation. Code

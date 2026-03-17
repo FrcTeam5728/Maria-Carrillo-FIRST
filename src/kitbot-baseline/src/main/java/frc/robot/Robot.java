@@ -9,7 +9,15 @@ import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.visualization.RobotVisualization;
+import frc.robot.visualization.MechanismVisualization;
+import frc.robot.simulation.SimulationManager;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.DoubleArrayPublisher;
+import edu.wpi.first.networktables.StringPublisher;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -24,6 +32,17 @@ public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
 
   private RobotContainer m_robotContainer;
+  
+  // AdvantageScope NetworkTables publishing
+  private DoubleArrayPublisher m_robotPosePub;
+  private StringPublisher m_robotModelPub;
+  private Pose2d m_robotPose = new Pose2d(0, 0, new Rotation2d());
+  
+  // Debug counter for model republishing
+  private int modelRepublishCounter = 0;
+  
+  // Mechanism2D visualization for Glass
+  private MechanismVisualization m_mechanismViz;
 
   /**
    * This function is run when the robot is first started up and should be used
@@ -39,6 +58,28 @@ public class Robot extends TimedRobot {
 
     // Used to track usage of Kitbot code, please do not remove.
     HAL.report(tResourceType.kResourceType_Framework, 10);
+    
+    // Initialize 3D robot visualization for AdvantageScope
+    RobotVisualization.initialize();
+    
+    // Initialize Mechanism2D visualization for Glass
+    m_mechanismViz = new MechanismVisualization();
+    
+    // Initialize simulation systems (only active in simulation mode)
+    SimulationManager.getInstance();
+    
+    // Publish robot pose to NetworkTables for AdvantageScope
+    m_robotPosePub = NetworkTableInstance.getDefault()
+        .getDoubleArrayTopic("/AdvantageScope/Robot/Pose").publish();
+    
+    // Publish robot model description
+    m_robotModelPub = NetworkTableInstance.getDefault()
+        .getStringTopic("/AdvantageScope/Robot/Model").publish();
+    
+    // Simple box model for KitBot
+    String modelJson = "{\"type\":\"box\",\"length\":0.7,\"width\":0.7,\"height\":0.3}";
+    m_robotModelPub.set(modelJson);
+    System.out.println("AdvantageScope Robot Model Published: " + modelJson);
   }
 
   /**
@@ -64,6 +105,29 @@ public class Robot extends TimedRobot {
     // robot's periodic
     // block in order for anything in the Command-based framework to work.
     CommandScheduler.getInstance().run();
+    
+    // Update robot visualization
+    updateRobotVisualization();
+    
+    // Update simulation systems
+    SimulationManager.getInstance().update();
+    
+    // Update robot pose for AdvantageScope
+    updateRobotPose();
+    
+    // Update Mechanism2D visualization
+    updateMechanismVisualization();
+    
+    // Debug: Check if model publisher is still valid
+    if (m_robotModelPub != null) {
+      // Occasionally republish model to ensure it's available
+      modelRepublishCounter++;
+      if (modelRepublishCounter % 250 == 0) { // Every 5 seconds
+        String modelJson = "{\"type\":\"box\",\"length\":0.7,\"width\":0.7,\"height\":0.3}";
+        m_robotModelPub.set(modelJson);
+        System.out.println("AdvantageScope Robot Model Republished: " + modelJson + " (counter: " + modelRepublishCounter + ")");
+      }
+    }
   }
 
   /** This function is called once each time the robot enters Disabled mode. */
@@ -127,7 +191,105 @@ public class Robot extends TimedRobot {
   }
 
   /** This function is called periodically whilst in simulation. */
-  @Override
-  public void simulationPeriodic() {
+  
+  /**
+   * Update robot position in 3D visualization
+   */
+  private void updateRobotVisualization() {
+    // Get robot pose from drive subsystem if available
+    if (m_robotContainer != null) {
+      // Use reflection to access drive subsystem since it's private
+      try {
+        java.lang.reflect.Field driveField = RobotContainer.class.getDeclaredField("driveSubsystem");
+        driveField.setAccessible(true);
+        Object driveSubsystem = driveField.get(m_robotContainer);
+        
+        if (driveSubsystem != null) {
+          // Try to get pose from drive subsystem
+          try {
+            java.lang.reflect.Method getPoseMethod = driveSubsystem.getClass().getMethod("getPose");
+            Object pose = getPoseMethod.invoke(driveSubsystem);
+            
+      if (pose instanceof edu.wpi.first.math.geometry.Pose2d) {
+        edu.wpi.first.math.geometry.Pose2d newPose = (edu.wpi.first.math.geometry.Pose2d) pose;
+        // Only update visualization/print when pose has changed significantly to avoid spamming logs
+        boolean shouldUpdate = false;
+        if (m_robotPose == null) {
+          shouldUpdate = true;
+        } else {
+          double dx = Math.abs(newPose.getX() - m_robotPose.getX());
+          double dy = Math.abs(newPose.getY() - m_robotPose.getY());
+          double dheading = Math.abs(newPose.getRotation().getDegrees() - m_robotPose.getRotation().getDegrees());
+          if (dx > 0.05 || dy > 0.05 || dheading > 1.0) { // thresholds: 5cm, 1deg
+            shouldUpdate = true;
+          }
+        }
+
+        if (shouldUpdate) {
+          m_robotPose = newPose;
+          RobotVisualization.updateRobotPosition(m_robotPose);
+          // Reduced logging: debug-level pose update
+          // Use SmartDashboard or debug flag if you want more frequent updates
+          System.out.println("Robot pose updated: X=" + m_robotPose.getX() + 
+                   ", Y=" + m_robotPose.getY() + 
+                   ", Heading=" + m_robotPose.getRotation().getDegrees());
+        }
+      }
+          } catch (Exception e) {
+            // Fallback: send default position if pose can't be retrieved
+            System.out.println("Failed to get pose from drive subsystem: " + e.getMessage());
+            RobotVisualization.updateRobotPosition(new edu.wpi.first.math.geometry.Pose2d());
+          }
+        } else {
+          System.out.println("Drive subsystem is null");
+        }
+      } catch (Exception e) {
+        // Field access failed, send default position
+        System.out.println("Failed to access drive subsystem field: " + e.getMessage());
+        RobotVisualization.updateRobotPosition(new edu.wpi.first.math.geometry.Pose2d());
+      }
+    } else {
+      System.out.println("RobotContainer is null");
+    }
+  }
+  
+  /**
+   * Update robot pose for AdvantageScope NetworkTables
+   */
+  private void updateRobotPose() {
+    // Get current pose from drivetrain/odometry
+    Pose2d currentPose = m_robotPose; // Use the pose we already retrieved in updateRobotVisualization()
+    
+    // Publish as [x, y, rotation_radians]
+    m_robotPosePub.set(new double[] {
+        currentPose.getX(),
+        currentPose.getY(),
+        currentPose.getRotation().getRadians()
+    });
+  }
+  
+  /**
+   * Update Mechanism2D visualization for Glass
+   */
+  private void updateMechanismVisualization() {
+    if (m_mechanismViz != null) {
+      // Update robot pose
+      m_mechanismViz.updateRobotPose(m_robotPose);
+      
+      // Get subsystem states (simplified for demo)
+      boolean hasTarget = SmartDashboard.getBoolean("Limelight/HasTarget", false);
+      double tx = SmartDashboard.getNumber("Limelight/TX", 0.0);
+      double ty = SmartDashboard.getNumber("Limelight/TY", 0.0);
+      
+      // Update Limelight state
+      m_mechanismViz.updateLimelightState(hasTarget, tx, ty);
+      
+      // Get autonomous state if available
+      String autoState = SmartDashboard.getString("AI/CurrentState", "UNKNOWN");
+      String autoAction = SmartDashboard.getString("AI/LastAction", "NONE");
+      m_mechanismViz.updateAutonomousState(autoState, autoAction);
+    } else {
+      System.out.println("MechanismVisualization is null");
+    }
   }
 }

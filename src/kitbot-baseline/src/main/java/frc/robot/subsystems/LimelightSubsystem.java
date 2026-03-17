@@ -11,6 +11,7 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.RobotBase;
 
 /**
  * Centralized Limelight subsystem that handles all Limelight communication.
@@ -49,6 +50,11 @@ public class LimelightSubsystem extends SubsystemBase {
     // Connection tracking
     private long lastUpdateTime = 0;
     private static final long CONNECTION_TIMEOUT_MS = 2000; // 2 seconds
+    // Track previous connection state to avoid noisy repeated logs
+    private boolean previousConnectedState = true;
+    // Minimum interval between connection warnings (ms)
+    private static final long CONNECTION_WARNING_INTERVAL_MS = 10000; // 10s
+    private long lastConnectionWarning = 0;
     
     // Target filtering
     private static final double MIN_TARGET_AREA = 0.5; // Minimum area to consider valid
@@ -137,10 +143,29 @@ public class LimelightSubsystem extends SubsystemBase {
         long currentTime = System.currentTimeMillis();
         long timeSinceUpdate = currentTime - lastUpdateTime;
         
-        isConnected = timeSinceUpdate < CONNECTION_TIMEOUT_MS;
-        
-        if (!isConnected && timeSinceUpdate > CONNECTION_TIMEOUT_MS * 2) {
-            System.err.println("Limelight not responding - check connection");
+        boolean nowConnected = timeSinceUpdate < CONNECTION_TIMEOUT_MS;
+        isConnected = nowConnected;
+
+        // Only show connection warnings in real robot mode, not simulation.
+        // Print only when the connection state changes or at most once per interval.
+        if (!RobotBase.isSimulation()) {
+            long now = System.currentTimeMillis();
+            if (!nowConnected) {
+                boolean shouldWarn = false;
+                if (previousConnectedState && timeSinceUpdate > CONNECTION_TIMEOUT_MS * 2) {
+                    // just lost connection
+                    shouldWarn = true;
+                } else if (now - lastConnectionWarning > CONNECTION_WARNING_INTERVAL_MS && timeSinceUpdate > CONNECTION_TIMEOUT_MS * 2) {
+                    // rate-limited periodic warning
+                    shouldWarn = true;
+                }
+
+                if (shouldWarn) {
+                    System.err.println("Limelight not responding - check connection");
+                    lastConnectionWarning = now;
+                }
+            }
+            previousConnectedState = nowConnected;
         }
     }
     

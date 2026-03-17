@@ -49,15 +49,15 @@ public class LimelightTestCommand extends Command {
         System.out.println("- Latency: " + String.format("%.1f", limelightSubsystem.getLatency()) + "ms");
         
         if (connected) {
-            System.out.println("✅ Limelight is connected and responding!");
-            
+            System.out.println("Limelight is connected and responding.");
+
             if (hasTarget) {
-                System.out.println("✅ Target detected!");
+                System.out.println("Target detected.");
             } else {
-                System.out.println("⚠️  No target detected - point Limelight at AprilTag");
+                System.out.println("No target detected - point Limelight at AprilTag");
             }
         } else {
-            System.out.println("❌ Limelight not connected - check physical connection");
+            System.out.println("Limelight not connected - check physical connection");
             System.out.println("Troubleshooting:");
             System.out.println("1. Check USB/Ethernet cable to Limelight");
             System.out.println("2. Verify Limelight power (LED should be on)");

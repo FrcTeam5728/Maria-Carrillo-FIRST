@@ -10,7 +10,6 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 import static frc.robot.Constants.OperatorConstants.*;
-import static frc.robot.Constants.FuelConstants.*;
 import frc.robot.commands.Autos;
 import frc.robot.commands.LimelightDiagnosticCommand;
 import frc.robot.commands.LimelightTestCommand;
@@ -18,6 +17,7 @@ import frc.robot.commands.ResetFieldPositionCommand;
 import frc.robot.commands.SelectShootingPositionCommand;
 import frc.robot.commands.ShootAtPositionCommand;
 import frc.robot.commands.SimpleAutoShootCommand;
+import frc.robot.commands.VirtualLimelightTestCommand;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.FuelSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
@@ -89,9 +89,13 @@ public class RobotContainer {
     driverController.start()
         .onTrue(new LimelightTestCommand(limelightSubsystem));
     
-    // Reset field position with LEFT STICK button (driver controller)
-    driverController.leftStick()
+    // Reset field position with RIGHT STICK button (driver controller)
+    driverController.rightStick()
         .onTrue(new ResetFieldPositionCommand(fieldPositionSystem));
+    
+    // Virtual Limelight test with LEFT STICK button (driver controller)
+    driverController.leftStick()
+        .onTrue(new VirtualLimelightTestCommand(limelightSubsystem));
     
     // === OPERATOR CONTROLLER - SHOOTING CONTROLS ===
     
