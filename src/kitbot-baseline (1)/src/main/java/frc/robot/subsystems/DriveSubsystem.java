@@ -9,7 +9,10 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelPositions;
+// TODO: Replace with NavX2 when dependencies are installed
+// import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.Encoder;
+// import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -36,7 +39,7 @@ public abstract class DriveSubsystem extends SubsystemBase {
     protected Encoder rightEncoder;
     
     // Gyro for heading measurement
-    protected ADXRS450_Gyro gyro;
+    protected AHRS gyro;
     
     // Wheel positions for odometry
     protected DifferentialDriveWheelPositions wheelPositions;
@@ -83,9 +86,9 @@ public abstract class DriveSubsystem extends SubsystemBase {
             double rightDistance = rightEncoder.getDistance();
             wheelPositions = new DifferentialDriveWheelPositions(leftDistance, rightDistance);
             
-            // Get gyro angle (inverted because gyro measures clockwise positive)
-            double gyroAngle = -gyro.getAngle();
-            Rotation2d gyroRotation = new Rotation2d(Math.toRadians(gyroAngle));
+            // Get gyro angle (NavX2 measures counter-clockwise positive)
+            double gyroAngle = gyro.getAngle();
+            Rotation2d gyroRotation = new Rotation2d(Math.toRadians(-gyroAngle));
             
             // Update odometry
             pose = odometry.update(gyroRotation, wheelPositions);
@@ -96,7 +99,7 @@ public abstract class DriveSubsystem extends SubsystemBase {
                 System.out.println("Odometry: X=" + String.format("%.3f", pose.getX()) + 
                                  ", Y=" + String.format("%.3f", pose.getY()) + 
                                  ", Heading=" + String.format("%.1f", pose.getRotation().getDegrees()) +
-                                 ", Gyro=" + String.format("%.1f", gyroAngle));
+                                 ", NavX=" + String.format("%.1f", gyroAngle));
             }
         } else if (edu.wpi.first.wpilibj.RobotBase.isSimulation()) {
             // Simple simulation update based on motor commands
@@ -119,7 +122,7 @@ public abstract class DriveSubsystem extends SubsystemBase {
                 System.out.println("  Left encoder: " + (leftEncoder != null ? "OK" : "NULL"));
                 System.out.println("  Right encoder: " + (rightEncoder != null ? "OK" : "NULL"));
                 System.out.println("  Odometry: " + (odometry != null ? "OK" : "NULL"));
-                System.out.println("  Gyro: " + (gyro != null ? "OK" : "NULL"));
+                System.out.println("  NavX: " + (gyro != null ? "OK" : "NULL"));
             }
         }
         
@@ -129,8 +132,11 @@ public abstract class DriveSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Drive/Odometry/Heading", pose.getRotation().getDegrees());
         
         if (gyro != null) {
-            SmartDashboard.putNumber("Drive/Gyro/Angle", gyro.getAngle());
-            SmartDashboard.putBoolean("Drive/Gyro/Connected", gyro.isConnected());
+            SmartDashboard.putNumber("Drive/NavX/Angle", gyro.getAngle());
+            SmartDashboard.putNumber("Drive/NavX/Yaw", gyro.getYaw());
+            SmartDashboard.putNumber("Drive/NavX/Pitch", gyro.getPitch());
+            SmartDashboard.putNumber("Drive/NavX/Roll", gyro.getRoll());
+            SmartDashboard.putBoolean("Drive/NavX/Connected", gyro.isConnected());
         }
         
         if (leftEncoder != null && rightEncoder != null) {
@@ -174,8 +180,8 @@ public abstract class DriveSubsystem extends SubsystemBase {
     }
     
     /**
-     * Get current gyro angle in degrees
-     * @return Gyro angle
+     * Get current NavX2 angle in degrees
+     * @return NavX2 angle
      */
     public double getGyroAngle() {
         if (gyro != null) {
@@ -259,12 +265,22 @@ public abstract class DriveSubsystem extends SubsystemBase {
     }
     
     /**
-     * Initialize gyro
+     * Initialize NavX2 gyro
      */
     protected void initializeGyro() {
-        gyro = new ADXRS450_Gyro();
-        gyro.calibrate(); // Calibrate gyro
-        System.out.println("Gyro initialized and calibrated");
+        try {
+            // Initialize NavX2 on SPI bus
+            gyro = new AHRS(SerialPort.Port.kMXP);
+            
+            // Wait for NavX2 to calibrate
+            Thread.sleep(1000);
+            
+            System.out.println("NavX2 initialized and calibrated");
+            System.out.println("NavX2 Firmware: " + gyro.getFirmwareVersion());
+        } catch (Exception e) {
+            System.err.println("Failed to initialize NavX2: " + e.getMessage());
+            gyro = null;
+        }
     }
     
     /**
