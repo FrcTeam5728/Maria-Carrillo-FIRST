@@ -4,7 +4,7 @@
 
 package frc.robot.commands;
 
-import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -14,7 +14,7 @@ import java.io.IOException;
  * Command to test direct Limelight stream access.
  * This bypasses CameraServer and tests the raw MJPEG stream.
  */
-public class TestLimelightStreamCommand extends CommandBase {
+public class TestLimelightStreamCommand extends Command {
     
     private static final String LIMELIGHT_IP = "172.22.11.2";
     private static final String STREAM_URL = "http://" + LIMELIGHT_IP + ":5800/stream.mjpg";

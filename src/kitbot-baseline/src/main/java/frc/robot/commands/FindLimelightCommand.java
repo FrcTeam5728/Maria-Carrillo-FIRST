@@ -4,7 +4,7 @@
 
 package frc.robot.commands;
 
-import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.Command;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.CompletableFuture;
@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
  * Command to find Limelight on the network by scanning common IPs.
  * This helps identify the correct IP address when the Limelight is unreachable.
  */
-public class FindLimelightCommand extends CommandBase {
+public class FindLimelightCommand extends Command {
     
     // Common Limelight IP ranges to scan
     private static final String[] COMMON_LIMELIGHT_IPS = {
