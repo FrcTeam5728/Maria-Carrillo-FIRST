@@ -20,7 +20,7 @@ This guide covers the complete setup and usage of the robot's systems including 
 ## 🤖 Robot Systems Overview
 
 ### **Core Subsystems:**
-- **DriveSubsystemSparkMax** - Drive motors with encoders and gyro
+- **DriveSubsystemSparkMax** - Drive motors with encoders
 - **LimelightSubsystem** - Vision targeting and AprilTag detection
 - **PulsingShooterSubsystem** - Shooting with pulsing pattern (3s ON / 0.5s OFF)
 - **FuelSubsystemSparkMax** - Intake and fuel management
@@ -116,7 +116,6 @@ This guide covers the complete setup and usage of the robot's systems including 
 
 ### **DriveSubsystem Odometry:**
 - **Encoders:** DIO ports 0 and 2 (external)
-- **Gyro:** ADXRS450_Gyro with calibration
 - **Periodic Updates:** Automatic position tracking
 - **SmartDashboard:** Real-time position data
 
@@ -131,7 +130,6 @@ This guide covers the complete setup and usage of the robot's systems including 
 Drive/Odometry/X: Robot X position
 Drive/Odometry/Y: Robot Y position
 Drive/Odometry/Heading: Robot heading in degrees
-Drive/Gyro/Angle: Gyro angle
 Drive/Encoder/Left: Left encoder distance
 Drive/Encoder/Right: Right encoder distance
 
@@ -203,7 +201,6 @@ Camera/USB_Available: USB camera status
 - **BooleanBox:** Green/Red status indicators
 - **NumberBar:** Visual bar graphs with limits
 - **NumberSlider:** Interactive sliders
-- **Gyro:** Compass-style heading display
 - **TextView:** Text information display
 
 ---
@@ -213,7 +210,7 @@ Camera/USB_Available: USB camera status
 ### **🚨 Common Issues:**
 
 #### **Robot Not Moving:**
-1. **Check DriveSubsystem:** Look for encoder/gyro errors in console
+1. **Check DriveSubsystem:** Look for encoder errors in console
 2. **Verify motors:** Check motor controller connections
 3. **Test joysticks:** Verify controller is connected
 
@@ -234,8 +231,7 @@ Camera/USB_Available: USB camera status
 
 #### **Odometry Issues:**
 1. **Position stuck at (0,0):** Check robot movement and encoders
-2. **Heading drifting:** Gyro may need recalibration
-3. **Position jumping:** Check for wheel slippage
+2. **Position jumping:** Check for wheel slippage
 
 ### **🛠️ Diagnostic Commands:**
 

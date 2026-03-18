@@ -34,9 +34,6 @@ public class DriveSubsystemSparkMax extends DriveSubsystem {
     // Initialize odometry system
     initializeOdometry();
     
-    // Initialize gyro
-    initializeGyro();
-    
     // Initialize SparkMax built-in encoders
     initializeSparkMaxEncoders();
 
