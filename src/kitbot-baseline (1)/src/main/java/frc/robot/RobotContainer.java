@@ -19,6 +19,7 @@ import frc.robot.subsystems.FuelSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
 import frc.robot.subsystems.PulsingShooterSubsystem;
 import frc.robot.utils.CameraFeedBroadcaster;
+import frc.robot.utils.DualUSBCameraServer;
 import frc.robot.utils.LimelightCameraServer;
 import frc.robot.utils.USBCameraServer;
 
@@ -35,7 +36,8 @@ public class RobotContainer {
   private final FuelSubsystem ballSubsystem = RobotSubsystemFactory.createFuelSubsystem();
   private final LimelightSubsystem limelightSubsystem = new LimelightSubsystem();
   private final PulsingShooterSubsystem shooterSubsystem = new PulsingShooterSubsystem();
-  private final SimpleCameraSubsystem cameraServerSubsystem = new SimpleCameraSubsystem();
+  // Camera subsystems
+  private final SimpleCameraSubsystem cameraServerSubsystem = new SimpleCameraSubsystem(false); // Default to single camera mode
   private final CameraFeedBroadcaster cameraFeedBroadcaster = new CameraFeedBroadcaster();
 
   // The driver's controller
@@ -78,10 +80,12 @@ public class RobotContainer {
    */
   private void configureBindings() {
     
-    // Initialize Limelight CameraServer for video feed
+    // Initialize camera systems
     LimelightCameraServer.initialize();
     
-    // Initialize USB CameraServer for driver camera
+    // Initialize USB CameraServer for driver camera (single camera mode by default)
+    // To enable dual camera mode, change this to: DualUSBCameraServer.initialize();
+    // and update SimpleCameraSubsystem constructor to: new SimpleCameraSubsystem(true)
     USBCameraServer.initialize();
     
     // Configure basic Shuffleboard controls
@@ -151,11 +155,14 @@ public class RobotContainer {
    * Updates all subsystems that need periodic updates.
    */
   public void periodic() {
-    // Update Limelight CameraServer status
+    // Update camera systems
     LimelightCameraServer.updateStatus();
     
-    // Update USB CameraServer status
+    // Update USB CameraServer status (single camera mode)
     USBCameraServer.updateStatus();
+    
+    // If using dual cameras, also update DualUSBCameraServer status:
+    // DualUSBCameraServer.updateStatus();
     
     // Update camera feed broadcaster
     cameraFeedBroadcaster.periodic();

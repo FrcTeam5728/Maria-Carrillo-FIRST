@@ -24,12 +24,13 @@ This guide covers the complete setup and usage of the robot's systems including 
 - **LimelightSubsystem** - Vision targeting and AprilTag detection
 - **PulsingShooterSubsystem** - Shooting with pulsing pattern (3s ON / 0.5s OFF)
 - **FuelSubsystemSparkMax** - Intake and fuel management
-- **SimpleCameraSubsystem** - Camera URL publishing to SmartDashboard
+- **SimpleCameraSubsystem** - Single/dual camera URL publishing to SmartDashboard
 
 ### **Utility Systems:**
 - **FieldPositionSystem** - NetworkTables-based position tracking
 - **ShootingPositionManager** - Predefined shooting positions
 - **ShuffleboardManager** - Organized Shuffleboard widgets
+- **DualUSBCameraServer** - Multi-camera management system
 
 ---
 
@@ -148,29 +149,74 @@ Field/PositionSource: Position data source
 ## 📷 Camera System
 
 ### **SimpleCameraSubsystem:**
+- **Dual Camera Support:** Can handle single or dual USB cameras
 - **Pure SmartDashboard:** No complex CameraServer dependencies
 - **URL-Based:** Direct MJPEG stream URLs
 - **NetworkTables Integration:** Camera status monitoring
+- **Configurable:** Switch between single/dual camera modes
+
+### **Camera Options:**
+- **Single Camera Mode:** One USB camera + Limelight
+- **Dual Camera Mode:** Two USB cameras + Limelight
+- **Configuration:** Set in `CameraConfig.USE_DUAL_CAMERAS`
 
 ### **Camera URLs:**
 ```
-Limelight: http://10.57.28.11:5800/stream.mjpg
-USB Camera: (set if needed)
+Limelight: http://172.22.11.2:5800/stream.mjpg
+Primary USB: http://roboRIO-5728.local:1181/stream.mjpg
+Secondary USB: http://roboRIO-5728.local:1182/stream.mjpg (dual mode)
 ```
 
 ### **SmartDashboard Entries:**
 ```
+# Single Camera Mode
 Camera/Limelight_URL: Limelight stream URL
 Camera/Limelight_Available: Limelight status
 Camera/USB_URL: USB camera URL
 Camera/USB_Available: USB camera status
+
+# Dual Camera Mode
+Camera/Primary_USB_URL: Primary camera URL
+Camera/Primary_USB_Available: Primary camera status
+Camera/Secondary_USB_URL: Secondary camera URL
+Camera/Secondary_USB_Available: Secondary camera status
 ```
 
+### **Enabling Dual Camera Mode:**
+1. **Edit CameraConfig.java:**
+   ```java
+   public static final boolean USE_DUAL_CAMERAS = true;
+   ```
+2. **Update RobotContainer.java:**
+   ```java
+   // Replace USBCameraServer.initialize() with:
+   DualUSBCameraServer.initialize();
+   ```
+3. **Update SimpleCameraSubsystem:**
+   ```java
+   // Replace new SimpleCameraSubsystem() with:
+   new SimpleCameraSubsystem(true);
+   ```
+
 ### **Shuffleboard Setup:**
+#### **Single Camera Mode:**
 1. **Add Camera widget**
-2. **Select "Custom URL"** source
-3. **Enter Limelight URL:** http://10.57.28.11:5800/stream.mjpg
-4. **Name widget:** "Limelight"
+2. **Select "Camera Server"** source
+3. **Choose "DriverCamera"**
+4. **Add second Camera widget**
+5. **Select "Custom URL"** source
+6. **Enter Limelight URL:** http://172.22.11.2:5800/stream.mjpg
+
+#### **Dual Camera Mode:**
+1. **Add Camera widget**
+2. **Select "Camera Server"** source
+3. **Choose "DriverCamera"** (primary)
+4. **Add second Camera widget**
+5. **Select "Camera Server"** source
+6. **Choose "SecondaryCamera"** (secondary)
+7. **Add third Camera widget**
+8. **Select "Custom URL"** source
+9. **Enter Limelight URL:** http://172.22.11.2:5800/stream.mjpg
 
 ---
 
@@ -228,6 +274,9 @@ Camera/USB_Available: USB camera status
 1. **Camera not showing:** ✅ FIXED - Use URL-based approach
 2. **USB camera problems:** Check physical connection
 3. **Limelight stream:** Test URL in browser first
+4. **Dual camera not working:** Check CameraConfig.USE_DUAL_CAMERAS setting
+5. **Second camera not detected:** Try different device numbers (0, 1, 2, 3)
+6. **Camera stream URL wrong:** Verify team number 5728 in configuration
 
 #### **Odometry Issues:**
 1. **Position stuck at (0,0):** Check robot movement and encoders
