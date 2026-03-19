@@ -86,6 +86,7 @@ public class DynamicUSBCameraServer {
             SmartDashboard.putBoolean("DynamicUSBCamera/Connected", true);
             SmartDashboard.putNumber("DynamicUSBCamera/DeviceNumber", currentDevice);
             SmartDashboard.putString("DynamicUSBCamera/CurrentCamera", initialCamera.getName());
+            SmartDashboard.putBoolean("DynamicUSBCamera/IsReversed", false); // Camera feed is not reversed
             
             System.out.println("Dual USB camera system initialized successfully!");
             System.out.println("Active camera: " + initialCamera.getName());
@@ -165,6 +166,7 @@ public class DynamicUSBCameraServer {
             // Update SmartDashboard
             SmartDashboard.putNumber("DynamicUSBCamera/DeviceNumber", currentDevice);
             SmartDashboard.putString("DynamicUSBCamera/CurrentCamera", newCamera.getName());
+            SmartDashboard.putBoolean("DynamicUSBCamera/IsReversed", false); // Camera feed is not reversed
             
             System.out.println("Switched to camera: " + newCamera.getName());
             
