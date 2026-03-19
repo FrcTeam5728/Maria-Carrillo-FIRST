@@ -20,6 +20,7 @@ import frc.robot.subsystems.LimelightSubsystem;
 import frc.robot.subsystems.PulsingShooterSubsystem;
 import frc.robot.utils.CameraFeedBroadcaster;
 import frc.robot.utils.DualUSBCameraServer;
+import frc.robot.utils.DynamicUSBCameraServer;
 import frc.robot.utils.LimelightCameraServer;
 import frc.robot.utils.USBCameraServer;
 
@@ -83,10 +84,10 @@ public class RobotContainer {
     // Initialize camera systems
     LimelightCameraServer.initialize();
     
-    // Initialize USB CameraServer for driver camera (single camera mode by default)
+    // Initialize USB CameraServer for driver camera (now using dynamic server)
     // To enable dual camera mode, change this to: DualUSBCameraServer.initialize();
     // and update SimpleCameraSubsystem constructor to: new SimpleCameraSubsystem(true)
-    USBCameraServer.initialize();
+    DynamicUSBCameraServer.initialize(1); // Start with device 1
     
     // Configure basic Shuffleboard controls
     SimpleShuffleboardControls.initialize(limelightSubsystem, shooterSubsystem, driveSubsystem);
@@ -122,9 +123,23 @@ public class RobotContainer {
     operatorController.rightBumper()
         .whileTrue(ballSubsystem.runEnd(() -> ballSubsystem.spinUp(), () -> ballSubsystem.stop()));
 
-    // Driver controller B button toggles movement inversion
-    driverController.b()
-        .onTrue(driveSubsystem.runOnce(() -> driveSubsystem.toggleMovementInversion()));
+    // Driver controller X button toggles movement inversion AND camera port
+    driverController.x()
+        .onTrue(driveSubsystem.runOnce(() -> {
+            // Toggle movement inversion
+            driveSubsystem.toggleMovementInversion();
+            
+            // Switch camera port based on inversion state
+            if (driveSubsystem.isMovementInverted()) {
+                // Movement inverted - switch to camera port 1
+                DynamicUSBCameraServer.switchToDevice(1);
+                System.out.println("X button: Movement INVERTED, Camera switched to port 1");
+            } else {
+                // Movement normal - switch to camera port 0
+                DynamicUSBCameraServer.switchToDevice(0);
+                System.out.println("X button: Movement NORMAL, Camera switched to port 0");
+            }
+        }));
 
     // Set the default command for the drive subsystem to the command provided by
     // factory with the values provided by the joystick axes on the driver
@@ -162,8 +177,8 @@ public class RobotContainer {
     // Update camera systems
     LimelightCameraServer.updateStatus();
     
-    // Update USB CameraServer status (single camera mode)
-    USBCameraServer.updateStatus();
+    // Update USB CameraServer status (now using dynamic server)
+    DynamicUSBCameraServer.updateStatus();
     
     // If using dual cameras, also update DualUSBCameraServer status:
     // DualUSBCameraServer.updateStatus();
