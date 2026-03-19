@@ -10,20 +10,20 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /**
- * Dynamic USB camera manager that can switch between different USB camera ports.
- * Allows runtime switching between camera devices without restarting robot code.
+ * Simple USB camera manager that switches between 2 camera devices.
+ * Optimized for USB bandwidth with proper resource cleanup.
  */
 public class DynamicUSBCameraServer {
     
     private static final String CAMERA_NAME = "DriverCamera";
-    private static final int CAMERA_WIDTH = 320;  // Reduced from 640 to save bandwidth
-    private static final int CAMERA_HEIGHT = 240; // Reduced from 480 to save bandwidth  
-    private static final int CAMERA_FPS = 15;     // Reduced from 30 to save bandwidth
+    private static final int CAMERA_WIDTH = 160;  // Very low resolution for maximum bandwidth savings
+    private static final int CAMERA_HEIGHT = 120; // Very low resolution for maximum bandwidth savings  
+    private static final int CAMERA_FPS = 10;      // Very low FPS for maximum bandwidth savings
     private static final int TEAM_NUMBER = 5728;
     
     private static boolean initialized = false;
     private static boolean connected = false;
-    private static int currentDevice = 0;
+    private static int currentDevice = 0;  // Only 0 or 1
     private static CameraServer cameraServer = null;
     private static NetworkTable cameraPublisherTable;
     
@@ -53,6 +53,15 @@ public class DynamicUSBCameraServer {
     }
     
     /**
+     * Switches between camera 0 and 1.
+     * Simple toggle: 0 -> 1 -> 0
+     */
+    public static void switchCamera() {
+        int nextDevice = (currentDevice == 0) ? 1 : 0;  // Only switch between 0 and 1
+        switchToDevice(nextDevice);
+    }
+    
+    /**
      * Switches to a different USB camera device.
      * Stops current camera and starts new one.
      * 
@@ -69,82 +78,33 @@ public class DynamicUSBCameraServer {
             return;
         }
         
+        // Only allow devices 0 and 1
+        if (newDeviceNumber < 0 || newDeviceNumber > 1) {
+            System.out.println("Only cameras 0 and 1 are supported");
+            return;
+        }
+        
         System.out.println("Switching USB camera from device " + currentDevice + " to device " + newDeviceNumber);
         
-        // Aggressive camera cleanup to prevent buffer and storage issues
+        // Simple camera cleanup
         try {
-            // Clear temporary files and storage space
-            cleanupStorage();
-            
-            // Stop current camera
             stopCamera();
-            
-            // Force garbage collection to help with buffer cleanup
-            System.gc();
-            
-            // Wait longer for camera resources to be fully released
-            Thread.sleep(2000); // 2 seconds for full cleanup
-            
-            // Clear any remaining camera instances
-            try {
-                CameraServer.removeCamera(CAMERA_NAME);
-                Thread.sleep(500);
-            } catch (Exception e) {
-                // Ignore cleanup errors
-            }
-            
-            // Final cleanup wait
-            Thread.sleep(1000);
-            
+            Thread.sleep(1000); // 1 second for resource cleanup
+            CameraServer.removeCamera(CAMERA_NAME);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+        } catch (Exception e) {
+            System.err.println("Camera cleanup warning: " + e.getMessage());
         }
         
         // Start new camera
         startCamera(newDeviceNumber);
-        
         currentDevice = newDeviceNumber;
         
         // Update status
         SmartDashboard.putNumber("DynamicUSBCamera/CurrentDevice", currentDevice);
-        SmartDashboard.putString("DynamicUSBCamera/StreamURL", getStreamUrl());
         
         System.out.println("USB camera switched to device " + newDeviceNumber);
-        System.out.println("New stream URL: " + getStreamUrl());
-        System.out.println("Camera switching complete - feed should be available shortly");
-    }
-    
-    /**
-     * Cleans up storage space and temporary files to resolve "no space left on device" errors.
-     */
-    private static void cleanupStorage() {
-        try {
-            System.out.println("Cleaning up storage space...");
-            
-            // Force garbage collection to free up memory
-            System.gc();
-            Thread.sleep(500);
-            
-            // Clear any cached camera data
-            try {
-                // Remove camera server instances to free up storage
-                CameraServer.removeCamera(CAMERA_NAME);
-                Thread.sleep(200);
-                
-                // Force another garbage collection
-                System.gc();
-                Thread.sleep(300);
-                
-            } catch (Exception e) {
-                System.err.println("Storage cleanup warning: " + e.getMessage());
-            }
-            
-            // Log storage cleanup completion
-            System.out.println("Storage cleanup completed");
-            
-        } catch (Exception e) {
-            System.err.println("Storage cleanup failed: " + e.getMessage());
-        }
     }
     
     /**

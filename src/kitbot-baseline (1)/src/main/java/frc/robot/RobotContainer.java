@@ -19,7 +19,6 @@ import frc.robot.subsystems.FuelSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
 import frc.robot.subsystems.PulsingShooterSubsystem;
 import frc.robot.utils.CameraFeedBroadcaster;
-import frc.robot.utils.DualUSBCameraServer;
 import frc.robot.utils.DynamicUSBCameraServer;
 import frc.robot.utils.LimelightCameraServer;
 import frc.robot.utils.USBCameraServer;
@@ -84,10 +83,8 @@ public class RobotContainer {
     // Initialize camera systems
     LimelightCameraServer.initialize();
     
-    // Initialize USB CameraServer for driver camera (now using dynamic server)
-    // To enable dual camera mode, change this to: DualUSBCameraServer.initialize();
-    // and update SimpleCameraSubsystem constructor to: new SimpleCameraSubsystem(true)
-    DynamicUSBCameraServer.initialize(1); // Start with device 1
+    // Initialize USB CameraServer for driver camera
+    DynamicUSBCameraServer.initialize(0); // Start with device 0
     
     // Configure basic Shuffleboard controls
     SimpleShuffleboardControls.initialize(limelightSubsystem, shooterSubsystem, driveSubsystem);
@@ -115,7 +112,6 @@ public class RobotContainer {
             // Toggle movement inversion
             driveSubsystem.toggleMovementInversion();
             
-            // Switch camera port based on inversion state
             if (driveSubsystem.isMovementInverted()) {
                 // Movement inverted - switch to camera port 1
                 DynamicUSBCameraServer.switchToDevice(1);
@@ -126,6 +122,13 @@ public class RobotContainer {
                 System.out.println("B button: Movement NORMAL, Camera switched to port 0");
             }
         }));
+
+    // Switch USB camera with LEFT TRIGGER (operator controller) - simple 2-camera toggle
+    operatorController.leftTrigger()
+        .onTrue(() -> {
+            DynamicUSBCameraServer.toggleDevice();  // Simple toggle between 0 and 1
+            return null;
+        });
 
     // Set the default command for the drive subsystem to the command provided by
     // factory with the values provided by the joystick axes on the driver
@@ -163,11 +166,8 @@ public class RobotContainer {
     // Update camera systems
     LimelightCameraServer.updateStatus();
     
-    // Update USB CameraServer status (now using dynamic server)
+    // Update USB CameraServer status
     DynamicUSBCameraServer.updateStatus();
-    
-    // If using dual cameras, also update DualUSBCameraServer status:
-    // DualUSBCameraServer.updateStatus();
     
     // Update camera feed broadcaster
     cameraFeedBroadcaster.periodic();
