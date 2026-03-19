@@ -201,6 +201,16 @@ public class RobotContainer {
     // While the right bumper on operator controller is held, manual spin-up
     operatorController.rightBumper()
         .whileTrue(ballSubsystem.runEnd(() -> ballSubsystem.spinUp(), () -> ballSubsystem.stop()));
+    
+    // Switch USB camera with LEFT TRIGGER (operator controller) - for bandwidth management
+    operatorController.leftTrigger()
+        .onTrue(() -> {
+            // Switch to next USB camera device (0 -> 1 -> 2 -> 0)
+            int currentDevice = USBCameraServer.getDeviceNumber();
+            int nextDevice = (currentDevice + 1) % 3; // Cycle through 0, 1, 2
+            USBCameraServer.switchToDevice(nextDevice);
+            return null;
+        });
 
     // Set the default command for the drive subsystem to the command provided by
     // factory with the values provided by the joystick axes on the driver

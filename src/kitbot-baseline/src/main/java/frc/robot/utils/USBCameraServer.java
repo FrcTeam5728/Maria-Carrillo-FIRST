@@ -16,14 +16,15 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class USBCameraServer {
     
     private static final String CAMERA_NAME = "DriverCamera";
-    private static final int CAMERA_WIDTH = 640;
-    private static final int CAMERA_HEIGHT = 480;
-    private static final int CAMERA_FPS = 30;
+    private static final int CAMERA_WIDTH = 320;  // Reduced from 640 to save bandwidth
+    private static final int CAMERA_HEIGHT = 240; // Reduced from 480 to save bandwidth  
+    private static final int CAMERA_FPS = 15;     // Reduced from 30 to save bandwidth
     private static final int DEFAULT_DEVICE = 0;
     
     private static boolean isInitialized = false;
     private static boolean isConnected = false;
     private static int deviceNumber = DEFAULT_DEVICE;
+    private static boolean isActive = false;  // Track if camera is currently active
     
     private static NetworkTable cameraPublisherTable;
     
@@ -60,10 +61,12 @@ public class USBCameraServer {
             
             isInitialized = true;
             isConnected = true;
+            isActive = true;  // Camera is now active
             
             // Update SmartDashboard with status
             SmartDashboard.putBoolean("USBCameraServer/Initialized", true);
             SmartDashboard.putBoolean("USBCameraServer/Connected", true);
+            SmartDashboard.putBoolean("USBCameraServer/Active", true);
             SmartDashboard.putString("USBCameraServer/CameraName", CAMERA_NAME);
             SmartDashboard.putNumber("USBCameraServer/DeviceNumber", deviceNumber);
             SmartDashboard.putNumber("USBCameraServer/Width", CAMERA_WIDTH);
@@ -76,8 +79,8 @@ public class USBCameraServer {
             System.out.println("=== USB CAMERA SERVER INITIALIZED ===");
             System.out.println("Camera Name: " + CAMERA_NAME);
             System.out.println("Device Number: " + deviceNumber);
-            System.out.println("Resolution: " + CAMERA_WIDTH + "x" + CAMERA_HEIGHT);
-            System.out.println("FPS: " + CAMERA_FPS);
+            System.out.println("Resolution: " + CAMERA_WIDTH + "x" + CAMERA_HEIGHT + " (Optimized for bandwidth)");
+            System.out.println("FPS: " + CAMERA_FPS + " (Optimized for bandwidth)");
             System.out.println("Status: Connected and ready for Shuffleboard");
             System.out.println("=====================================");
             
@@ -85,9 +88,11 @@ public class USBCameraServer {
             System.err.println("Failed to initialize USB CameraServer with device " + deviceNumber + ": " + e.getMessage());
             isInitialized = false;
             isConnected = false;
+            isActive = false;
             
             SmartDashboard.putBoolean("USBCameraServer/Initialized", false);
             SmartDashboard.putBoolean("USBCameraServer/Connected", false);
+            SmartDashboard.putBoolean("USBCameraServer/Active", false);
             SmartDashboard.putString("USBCameraServer/Status", "Failed: " + e.getMessage());
         }
     }
@@ -164,11 +169,14 @@ public class USBCameraServer {
         try {
             // Update connection status
             SmartDashboard.putBoolean("USBCameraServer/Connected", isConnected);
+            SmartDashboard.putBoolean("USBCameraServer/Active", isActive);
             SmartDashboard.putNumber("USBCameraServer/LastUpdate", 
                                    System.currentTimeMillis() / 1000.0);
             
-            // Re-publish camera stream info
-            publishCameraStream();
+            // Re-publish camera stream info only if active
+            if (isActive) {
+                publishCameraStream();
+            }
             
             // Provide setup info for Shuffleboard
             SmartDashboard.putString("USBCameraServer/ShuffleboardSetup", 
@@ -178,13 +186,13 @@ public class USBCameraServer {
                 "\\n4. Choose '" + CAMERA_NAME + "'" +
                 "\\n5. Camera feed should appear");
             
-            // Provide troubleshooting info
+            // Provide bandwidth-optimized troubleshooting info
             SmartDashboard.putString("USBCameraServer/Troubleshooting", 
                 "1. Check USB camera connection" +
-                "\\n2. Verify camera device number (try 0, 1, 2)" +
-                "\\n3. Check camera permissions on roboRIO" +
-                "\\n4. Restart robot code if needed" +
-                "\\n5. Check if camera is recognized by system");
+                "\\n2. Verify camera device number (use LEFT TRIGGER to switch)" +
+                "\\n3. Camera is optimized for USB bandwidth (320x240@15fps)" +
+                "\\n4. Only one camera active at a time to prevent bandwidth issues" +
+                "\\n5. Use LEFT TRIGGER to cycle through cameras 0, 1, 2");
             
         } catch (Exception e) {
             System.err.println("Error updating USB CameraServer status: " + e.getMessage());
@@ -243,8 +251,75 @@ public class USBCameraServer {
         // Reset initialization state
         isInitialized = false;
         isConnected = false;
+        isActive = false;
         
         // Try with new device number
         initialize(newDeviceNumber);
+    }
+    
+    /**
+     * Safely switches to a different USB camera device.
+     * Properly manages bandwidth by stopping current camera first.
+     * 
+     * @param newDeviceNumber New device number to switch to
+     */
+    public static void switchToDevice(int newDeviceNumber) {
+        System.out.println("=== SWITCHING USB CAMERA ===");
+        System.out.println("From device: " + deviceNumber);
+        System.out.println("To device: " + newDeviceNumber);
+        
+        // First, stop current camera to free bandwidth
+        stopCamera();
+        
+        // Wait a moment for resources to be released
+        try {
+            Thread.sleep(1000); // 1 second delay for faster switching
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        
+        // Reset state completely
+        isInitialized = false;
+        isConnected = false;
+        isActive = false;
+        
+        // Initialize new camera
+        initialize(newDeviceNumber);
+        
+        System.out.println("=== CAMERA SWITCH COMPLETE ===");
+    }
+    
+    /**
+     * Stops the current camera and frees bandwidth.
+     */
+    public static void stopCamera() {
+        if (isActive) {
+            System.out.println("Stopping USB camera device " + deviceNumber + " to free bandwidth");
+            
+            // Clear camera stream info
+            if (cameraPublisherTable != null) {
+                try {
+                    cameraPublisherTable.getEntry(CAMERA_NAME).setString("");
+                } catch (Exception e) {
+                    System.err.println("Error clearing camera stream: " + e.getMessage());
+                }
+            }
+            
+            // Update status
+            isActive = false;
+            SmartDashboard.putBoolean("USBCameraServer/Active", false);
+            SmartDashboard.putString("USBCameraServer/Status", "Camera stopped - bandwidth freed");
+            
+            System.out.println("USB camera stopped - bandwidth freed");
+        }
+    }
+    
+    /**
+     * Checks if the camera is currently active.
+     * 
+     * @return True if camera is active
+     */
+    public static boolean isActive() {
+        return isActive;
     }
 }
