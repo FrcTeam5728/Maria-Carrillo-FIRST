@@ -43,8 +43,7 @@ This guide covers the complete setup and usage of the robot's systems including 
 - **RIGHT BUMPER:** Odometry diagnostic (enhanced)
 - **START Button:** Limelight connection test
 - **BACK Button:** Continuous Limelight diagnostic
-- **B Button:** Toggle movement inversion (forward/backward only)
-- **X Button:** Toggle camera port (0 ↔ 1)
+- **B Button:** Toggle movement inversion AND camera port (forward/backward + rotation, port 0 ↔ 1)
 
 ### **Operator Controller (Port 1):**
 - **D-pad UP:** Select shooting position (Speaker positions)

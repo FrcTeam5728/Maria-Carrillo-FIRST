@@ -109,26 +109,21 @@ public class RobotContainer {
     
     // === DRIVER CONTROLLER - MOVEMENT CONTROLS ===
     
-    // Driver controller B button toggles movement inversion ONLY
+    // Driver controller B button toggles movement inversion AND camera port
     driverController.b()
         .onTrue(driveSubsystem.runOnce(() -> {
+            // Toggle movement inversion
             driveSubsystem.toggleMovementInversion();
-            System.out.println("B button: Movement " + 
-                (driveSubsystem.isMovementInverted() ? "INVERTED" : "NORMAL"));
-        }));
-    
-    // Driver controller X button toggles camera port switching ONLY
-    driverController.x()
-        .onTrue(driveSubsystem.runOnce(() -> {
-            // Switch camera port based on current state
+            
+            // Switch camera port based on inversion state
             if (driveSubsystem.isMovementInverted()) {
                 // Movement inverted - switch to camera port 1
                 DynamicUSBCameraServer.switchToDevice(1);
-                System.out.println("X button: Camera switched to port 1");
+                System.out.println("B button: Movement INVERTED, Camera switched to port 1");
             } else {
                 // Movement normal - switch to camera port 0
                 DynamicUSBCameraServer.switchToDevice(0);
-                System.out.println("X button: Camera switched to port 0");
+                System.out.println("B button: Movement NORMAL, Camera switched to port 0");
             }
         }));
 
@@ -146,15 +141,9 @@ public class RobotContainer {
             () -> {
               double baseSpeed = -driverController.getLeftY() * DRIVE_SCALING;
               double triggerBoost = driverController.getRightTriggerAxis() * 0.5; // 50% boost
-              
-              // Apply movement inversion to translation only (forward/backward)
-              if (driveSubsystem.isMovementInverted()) {
-                  baseSpeed = -baseSpeed; // Invert forward/backward
-              }
-              
               return baseSpeed + triggerBoost;
             },
-            () -> -driverController.getRightX() * ROTATION_SCALING)); // Rotation stays normal
+            () -> -driverController.getRightX() * ROTATION_SCALING));
   }
 
   /**
