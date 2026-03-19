@@ -37,10 +37,10 @@ public class DynamicUSBCameraServer {
     
     /**
      * Initializes the dynamic USB camera server.
-     * Starts with device 0 by default.
+     * Starts with device 1 by default.
      */
     public static void initialize() {
-        initialize(0);
+        initialize(1); // Start with camera 1
     }
     
     /**
