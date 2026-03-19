@@ -14,6 +14,7 @@ import static frc.robot.Constants.OperatorConstants.*;
 import frc.robot.commands.Autos;
 import frc.robot.commands.SimpleAutoShootCommand;
 import frc.robot.config.SimpleShuffleboardControls;
+import frc.robot.config.PathPlannerAutoBuilder;
 import frc.robot.subsystems.SimpleCameraSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.FuelSubsystem;
@@ -62,12 +63,20 @@ public class RobotContainer {
     System.out.println("Pulsing shooter: 3s ON, 0.5s OFF");
     System.out.println("==================================");
 
+    // Configure PathPlanner for autonomous path following
+    PathPlannerAutoBuilder.configure(driveSubsystem);
+    System.out.println("PathPlanner configured for differential drive");
+
     configureBindings();
 
     // Set the options to show up in the Dashboard for selecting auto modes. If you
     // add additional auto modes you can add additional lines here with
     // autoChooser.addOption
     autoChooser.setDefaultOption("Autonomous", Autos.exampleAuto(driveSubsystem, ballSubsystem));
+    
+    // Add PathPlanner auto options
+    autoChooser.addOption("PathPlanner Test", PathPlannerAutoBuilder.getAutoCommand("TestAuto"));
+    autoChooser.addOption("Follow Test Path", PathPlannerAutoBuilder.getFollowPathCommand("TestPath"));
   }
 
   /**
@@ -105,6 +114,20 @@ public class RobotContainer {
     operatorController.a()
         .whileTrue(ballSubsystem.runEnd(() -> ballSubsystem.ejectIntakeOnly(), () -> ballSubsystem.stop()));
     
+    // === PATHPLANNER TEST CONTROLS ===
+    
+    // Driver controller A button - follow test path
+    driverController.a()
+        .onTrue(PathPlannerAutoBuilder.getFollowPathCommand("TestPath"));
+    
+    // Driver controller X button - run test autonomous
+    driverController.x()
+        .onTrue(PathPlannerAutoBuilder.getAutoCommand("TestAuto"));
+    
+    // Operator controller A button - follow square path
+    operatorController.a()
+        .onTrue(PathPlannerAutoBuilder.getFollowPathCommand("SquarePath"));
+
     // === DRIVER CONTROLLER - MOVEMENT CONTROLS ===
     
     // Driver controller B button toggles movement inversion AND camera port

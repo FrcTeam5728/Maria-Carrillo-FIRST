@@ -1,0 +1,36 @@
+{
+  "version": 1.0,
+  "name": "TestAuto",
+  "startingPose": {
+    "x": 0.0,
+    "y": 0.0,
+    "rotation": 0.0
+  },
+  "commandStructure": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "TestPath"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "time": 1.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "SquarePath"
+          }
+        }
+      ]
+    }
+  },
+  "folder": null,
+  "choreoAuto": false
+}
