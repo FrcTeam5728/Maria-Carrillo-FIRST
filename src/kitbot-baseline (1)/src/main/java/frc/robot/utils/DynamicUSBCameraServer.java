@@ -26,6 +26,7 @@ public class DynamicUSBCameraServer {
     
     private static boolean initialized = false;
     private static boolean connected = false;
+    private static boolean isCameraInverted = true; // Camera feels backwards by default
     private static int currentDevice = 0;  // Only 0 or 1
     
     // Dual camera setup for proper switching
@@ -86,7 +87,7 @@ public class DynamicUSBCameraServer {
             SmartDashboard.putBoolean("DynamicUSBCamera/Connected", true);
             SmartDashboard.putNumber("DynamicUSBCamera/DeviceNumber", currentDevice);
             SmartDashboard.putString("DynamicUSBCamera/CurrentCamera", initialCamera.getName());
-            SmartDashboard.putBoolean("DynamicUSBCamera/IsReversed", false); // Camera feed is not reversed
+            SmartDashboard.putBoolean("DynamicUSBCamera/IsReversed", isCameraInverted); // Camera is inverted by default
             
             System.out.println("Dual USB camera system initialized successfully!");
             System.out.println("Active camera: " + initialCamera.getName());
@@ -166,7 +167,7 @@ public class DynamicUSBCameraServer {
             // Update SmartDashboard
             SmartDashboard.putNumber("DynamicUSBCamera/DeviceNumber", currentDevice);
             SmartDashboard.putString("DynamicUSBCamera/CurrentCamera", newCamera.getName());
-            SmartDashboard.putBoolean("DynamicUSBCamera/IsReversed", false); // Camera feed is not reversed
+            SmartDashboard.putBoolean("DynamicUSBCamera/IsReversed", isCameraInverted); // Maintain inversion status
             
             System.out.println("Switched to camera: " + newCamera.getName());
             
