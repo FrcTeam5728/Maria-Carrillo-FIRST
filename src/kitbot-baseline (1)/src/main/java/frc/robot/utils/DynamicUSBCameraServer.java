@@ -5,6 +5,9 @@
 package frc.robot.utils;
 
 import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.cscore.VideoMode;
+import edu.wpi.first.cscore.UsbCamera;
+import edu.wpi.first.cscore.VideoSink;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -24,7 +27,11 @@ public class DynamicUSBCameraServer {
     private static boolean initialized = false;
     private static boolean connected = false;
     private static int currentDevice = 0;  // Only 0 or 1
-    private static CameraServer cameraServer = null;
+    
+    // Dual camera setup for proper switching
+    private static UsbCamera camera0;
+    private static UsbCamera camera1;
+    private static VideoSink server;
     private static NetworkTable cameraPublisherTable;
     
     /**
@@ -36,20 +43,96 @@ public class DynamicUSBCameraServer {
     }
     
     /**
-     * Initializes the dynamic USB camera server with a specific device.
+     * Initializes the dynamic USB camera server with specified starting device.
+     * Uses proper WPILib dual camera approach for instant switching.
      * 
-     * @param deviceNumber Initial USB camera device number
+     * @param startDevice Starting USB camera device number (0 or 1)
      */
-    public static void initialize(int deviceNumber) {
+    public static void initialize(int startDevice) {
         if (initialized) {
+            System.out.println("DynamicUSBCameraServer already initialized");
             return;
         }
         
-        currentDevice = deviceNumber;
-        cameraPublisherTable = NetworkTableInstance.getDefault().getTable("CameraPublisher");
+        if (startDevice != 0 && startDevice != 1) {
+            System.err.println("Invalid start device: " + startDevice + ". Must be 0 or 1.");
+            return;
+        }
         
-        startCamera(currentDevice);
-        initialized = true;
+        try {
+            System.out.println("Initializing dual USB camera system...");
+            
+            // Start both cameras
+            camera0 = CameraServer.startAutomaticCapture(0);
+            camera1 = CameraServer.startAutomaticCapture(1);
+            
+            // Configure both cameras with the same settings
+            configureCamera(camera0, "Camera0");
+            configureCamera(camera1, "Camera1");
+            
+            // Get the server for switching
+            server = CameraServer.getServer();
+            
+            // Set initial camera
+            currentDevice = startDevice;
+            UsbCamera initialCamera = (startDevice == 0) ? camera0 : camera1;
+            server.setSource(initialCamera);
+            
+            connected = true;
+            initialized = true;
+            
+            // Update SmartDashboard
+            SmartDashboard.putBoolean("DynamicUSBCamera/Initialized", true);
+            SmartDashboard.putBoolean("DynamicUSBCamera/Connected", true);
+            SmartDashboard.putNumber("DynamicUSBCamera/DeviceNumber", currentDevice);
+            SmartDashboard.putString("DynamicUSBCamera/CurrentCamera", initialCamera.getName());
+            
+            System.out.println("Dual USB camera system initialized successfully!");
+            System.out.println("Active camera: " + initialCamera.getName());
+            
+        } catch (Exception e) {
+            System.err.println("Failed to initialize dual USB camera system: " + e.getMessage());
+            initialized = false;
+            connected = false;
+        }
+    }
+    
+    /**
+     * Configures a camera with standard settings.
+     */
+    private static void configureCamera(UsbCamera camera, String name) {
+        try {
+            System.out.println("Configuring " + name + "...");
+            
+            // Wait for camera to initialize
+            Thread.sleep(200);
+            
+            // Set resolution and FPS
+            camera.setResolution(CAMERA_WIDTH, CAMERA_HEIGHT);
+            camera.setFPS(CAMERA_FPS);
+            
+            // Set pixel format for bandwidth efficiency
+            try {
+                camera.setPixelFormat(VideoMode.PixelFormat.kYUYV);
+                System.out.println(name + ": Set pixel format to YUYV");
+            } catch (Exception e) {
+                try {
+                    camera.setPixelFormat(VideoMode.PixelFormat.kMJPEG);
+                    System.out.println(name + ": Set pixel format to MJPEG");
+                } catch (Exception e2) {
+                    System.out.println(name + ": Using default pixel format");
+                }
+            }
+            
+            // Verify settings
+            Thread.sleep(100);
+            var mode = camera.getVideoMode();
+            System.out.println(name + " configured: " + mode.width + "x" + mode.height + 
+                             " @ " + mode.fps + " FPS, Format: " + mode.pixelFormat);
+            
+        } catch (Exception e) {
+            System.err.println("Error configuring " + name + ": " + e.getMessage());
+        }
     }
     
     /**
@@ -62,49 +145,42 @@ public class DynamicUSBCameraServer {
     }
     
     /**
-     * Switches to a different USB camera device.
-     * Stops current camera and starts new one.
+     * Switches to a specific USB camera device.
+     * Uses instant switching with VideoSink.setSource().
      * 
-     * @param newDeviceNumber New USB camera device number
+     * @param newDeviceNumber New USB camera device number (0 or 1)
      */
     public static void switchToDevice(int newDeviceNumber) {
-        if (!initialized) {
-            initialize(newDeviceNumber);
+        if (!initialized || !connected) {
+            System.err.println("Cannot switch camera - system not initialized");
             return;
         }
         
-        if (currentDevice == newDeviceNumber) {
-            System.out.println("Camera already on device " + newDeviceNumber);
-            return;
-        }
-        
-        // Only allow devices 0 and 1
         if (newDeviceNumber < 0 || newDeviceNumber > 1) {
-            System.out.println("Only cameras 0 and 1 are supported");
+            System.err.println("Invalid device number: " + newDeviceNumber + ". Must be 0 or 1.");
             return;
         }
         
-        System.out.println("Switching USB camera from device " + currentDevice + " to device " + newDeviceNumber);
-        
-        // Simple camera cleanup
-        try {
-            stopCamera();
-            Thread.sleep(1000); // 1 second for resource cleanup
-            CameraServer.removeCamera(CAMERA_NAME);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        } catch (Exception e) {
-            System.err.println("Camera cleanup warning: " + e.getMessage());
+        if (newDeviceNumber == currentDevice) {
+            System.out.println("Already on device " + newDeviceNumber);
+            return;
         }
         
-        // Start new camera
-        startCamera(newDeviceNumber);
-        currentDevice = newDeviceNumber;
-        
-        // Update status
-        SmartDashboard.putNumber("DynamicUSBCamera/CurrentDevice", currentDevice);
-        
-        System.out.println("USB camera switched to device " + newDeviceNumber);
+        try {
+            // Instant camera switching using VideoSink.setSource()
+            UsbCamera newCamera = (newDeviceNumber == 0) ? camera0 : camera1;
+            server.setSource(newCamera);
+            currentDevice = newDeviceNumber;
+            
+            // Update SmartDashboard
+            SmartDashboard.putNumber("DynamicUSBCamera/DeviceNumber", currentDevice);
+            SmartDashboard.putString("DynamicUSBCamera/CurrentCamera", newCamera.getName());
+            
+            System.out.println("Switched to camera: " + newCamera.getName());
+            
+        } catch (Exception e) {
+            System.err.println("Error switching to device " + newDeviceNumber + ": " + e.getMessage());
+        }
     }
     
     /**
@@ -200,13 +276,13 @@ public class DynamicUSBCameraServer {
                                 
                                 // Set pixel format to YUYV for better bandwidth efficiency
                                 try {
-                                    camera.setPixelFormat(edu.wpi.first.cscore.VideoMode.PixelFormat.kYUYV);
+                                    camera.setPixelFormat(VideoMode.PixelFormat.kYUYV);
                                     System.out.println("Set pixel format to YUYV for bandwidth optimization");
                                 } catch (Exception e) {
                                     System.err.println("Could not set YUYV format, trying default: " + e.getMessage());
                                     // Try MJPEG as fallback
                                     try {
-                                        camera.setPixelFormat(edu.wpi.first.cscore.VideoMode.PixelFormat.kMJPEG);
+                                        camera.setPixelFormat(VideoMode.PixelFormat.kMJPEG);
                                         System.out.println("Set pixel format to MJPEG as fallback");
                                     } catch (Exception e2) {
                                         System.err.println("Could not set MJPEG format, using camera default: " + e2.getMessage());
