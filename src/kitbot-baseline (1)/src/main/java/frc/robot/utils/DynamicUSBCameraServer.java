@@ -111,18 +111,8 @@ public class DynamicUSBCameraServer {
             camera.setResolution(CAMERA_WIDTH, CAMERA_HEIGHT);
             camera.setFPS(CAMERA_FPS);
             
-            // Set pixel format for bandwidth efficiency
-            try {
-                camera.setPixelFormat(VideoMode.PixelFormat.kYUYV);
-                System.out.println(name + ": Set pixel format to YUYV");
-            } catch (Exception e) {
-                try {
-                    camera.setPixelFormat(VideoMode.PixelFormat.kMJPEG);
-                    System.out.println(name + ": Set pixel format to MJPEG");
-                } catch (Exception e2) {
-                    System.out.println(name + ": Using default pixel format");
-                }
-            }
+            // Skip pixel format setting - use camera default for compatibility
+            System.out.println(name + ": Using camera default pixel format");
             
             // Verify settings
             Thread.sleep(100);
@@ -274,20 +264,8 @@ public class DynamicUSBCameraServer {
                                     System.err.println("Could not verify new camera settings: " + e.getMessage());
                                 }
                                 
-                                // Set pixel format to YUYV for better bandwidth efficiency
-                                try {
-                                    camera.setPixelFormat(VideoMode.PixelFormat.kYUYV);
-                                    System.out.println("Set pixel format to YUYV for bandwidth optimization");
-                                } catch (Exception e) {
-                                    System.err.println("Could not set YUYV format, trying default: " + e.getMessage());
-                                    // Try MJPEG as fallback
-                                    try {
-                                        camera.setPixelFormat(VideoMode.PixelFormat.kMJPEG);
-                                        System.out.println("Set pixel format to MJPEG as fallback");
-                                    } catch (Exception e2) {
-                                        System.err.println("Could not set MJPEG format, using camera default: " + e2.getMessage());
-                                    }
-                                }
+                                // Skip pixel format setting - use camera default for compatibility
+                                System.out.println("Using camera default pixel format");
                                 
                                 // Apply video scaling to make feed appear larger
                                 // Note: WPILib CameraServer doesn't have direct scaling, 
