@@ -263,10 +263,10 @@ public abstract class DriveSubsystem extends SubsystemBase {
             double forwardSpeed = forward.getAsDouble();
             double rotationSpeed = rotation.getAsDouble();
             
-            // Apply movement inversion to both direction and rotation
+            // Apply movement inversion to forward/backward only (not rotation)
             if (movementInverted) {
-                forwardSpeed = -forwardSpeed; // Invert forward/backward
-                rotationSpeed = -rotationSpeed; // Invert rotation
+                forwardSpeed = -forwardSpeed; // Invert forward/backward only
+                // rotationSpeed remains unchanged for consistent turning
             }
             
             drive.arcadeDrive(forwardSpeed, rotationSpeed);
@@ -275,7 +275,8 @@ public abstract class DriveSubsystem extends SubsystemBase {
     
     /**
      * Toggles movement inversion state.
-     * When inverted, all forward/backward and left/right movement is reversed.
+     * When inverted, only forward/backward movement is reversed.
+     * Left/right rotation remains normal for consistent turning.
      */
     public void toggleMovementInversion() {
         movementInverted = !movementInverted;

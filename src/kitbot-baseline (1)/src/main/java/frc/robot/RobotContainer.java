@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 import static frc.robot.Constants.OperatorConstants.*;
 import frc.robot.commands.Autos;
+import frc.robot.commands.RampZigzagShootAuto;
 import frc.robot.commands.SimpleAutoShootCommand;
 import frc.robot.config.SimpleShuffleboardControls;
 import frc.robot.config.PathPlannerAutoBuilder;
@@ -78,6 +79,9 @@ public class RobotContainer {
     // Add PathPlanner auto options
     autoChooser.addOption("PathPlanner Test", PathPlannerAutoBuilder.getAutoCommand("TestAuto"));
     autoChooser.addOption("Follow Test Path", PathPlannerAutoBuilder.getFollowPathCommand("TestPath"));
+    
+    // Add custom autonomous commands
+    autoChooser.addOption("Ramp Zigzag Shoot", new RampZigzagShootAuto(driveSubsystem, ballSubsystem));
   }
 
   /**
