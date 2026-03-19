@@ -59,6 +59,9 @@ public abstract class DriveSubsystem extends SubsystemBase {
     protected double manualLeftSpeed = 0.0;
     protected double manualRightSpeed = 0.0;
     
+    // Movement inversion state
+    private boolean movementInverted = false;
+    
     /**
      * Update odometry - should be called periodically
      */
@@ -256,7 +259,47 @@ public abstract class DriveSubsystem extends SubsystemBase {
      * @return Command to drive the robot
      */
     public Command driveArcade(DoubleSupplier forward, DoubleSupplier rotation) {
-        return this.run(
-            () -> drive.arcadeDrive(forward.getAsDouble(), rotation.getAsDouble()));
+        return this.run(() -> {
+            double forwardSpeed = forward.getAsDouble();
+            double rotationSpeed = rotation.getAsDouble();
+            
+            // Apply movement inversion if enabled
+            if (movementInverted) {
+                forwardSpeed = -forwardSpeed;
+                rotationSpeed = -rotationSpeed;
+            }
+            
+            drive.arcadeDrive(forwardSpeed, rotationSpeed);
+        });
+    }
+    
+    /**
+     * Toggles movement inversion state.
+     * When inverted, all forward/backward and left/right movement is reversed.
+     */
+    public void toggleMovementInversion() {
+        movementInverted = !movementInverted;
+        System.out.println("Movement inversion " + (movementInverted ? "ENABLED" : "DISABLED"));
+        SmartDashboard.putBoolean("Drive/MovementInverted", movementInverted);
+    }
+    
+    /**
+     * Gets the current movement inversion state.
+     * 
+     * @return True if movement is inverted
+     */
+    public boolean isMovementInverted() {
+        return movementInverted;
+    }
+    
+    /**
+     * Sets the movement inversion state.
+     * 
+     * @param inverted Whether movement should be inverted
+     */
+    public void setMovementInverted(boolean inverted) {
+        this.movementInverted = inverted;
+        System.out.println("Movement inversion " + (movementInverted ? "ENABLED" : "DISABLED"));
+        SmartDashboard.putBoolean("Drive/MovementInverted", movementInverted);
     }
 }

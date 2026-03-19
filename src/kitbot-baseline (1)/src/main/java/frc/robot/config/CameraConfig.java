@@ -22,8 +22,8 @@ public final class CameraConfig {
      * These correspond to the device numbers assigned by the roboRIO.
      * Typical values: 0 for first camera, 1 for second camera, etc.
      */
-    public static final int PRIMARY_USB_CAMERA_DEVICE = 0;
-    public static final int SECONDARY_USB_CAMERA_DEVICE = 1;
+    public static final int PRIMARY_USB_CAMERA_DEVICE = 1;
+    public static final int SECONDARY_USB_CAMERA_DEVICE = 0;
     
     /**
      * USB Camera resolution and FPS settings.

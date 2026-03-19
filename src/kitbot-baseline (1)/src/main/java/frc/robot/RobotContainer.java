@@ -122,6 +122,10 @@ public class RobotContainer {
     operatorController.rightBumper()
         .whileTrue(ballSubsystem.runEnd(() -> ballSubsystem.spinUp(), () -> ballSubsystem.stop()));
 
+    // Driver controller B button toggles movement inversion
+    driverController.b()
+        .onTrue(driveSubsystem.runOnce(() -> driveSubsystem.toggleMovementInversion()));
+
     // Set the default command for the drive subsystem to the command provided by
     // factory with the values provided by the joystick axes on the driver
     // controller. The Y axis of the controller is inverted so that pushing the
