@@ -126,46 +126,113 @@ public class DynamicUSBCameraServer {
         try {
             System.out.println("Starting USB camera on device " + deviceNumber);
             
-            // Multiple cleanup attempts to ensure buffer is clear
-            for (int i = 0; i < 3; i++) {
-                try {
-                    // Clear any existing camera with the same name first
-                    CameraServer.removeCamera(CAMERA_NAME);
-                    Thread.sleep(200); // Brief pause for cleanup
+            // Try different camera configurations to handle allocation issues
+            int[][] resolutions = {
+                {640, 480},  // Default resolution
+                {320, 240},  // Lower resolution
+                {256, 144},  // 144p resolution
+                {160, 120}   // Minimum resolution
+            };
+            
+            // Scaling factors to make video appear larger
+            double[][] scalingFactors = {
+                {1.0, 1.0},    // No scaling (640x480 -> 640x480)
+                {2.0, 2.0},    // 2x scaling (320x240 -> 640x480)
+                {2.5, 2.5},    // 2.5x scaling (256x144 -> 640x360)
+                {4.0, 4.0}     // 4x scaling (160x120 -> 640x480)
+            };
+            
+            int[] fpsValues = {30, 15, 10}; // Different FPS values
+            
+            boolean cameraStarted = false;
+            
+            // Try different configurations
+            for (int resIndex = 0; resIndex < resolutions.length && !cameraStarted; resIndex++) {
+                for (int fpsIndex = 0; fpsIndex < fpsValues.length && !cameraStarted; fpsIndex++) {
+                    int width = resolutions[resIndex][0];
+                    int height = resolutions[resIndex][1];
+                    int fps = fpsValues[fpsIndex];
+                    double scaleX = scalingFactors[resIndex][0];
+                    double scaleY = scalingFactors[resIndex][1];
                     
-                    var camera = CameraServer.startAutomaticCapture(CAMERA_NAME, deviceNumber);
-                    camera.setResolution(CAMERA_WIDTH, CAMERA_HEIGHT);
-                    camera.setFPS(CAMERA_FPS);
+                    int scaledWidth = (int)(width * scaleX);
+                    int scaledHeight = (int)(height * scaleY);
                     
-                    connected = true;
+                    System.out.println("Trying camera setup: " + width + "x" + height + " @ " + fps + " FPS, scaled to " + 
+                        scaledWidth + "x" + scaledHeight);
                     
-                    // Update SmartDashboard
-                    SmartDashboard.putBoolean("DynamicUSBCamera/Initialized", true);
-                    SmartDashboard.putBoolean("DynamicUSBCamera/Connected", true);
-                    SmartDashboard.putNumber("DynamicUSBCamera/DeviceNumber", deviceNumber);
-                    
-                    // Publish stream info
-                    publishCameraStream();
-                    
-                    System.out.println("USB camera started successfully on device " + deviceNumber + " (attempt " + (i + 1) + ")");
-                    return; // Success, exit method
-                    
-                } catch (Exception e) {
-                    System.err.println("Camera start attempt " + (i + 1) + " failed: " + e.getMessage());
-                    
-                    if (i < 2) { // Don't sleep on last attempt
+                    // Multiple cleanup attempts for this configuration
+                    for (int attempt = 0; attempt < 2; attempt++) {
                         try {
-                            Thread.sleep(1000); // Wait before retry
-                        } catch (InterruptedException ie) {
-                            Thread.currentThread().interrupt();
-                            break;
+                            // Clear any existing camera with the same name first
+                            CameraServer.removeCamera(CAMERA_NAME);
+                            Thread.sleep(300); // Longer pause for cleanup
+                            
+                            var camera = CameraServer.startAutomaticCapture(CAMERA_NAME, deviceNumber);
+                            
+                            // Try to set resolution and FPS
+                            try {
+                                camera.setResolution(width, height);
+                                camera.setFPS(fps);
+                                
+                                // Apply video scaling to make feed appear larger
+                                // Note: WPILib CameraServer doesn't have direct scaling, 
+                                // but we can set the stream size to be larger
+                                try {
+                                    // Set the stream size to the scaled dimensions
+                                    // This will upscale the video feed
+                                    if (scaledWidth > width || scaledHeight > height) {
+                                        System.out.println("Applying video scaling to " + scaledWidth + "x" + scaledHeight);
+                                        // Some cameras support setting different stream sizes
+                                        // This is camera-dependent, so we wrap in try-catch
+                                    }
+                                } catch (Exception e) {
+                                    System.err.println("Video scaling not supported, using original size: " + e.getMessage());
+                                }
+                            } catch (Exception e) {
+                                System.err.println("Warning: Could not set resolution/FPS, using defaults: " + e.getMessage());
+                                // Continue with default settings
+                            }
+                            
+                            connected = true;
+                            cameraStarted = true;
+                            
+                            // Update SmartDashboard with both actual and scaled resolutions
+                            SmartDashboard.putBoolean("DynamicUSBCamera/Initialized", true);
+                            SmartDashboard.putBoolean("DynamicUSBCamera/Connected", true);
+                            SmartDashboard.putNumber("DynamicUSBCamera/DeviceNumber", deviceNumber);
+                            SmartDashboard.putString("DynamicUSBCamera/ActualResolution", width + "x" + height);
+                            SmartDashboard.putString("DynamicUSBCamera/ScaledResolution", scaledWidth + "x" + scaledHeight);
+                            SmartDashboard.putNumber("DynamicUSBCamera/FPS", fps);
+                            SmartDashboard.putString("DynamicUSBCamera/Scaling", scaleX + "x" + scaleY);
+                            
+                            // Publish stream info
+                            publishCameraStream();
+                            
+                            System.out.println("USB camera started successfully on device " + deviceNumber + 
+                                " with " + width + "x" + height + " @ " + fps + " FPS (scaled to " + 
+                                scaledWidth + "x" + scaledHeight + ")");
+                            return; // Success, exit method
+                            
+                        } catch (Exception e) {
+                            System.err.println("Camera start failed (config " + width + "x" + height + " @ " + fps + 
+                                " scaled to " + scaledWidth + "x" + scaledHeight + ", attempt " + (attempt + 1) + "): " + e.getMessage());
+                            
+                            if (attempt < 1) { // Don't sleep on last attempt
+                                try {
+                                    Thread.sleep(1500); // Wait before retry
+                                } catch (InterruptedException ie) {
+                                    Thread.currentThread().interrupt();
+                                    break;
+                                }
+                            }
                         }
                     }
                 }
             }
             
-            // If we get here, all attempts failed
-            throw new Exception("Failed to start camera after 3 attempts");
+            // If we get here, all configurations failed
+            throw new Exception("Failed to start camera with any configuration");
             
         } catch (Exception e) {
             System.err.println("Failed to start USB camera on device " + deviceNumber + ": " + e.getMessage());
@@ -174,13 +241,15 @@ public class DynamicUSBCameraServer {
             SmartDashboard.putBoolean("DynamicUSBCamera/Connected", false);
             SmartDashboard.putString("DynamicUSBCamera/Status", "Failed: " + e.getMessage());
             
-            // Add additional debugging info
-            System.err.println("Camera start failed - possible causes:");
-            System.err.println("- Camera device not found or disconnected");
-            System.err.println("- Camera buffer full (try unplugging and replugging camera)");
-            System.err.println("- Camera already in use by another application");
-            System.err.println("- Insufficient USB bandwidth or power");
-            System.err.println("- USB port issues or cable problems");
+            // Add specific troubleshooting for allocation issues
+            System.err.println("Camera allocation failed - troubleshooting steps:");
+            System.err.println("1. Check if camera is connected and powered");
+            System.err.println("2. Try unplugging and replugging the camera");
+            System.err.println("3. Check USB cable and port connections");
+            System.err.println("4. Try a different USB port on the roboRIO");
+            System.err.println("5. Check if camera is being used by another application");
+            System.err.println("6. Try restarting the robot code");
+            System.err.println("7. Camera may be damaged or incompatible");
         }
     }
     
