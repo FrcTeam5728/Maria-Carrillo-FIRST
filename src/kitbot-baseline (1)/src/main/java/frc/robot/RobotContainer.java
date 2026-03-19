@@ -107,8 +107,8 @@ public class RobotContainer {
     
     // While the right bumper on operator controller is held, continuous shooter
     operatorController.rightBumper()
-        .whileTrue(shooterSubsystem.runEnd(() -> shooterSubsystem.startContinuous(), 
-                                          () -> shooterSubsystem.stop()));
+        .whileTrue(ballSubsystem.runEnd(() -> ballSubsystem.launch(), 
+                                          () -> ballSubsystem.stop()));
     
     // Ball ejection with A button (uses only intake motor in reverse)
     operatorController.a()
@@ -118,15 +118,30 @@ public class RobotContainer {
     
     // Driver controller A button - follow test path
     driverController.a()
-        .onTrue(PathPlannerAutoBuilder.getFollowPathCommand("TestPath"));
+        .onTrue(Commands.runOnce(() -> {
+            DynamicUSBCameraServer.pauseForAutonomous();
+        }).andThen(PathPlannerAutoBuilder.getFollowPathCommand("TestPath"))
+        .finallyDo(() -> {
+            DynamicUSBCameraServer.resumeFromAutonomous();
+        }));
     
     // Driver controller X button - run test autonomous
     driverController.x()
-        .onTrue(PathPlannerAutoBuilder.getAutoCommand("TestAuto"));
+        .onTrue(Commands.runOnce(() -> {
+            DynamicUSBCameraServer.pauseForAutonomous();
+        }).andThen(PathPlannerAutoBuilder.getAutoCommand("TestAuto"))
+        .finallyDo(() -> {
+            DynamicUSBCameraServer.resumeFromAutonomous();
+        }));
     
     // Operator controller A button - follow square path
     operatorController.a()
-        .onTrue(PathPlannerAutoBuilder.getFollowPathCommand("SquarePath"));
+        .onTrue(Commands.runOnce(() -> {
+            DynamicUSBCameraServer.pauseForAutonomous();
+        }).andThen(PathPlannerAutoBuilder.getFollowPathCommand("SquarePath"))
+        .finallyDo(() -> {
+            DynamicUSBCameraServer.resumeFromAutonomous();
+        }));
 
     // === DRIVER CONTROLLER - MOVEMENT CONTROLS ===
     

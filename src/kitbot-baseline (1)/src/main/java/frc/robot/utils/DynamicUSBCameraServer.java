@@ -272,6 +272,28 @@ public class DynamicUSBCameraServer {
     }
     
     /**
+     * Pauses camera during autonomous to free USB bandwidth.
+     * Call this before starting PathPlanner commands.
+     */
+    public static void pauseForAutonomous() {
+        if (initialized && connected) {
+            System.out.println("Pausing camera for autonomous - freeing USB bandwidth");
+            stopCamera();
+        }
+    }
+    
+    /**
+     * Resumes camera after autonomous completes.
+     * Call this after PathPlanner commands finish.
+     */
+    public static void resumeFromAutonomous() {
+        if (initialized && !connected) {
+            System.out.println("Resuming camera after autonomous");
+            switchToDevice(currentDevice); // Restart on same device
+        }
+    }
+    
+    /**
      * Publishes camera stream information.
      */
     private static void publishCameraStream() {
