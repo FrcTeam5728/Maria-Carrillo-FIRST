@@ -155,6 +155,10 @@ public class RobotContainer {
     
     // === OPERATOR CONTROLLER - SHOOTING CONTROLS ===
     
+    // Auto-shoot with RIGHT TRIGGER (operator controller) - primary shooting method
+    operatorController.rightTrigger()
+        .whileTrue(new SimpleAutoShootCommand(driveSubsystem, limelightSubsystem, shooterSubsystem));
+    
     // D-pad controls for shooting position selection
     operatorController.povUp()
         .onTrue(new SelectShootingPositionCommand(shootingPositionManager, 0)); // Up - Speaker positions
@@ -172,10 +176,6 @@ public class RobotContainer {
     operatorController.x()
         .onTrue(new ShootAtPositionCommand(driveSubsystem, limelightSubsystem, 
                                          shooterSubsystem, shootingPositionManager));
-    
-    // Simple auto-shoot with B button (uses centralized Limelight and pulsing shooter)
-    operatorController.b()
-        .onTrue(new SimpleAutoShootCommand(driveSubsystem, limelightSubsystem, shooterSubsystem));
     
     // Manual shooter control with Y button
     operatorController.y()

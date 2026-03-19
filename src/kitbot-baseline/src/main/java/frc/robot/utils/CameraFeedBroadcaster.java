@@ -44,8 +44,11 @@ public class CameraFeedBroadcaster extends SubsystemBase {
     
     @Override
     public void periodic() {
-        // Continuously publish stream URL
-        publishCameraStream();
+        // Only publish stream URL periodically to avoid storage issues
+        long currentTime = System.currentTimeMillis();
+        if (currentTime % 5000 < 20) { // Every 5 seconds for 20ms
+            publishCameraStream();
+        }
     }
     
     /**

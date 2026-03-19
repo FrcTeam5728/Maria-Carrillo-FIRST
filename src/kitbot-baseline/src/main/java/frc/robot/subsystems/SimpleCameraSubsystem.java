@@ -53,20 +53,16 @@ public class SimpleCameraSubsystem extends SubsystemBase {
     
     @Override
     public void periodic() {
-        // Update camera status in SmartDashboard
-        edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putBoolean("Camera/USB_Available", usbCameraAvailable);
-        edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putBoolean("Camera/Limelight_Available", limelightAvailable);
-        
-        // Debug: Print status every 10 seconds
+        // Update camera status in SmartDashboard periodically to avoid storage issues
         long currentTime = System.currentTimeMillis();
-        if (currentTime % 10000 < 100) {
+        if (currentTime % 10000 < 50) { // Every 10 seconds for 50ms
+            edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putBoolean("Camera/USB_Available", usbCameraAvailable);
+            edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putBoolean("Camera/Limelight_Available", limelightAvailable);
+            
             System.out.println("Camera Status:");
             System.out.println("  USB Camera: " + (usbCameraAvailable ? "AVAILABLE" : "NOT AVAILABLE"));
             System.out.println("  Limelight: " + (limelightAvailable ? "AVAILABLE" : "NOT AVAILABLE"));
             System.out.println("  Limelight URL: " + LIMELIGHT_STREAM_URL);
-            System.out.println("  Add Camera widgets to Shuffleboard using these SmartDashboard keys:");
-            System.out.println("    - Limelight_URL: " + LIMELIGHT_STREAM_URL);
-            System.out.println("    - USB_Camera_URL: (set if needed)");
         }
     }
     
