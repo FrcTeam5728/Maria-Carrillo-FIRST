@@ -263,10 +263,10 @@ public abstract class DriveSubsystem extends SubsystemBase {
             double forwardSpeed = forward.getAsDouble();
             double rotationSpeed = rotation.getAsDouble();
             
-            // Apply movement inversion if enabled
+            // Apply movement inversion to translation only (forward/backward)
             if (movementInverted) {
-                forwardSpeed = -forwardSpeed;
-                rotationSpeed = -rotationSpeed;
+                forwardSpeed = -forwardSpeed; // Only invert forward/backward
+                // Rotation stays normal
             }
             
             drive.arcadeDrive(forwardSpeed, rotationSpeed);

@@ -70,11 +70,14 @@ public abstract class FuelSubsystem extends SubsystemBase {
     
     /**
      * Sets intake/launcher roller to eject fuel back out using ONLY intake motor.
-     * Feeder motor does nothing.
+     * Both motors spin in reverse direction for ejection.
      */
     public void ejectIntakeOnly() {
-        setFeederVoltage(0); // Feeder motor does nothing
-        setIntakeLauncherVoltage(-1 * getDashboardVoltage("Intaking intake roller value", INTAKING_INTAKE_VOLTAGE));
+        double intakeVoltage = -1 * getDashboardVoltage("Intaking intake roller value", INTAKING_INTAKE_VOLTAGE);
+        double feederVoltage = -1 * getDashboardVoltage("Intaking feeder roller value", INTAKING_FEEDER_VOLTAGE);
+        
+        setIntakeLauncherVoltage(intakeVoltage); // Intake motor in reverse
+        setFeederVoltage(feederVoltage); // Feeder motor also in reverse
     }
 
     /**

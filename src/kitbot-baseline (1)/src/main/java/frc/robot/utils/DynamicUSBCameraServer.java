@@ -71,12 +71,12 @@ public class DynamicUSBCameraServer {
         
         System.out.println("Switching USB camera from device " + currentDevice + " to device " + newDeviceNumber);
         
-        // Stop current camera and wait for cleanup
+        // Stop current camera completely
         stopCamera();
         
-        // Wait longer for camera resources to be fully released
+        // Wait for camera resources to be fully released
         try {
-            Thread.sleep(500); // Increased wait time
+            Thread.sleep(1000); // Increased to 1 second for full cleanup
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -92,6 +92,7 @@ public class DynamicUSBCameraServer {
         
         System.out.println("USB camera switched to device " + newDeviceNumber);
         System.out.println("New stream URL: " + getStreamUrl());
+        System.out.println("Camera switching complete - feed should be available shortly");
     }
     
     /**

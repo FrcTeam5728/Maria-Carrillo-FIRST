@@ -43,18 +43,17 @@ This guide covers the complete setup and usage of the robot's systems including 
 - **RIGHT BUMPER:** Odometry diagnostic (enhanced)
 - **START Button:** Limelight connection test
 - **BACK Button:** Continuous Limelight diagnostic
+- **B Button:** Toggle movement inversion (forward/backward only)
+- **X Button:** Toggle camera port (0 ↔ 1)
 
 ### **Operator Controller (Port 1):**
 - **D-pad UP:** Select shooting position (Speaker positions)
 - **D-pad RIGHT:** Next shooting position
 - **D-pad DOWN:** Select shooting position (Stage positions)
 - **D-pad LEFT:** Previous shooting position
-- **X Button:** Shoot at selected position
-- **B Button:** Simple auto-shoot
-- **A Button:** Ball ejection (intake motor reverse only)
-- **Y Button:** Toggle pulsing shooter
 - **LEFT BUMPER:** Intake fuel
 - **RIGHT BUMPER:** Continuous shooter
+- **A Button:** Ball ejection (intake motor reverse only)
 
 ---
 

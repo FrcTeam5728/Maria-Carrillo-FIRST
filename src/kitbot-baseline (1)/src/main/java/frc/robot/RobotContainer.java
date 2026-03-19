@@ -94,50 +94,41 @@ public class RobotContainer {
     
     // === OPERATOR CONTROLLER - SHOOTING CONTROLS ===
     
-    // Simple auto-shoot with B button (uses Limelight and pulsing shooter)
-    operatorController.b()
-        .onTrue(new SimpleAutoShootCommand(driveSubsystem, limelightSubsystem, shooterSubsystem));
+    // While the left bumper on operator controller is held, intake Fuel
+    operatorController.leftBumper()
+        .whileTrue(ballSubsystem.runEnd(() -> ballSubsystem.intake(), () -> ballSubsystem.stop()));
+    
+    // While the right bumper on operator controller is held, continuous shooter
+    operatorController.rightBumper()
+        .whileTrue(shooterSubsystem.runEnd(() -> shooterSubsystem.startContinuous(), 
+                                          () -> shooterSubsystem.stop()));
     
     // Ball ejection with A button (uses only intake motor in reverse)
     operatorController.a()
         .whileTrue(ballSubsystem.runEnd(() -> ballSubsystem.ejectIntakeOnly(), () -> ballSubsystem.stop()));
     
-    // Pulsing shooter toggle with Y button (moved from A)
-    operatorController.y()
-        .onTrue(shooterSubsystem.runOnce(() -> {
-            if (shooterSubsystem.isPulsing()) {
-                shooterSubsystem.stop();
-                System.out.println("Pulsing shooter stopped");
-            } else {
-                shooterSubsystem.startPulsing();
-                System.out.println("Pulsing shooter started");
-            }
+    // === DRIVER CONTROLLER - MOVEMENT CONTROLS ===
+    
+    // Driver controller B button toggles movement inversion ONLY
+    driverController.b()
+        .onTrue(driveSubsystem.runOnce(() -> {
+            driveSubsystem.toggleMovementInversion();
+            System.out.println("B button: Movement " + 
+                (driveSubsystem.isMovementInverted() ? "INVERTED" : "NORMAL"));
         }));
     
-    // While the left bumper on operator controller is held, intake Fuel
-    operatorController.leftBumper()
-        .whileTrue(ballSubsystem.runEnd(() -> ballSubsystem.intake(), () -> ballSubsystem.stop()));
-    
-    // While the right bumper on operator controller is held, continuous shooter (moved from Y)
-    operatorController.rightBumper()
-        .whileTrue(shooterSubsystem.runEnd(() -> shooterSubsystem.startContinuous(), 
-                                          () -> shooterSubsystem.stop()));
-
-    // Driver controller X button toggles movement inversion AND camera port
+    // Driver controller X button toggles camera port switching ONLY
     driverController.x()
         .onTrue(driveSubsystem.runOnce(() -> {
-            // Toggle movement inversion
-            driveSubsystem.toggleMovementInversion();
-            
-            // Switch camera port based on inversion state
+            // Switch camera port based on current state
             if (driveSubsystem.isMovementInverted()) {
                 // Movement inverted - switch to camera port 1
                 DynamicUSBCameraServer.switchToDevice(1);
-                System.out.println("X button: Movement INVERTED, Camera switched to port 1");
+                System.out.println("X button: Camera switched to port 1");
             } else {
                 // Movement normal - switch to camera port 0
                 DynamicUSBCameraServer.switchToDevice(0);
-                System.out.println("X button: Movement NORMAL, Camera switched to port 0");
+                System.out.println("X button: Camera switched to port 0");
             }
         }));
 
@@ -155,9 +146,15 @@ public class RobotContainer {
             () -> {
               double baseSpeed = -driverController.getLeftY() * DRIVE_SCALING;
               double triggerBoost = driverController.getRightTriggerAxis() * 0.5; // 50% boost
+              
+              // Apply movement inversion to translation only (forward/backward)
+              if (driveSubsystem.isMovementInverted()) {
+                  baseSpeed = -baseSpeed; // Invert forward/backward
+              }
+              
               return baseSpeed + triggerBoost;
             },
-            () -> -driverController.getRightX() * ROTATION_SCALING));
+            () -> -driverController.getRightX() * ROTATION_SCALING)); // Rotation stays normal
   }
 
   /**
