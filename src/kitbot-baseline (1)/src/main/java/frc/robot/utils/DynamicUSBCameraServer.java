@@ -16,9 +16,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class DynamicUSBCameraServer {
     
     private static final String CAMERA_NAME = "DriverCamera";
-    private static final int CAMERA_WIDTH = 640;
-    private static final int CAMERA_HEIGHT = 480;
-    private static final int CAMERA_FPS = 30;
+    private static final int CAMERA_WIDTH = 320;  // Reduced from 640 to save bandwidth
+    private static final int CAMERA_HEIGHT = 240; // Reduced from 480 to save bandwidth  
+    private static final int CAMERA_FPS = 15;     // Reduced from 30 to save bandwidth
     private static final int TEAM_NUMBER = 5728;
     
     private static boolean initialized = false;
@@ -301,7 +301,7 @@ public class DynamicUSBCameraServer {
             System.out.println("Stopped USB camera on device " + currentDevice);
             
             // Wait a moment for resources to be released
-            Thread.sleep(100);
+            Thread.sleep(1000); // 1 second delay for faster switching
             
         } catch (Exception e) {
             System.err.println("Error stopping camera: " + e.getMessage());
