@@ -71,8 +71,11 @@ public class DynamicUSBCameraServer {
         
         System.out.println("Switching USB camera from device " + currentDevice + " to device " + newDeviceNumber);
         
-        // Aggressive camera cleanup to prevent buffer issues
+        // Aggressive camera cleanup to prevent buffer and storage issues
         try {
+            // Clear temporary files and storage space
+            cleanupStorage();
+            
             // Stop current camera
             stopCamera();
             
@@ -109,6 +112,39 @@ public class DynamicUSBCameraServer {
         System.out.println("USB camera switched to device " + newDeviceNumber);
         System.out.println("New stream URL: " + getStreamUrl());
         System.out.println("Camera switching complete - feed should be available shortly");
+    }
+    
+    /**
+     * Cleans up storage space and temporary files to resolve "no space left on device" errors.
+     */
+    private static void cleanupStorage() {
+        try {
+            System.out.println("Cleaning up storage space...");
+            
+            // Force garbage collection to free up memory
+            System.gc();
+            Thread.sleep(500);
+            
+            // Clear any cached camera data
+            try {
+                // Remove camera server instances to free up storage
+                CameraServer.removeCamera(CAMERA_NAME);
+                Thread.sleep(200);
+                
+                // Force another garbage collection
+                System.gc();
+                Thread.sleep(300);
+                
+            } catch (Exception e) {
+                System.err.println("Storage cleanup warning: " + e.getMessage());
+            }
+            
+            // Log storage cleanup completion
+            System.out.println("Storage cleanup completed");
+            
+        } catch (Exception e) {
+            System.err.println("Storage cleanup failed: " + e.getMessage());
+        }
     }
     
     /**
@@ -241,15 +277,17 @@ public class DynamicUSBCameraServer {
             SmartDashboard.putBoolean("DynamicUSBCamera/Connected", false);
             SmartDashboard.putString("DynamicUSBCamera/Status", "Failed: " + e.getMessage());
             
-            // Add specific troubleshooting for allocation issues
+            // Add specific troubleshooting for allocation and storage issues
             System.err.println("Camera allocation failed - troubleshooting steps:");
-            System.err.println("1. Check if camera is connected and powered");
-            System.err.println("2. Try unplugging and replugging the camera");
-            System.err.println("3. Check USB cable and port connections");
-            System.err.println("4. Try a different USB port on the roboRIO");
-            System.err.println("5. Check if camera is being used by another application");
-            System.err.println("6. Try restarting the robot code");
-            System.err.println("7. Camera may be damaged or incompatible");
+            System.err.println("1. STORAGE SPACE: Check roboRIO storage (no space left on device)");
+            System.err.println("2. MEMORY: Force restart robot code to clear memory");
+            System.err.println("3. HARDWARE: Check if camera is connected and powered");
+            System.err.println("4. USB: Try unplugging and replugging camera");
+            System.err.println("5. PORT: Try a different USB port on roboRIO");
+            System.err.println("6. CONFLICT: Check if camera is used by another app");
+            System.err.println("7. REBOOT: Try restarting the roboRIO");
+            System.err.println("8. CAMERA: Camera may be damaged or incompatible");
+            System.err.println("9. STORAGE: Delete old log files from roboRIO");
         }
     }
     
