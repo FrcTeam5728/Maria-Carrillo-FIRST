@@ -71,8 +71,15 @@ public class DynamicUSBCameraServer {
         
         System.out.println("Switching USB camera from device " + currentDevice + " to device " + newDeviceNumber);
         
-        // Stop current camera
+        // Stop current camera and wait for cleanup
         stopCamera();
+        
+        // Wait longer for camera resources to be fully released
+        try {
+            Thread.sleep(500); // Increased wait time
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
         
         // Start new camera
         startCamera(newDeviceNumber);
@@ -102,6 +109,14 @@ public class DynamicUSBCameraServer {
         try {
             System.out.println("Starting USB camera on device " + deviceNumber);
             
+            // Clear any existing camera with the same name first
+            try {
+                CameraServer.removeCamera(CAMERA_NAME);
+                Thread.sleep(100); // Brief pause for cleanup
+            } catch (Exception e) {
+                // Ignore errors during cleanup
+            }
+            
             var camera = CameraServer.startAutomaticCapture(CAMERA_NAME, deviceNumber);
             camera.setResolution(CAMERA_WIDTH, CAMERA_HEIGHT);
             camera.setFPS(CAMERA_FPS);
@@ -124,6 +139,13 @@ public class DynamicUSBCameraServer {
             
             SmartDashboard.putBoolean("DynamicUSBCamera/Connected", false);
             SmartDashboard.putString("DynamicUSBCamera/Status", "Failed: " + e.getMessage());
+            
+            // Add additional debugging info
+            System.err.println("Camera start failed - possible causes:");
+            System.err.println("- Camera device not found or disconnected");
+            System.err.println("- Camera already in use by another application");
+            System.err.println("- USB buffer full (try unplugging and replugging camera)");
+            System.err.println("- Insufficient USB bandwidth or power");
         }
     }
     
@@ -132,10 +154,13 @@ public class DynamicUSBCameraServer {
      */
     private static void stopCamera() {
         try {
-            if (cameraServer != null) {
-                CameraServer.removeCamera(CAMERA_NAME);
-                System.out.println("Stopped USB camera on device " + currentDevice);
-            }
+            // Remove camera from CameraServer to free up resources
+            CameraServer.removeCamera(CAMERA_NAME);
+            System.out.println("Stopped USB camera on device " + currentDevice);
+            
+            // Wait a moment for resources to be released
+            Thread.sleep(100);
+            
         } catch (Exception e) {
             System.err.println("Error stopping camera: " + e.getMessage());
         }

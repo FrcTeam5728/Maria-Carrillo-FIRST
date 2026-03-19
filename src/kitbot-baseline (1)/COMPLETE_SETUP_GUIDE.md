@@ -51,10 +51,10 @@ This guide covers the complete setup and usage of the robot's systems including 
 - **D-pad LEFT:** Previous shooting position
 - **X Button:** Shoot at selected position
 - **B Button:** Simple auto-shoot
-- **A Button:** Toggle pulsing shooter
-- **Y Button:** Manual continuous shooting
+- **A Button:** Ball ejection (intake motor reverse only)
+- **Y Button:** Toggle pulsing shooter
 - **LEFT BUMPER:** Intake fuel
-- **RIGHT BUMPER:** Manual shooter spin-up
+- **RIGHT BUMPER:** Continuous shooter
 
 ---
 

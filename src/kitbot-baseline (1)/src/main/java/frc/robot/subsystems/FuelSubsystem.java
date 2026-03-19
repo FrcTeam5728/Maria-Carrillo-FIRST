@@ -65,7 +65,16 @@ public abstract class FuelSubsystem extends SubsystemBase {
      */
     public void eject() {
         setFeederVoltage(-1 * getDashboardVoltage("Intaking feeder roller value", INTAKING_FEEDER_VOLTAGE));
-        setIntakeLauncherVoltage(-1 * getDashboardVoltage("Intaking launcher roller value", INTAKING_INTAKE_VOLTAGE));
+        setIntakeLauncherVoltage(-1 * getDashboardVoltage("Intaking intake roller value", INTAKING_INTAKE_VOLTAGE));
+    }
+    
+    /**
+     * Sets intake/launcher roller to eject fuel back out using ONLY intake motor.
+     * Feeder motor does nothing.
+     */
+    public void ejectIntakeOnly() {
+        setFeederVoltage(0); // Feeder motor does nothing
+        setIntakeLauncherVoltage(-1 * getDashboardVoltage("Intaking intake roller value", INTAKING_INTAKE_VOLTAGE));
     }
 
     /**

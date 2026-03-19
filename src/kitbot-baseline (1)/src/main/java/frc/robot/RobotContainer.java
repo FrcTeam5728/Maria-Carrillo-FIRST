@@ -98,13 +98,12 @@ public class RobotContainer {
     operatorController.b()
         .onTrue(new SimpleAutoShootCommand(driveSubsystem, limelightSubsystem, shooterSubsystem));
     
-    // Manual shooter control with Y button
-    operatorController.y()
-        .whileTrue(shooterSubsystem.runEnd(() -> shooterSubsystem.startContinuous(), 
-                                          () -> shooterSubsystem.stop()));
-    
-    // Pulsing shooter toggle with A button
+    // Ball ejection with A button (uses only intake motor in reverse)
     operatorController.a()
+        .whileTrue(ballSubsystem.runEnd(() -> ballSubsystem.ejectIntakeOnly(), () -> ballSubsystem.stop()));
+    
+    // Pulsing shooter toggle with Y button (moved from A)
+    operatorController.y()
         .onTrue(shooterSubsystem.runOnce(() -> {
             if (shooterSubsystem.isPulsing()) {
                 shooterSubsystem.stop();
@@ -119,9 +118,10 @@ public class RobotContainer {
     operatorController.leftBumper()
         .whileTrue(ballSubsystem.runEnd(() -> ballSubsystem.intake(), () -> ballSubsystem.stop()));
     
-    // While the right bumper on operator controller is held, manual spin-up
+    // While the right bumper on operator controller is held, continuous shooter (moved from Y)
     operatorController.rightBumper()
-        .whileTrue(ballSubsystem.runEnd(() -> ballSubsystem.spinUp(), () -> ballSubsystem.stop()));
+        .whileTrue(shooterSubsystem.runEnd(() -> shooterSubsystem.startContinuous(), 
+                                          () -> shooterSubsystem.stop()));
 
     // Driver controller X button toggles movement inversion AND camera port
     driverController.x()
