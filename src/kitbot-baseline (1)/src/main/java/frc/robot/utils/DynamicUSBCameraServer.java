@@ -16,9 +16,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class DynamicUSBCameraServer {
     
     private static final String CAMERA_NAME = "DriverCamera";
-    private static final int CAMERA_WIDTH = 160;  // Very low resolution for maximum bandwidth savings
-    private static final int CAMERA_HEIGHT = 120; // Very low resolution for maximum bandwidth savings  
-    private static final int CAMERA_FPS = 10;      // Very low FPS for maximum bandwidth savings
+    private static final int CAMERA_WIDTH = 120;   // Low but more standard resolution
+    private static final int CAMERA_HEIGHT = 80;    // Low but more standard resolution  
+    private static final int CAMERA_FPS = 8;       // Low FPS but not too low
     private static final int TEAM_NUMBER = 5728;
     
     private static boolean initialized = false;
@@ -166,10 +166,52 @@ public class DynamicUSBCameraServer {
                             
                             var camera = CameraServer.startAutomaticCapture(CAMERA_NAME, deviceNumber);
                             
+                            // Wait a moment for camera to initialize
+                            Thread.sleep(500);
+                            
+                            // Get current camera settings for debugging
+                            try {
+                                var currentMode = camera.getVideoMode();
+                                System.out.println("Camera default mode: " + currentMode.width + "x" + currentMode.height + 
+                                                 " @ " + currentMode.fps + " FPS, Format: " + currentMode.pixelFormat);
+                            } catch (Exception e) {
+                                System.err.println("Could not read camera mode: " + e.getMessage());
+                            }
+                            
                             // Try to set resolution and FPS
                             try {
+                                System.out.println("Attempting to set camera to: " + width + "x" + height + " @ " + fps + " FPS");
                                 camera.setResolution(width, height);
                                 camera.setFPS(fps);
+                                
+                                // Verify settings were applied
+                                try {
+                                    Thread.sleep(200); // Wait for settings to apply
+                                    var newMode = camera.getVideoMode();
+                                    System.out.println("Camera new mode: " + newMode.width + "x" + newMode.height + 
+                                                     " @ " + newMode.fps + " FPS, Format: " + newMode.pixelFormat);
+                                    
+                                    if (newMode.width != width || newMode.height != height) {
+                                        System.err.println("WARNING: Resolution not set as requested!");
+                                    }
+                                } catch (Exception e) {
+                                    System.err.println("Could not verify new camera settings: " + e.getMessage());
+                                }
+                                
+                                // Set pixel format to YUYV for better bandwidth efficiency
+                                try {
+                                    camera.setPixelFormat(edu.wpi.first.cscore.VideoMode.PixelFormat.kYUYV);
+                                    System.out.println("Set pixel format to YUYV for bandwidth optimization");
+                                } catch (Exception e) {
+                                    System.err.println("Could not set YUYV format, trying default: " + e.getMessage());
+                                    // Try MJPEG as fallback
+                                    try {
+                                        camera.setPixelFormat(edu.wpi.first.cscore.VideoMode.PixelFormat.kMJPEG);
+                                        System.out.println("Set pixel format to MJPEG as fallback");
+                                    } catch (Exception e2) {
+                                        System.err.println("Could not set MJPEG format, using camera default: " + e2.getMessage());
+                                    }
+                                }
                                 
                                 // Apply video scaling to make feed appear larger
                                 // Note: WPILib CameraServer doesn't have direct scaling, 
