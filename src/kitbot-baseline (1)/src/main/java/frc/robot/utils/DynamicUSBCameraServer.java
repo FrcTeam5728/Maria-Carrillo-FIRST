@@ -71,12 +71,28 @@ public class DynamicUSBCameraServer {
         
         System.out.println("Switching USB camera from device " + currentDevice + " to device " + newDeviceNumber);
         
-        // Stop current camera completely
-        stopCamera();
-        
-        // Wait for camera resources to be fully released
+        // Aggressive camera cleanup to prevent buffer issues
         try {
-            Thread.sleep(1000); // Increased to 1 second for full cleanup
+            // Stop current camera
+            stopCamera();
+            
+            // Force garbage collection to help with buffer cleanup
+            System.gc();
+            
+            // Wait longer for camera resources to be fully released
+            Thread.sleep(2000); // 2 seconds for full cleanup
+            
+            // Clear any remaining camera instances
+            try {
+                CameraServer.removeCamera(CAMERA_NAME);
+                Thread.sleep(500);
+            } catch (Exception e) {
+                // Ignore cleanup errors
+            }
+            
+            // Final cleanup wait
+            Thread.sleep(1000);
+            
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -110,29 +126,46 @@ public class DynamicUSBCameraServer {
         try {
             System.out.println("Starting USB camera on device " + deviceNumber);
             
-            // Clear any existing camera with the same name first
-            try {
-                CameraServer.removeCamera(CAMERA_NAME);
-                Thread.sleep(100); // Brief pause for cleanup
-            } catch (Exception e) {
-                // Ignore errors during cleanup
+            // Multiple cleanup attempts to ensure buffer is clear
+            for (int i = 0; i < 3; i++) {
+                try {
+                    // Clear any existing camera with the same name first
+                    CameraServer.removeCamera(CAMERA_NAME);
+                    Thread.sleep(200); // Brief pause for cleanup
+                    
+                    var camera = CameraServer.startAutomaticCapture(CAMERA_NAME, deviceNumber);
+                    camera.setResolution(CAMERA_WIDTH, CAMERA_HEIGHT);
+                    camera.setFPS(CAMERA_FPS);
+                    
+                    connected = true;
+                    
+                    // Update SmartDashboard
+                    SmartDashboard.putBoolean("DynamicUSBCamera/Initialized", true);
+                    SmartDashboard.putBoolean("DynamicUSBCamera/Connected", true);
+                    SmartDashboard.putNumber("DynamicUSBCamera/DeviceNumber", deviceNumber);
+                    
+                    // Publish stream info
+                    publishCameraStream();
+                    
+                    System.out.println("USB camera started successfully on device " + deviceNumber + " (attempt " + (i + 1) + ")");
+                    return; // Success, exit method
+                    
+                } catch (Exception e) {
+                    System.err.println("Camera start attempt " + (i + 1) + " failed: " + e.getMessage());
+                    
+                    if (i < 2) { // Don't sleep on last attempt
+                        try {
+                            Thread.sleep(1000); // Wait before retry
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                            break;
+                        }
+                    }
+                }
             }
             
-            var camera = CameraServer.startAutomaticCapture(CAMERA_NAME, deviceNumber);
-            camera.setResolution(CAMERA_WIDTH, CAMERA_HEIGHT);
-            camera.setFPS(CAMERA_FPS);
-            
-            connected = true;
-            
-            // Update SmartDashboard
-            SmartDashboard.putBoolean("DynamicUSBCamera/Initialized", true);
-            SmartDashboard.putBoolean("DynamicUSBCamera/Connected", true);
-            SmartDashboard.putNumber("DynamicUSBCamera/DeviceNumber", deviceNumber);
-            
-            // Publish stream info
-            publishCameraStream();
-            
-            System.out.println("USB camera started successfully on device " + deviceNumber);
+            // If we get here, all attempts failed
+            throw new Exception("Failed to start camera after 3 attempts");
             
         } catch (Exception e) {
             System.err.println("Failed to start USB camera on device " + deviceNumber + ": " + e.getMessage());
@@ -144,9 +177,10 @@ public class DynamicUSBCameraServer {
             // Add additional debugging info
             System.err.println("Camera start failed - possible causes:");
             System.err.println("- Camera device not found or disconnected");
+            System.err.println("- Camera buffer full (try unplugging and replugging camera)");
             System.err.println("- Camera already in use by another application");
-            System.err.println("- USB buffer full (try unplugging and replugging camera)");
             System.err.println("- Insufficient USB bandwidth or power");
+            System.err.println("- USB port issues or cable problems");
         }
     }
     
