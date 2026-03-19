@@ -6,6 +6,7 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -37,7 +38,7 @@ public class RobotContainer {
   private final LimelightSubsystem limelightSubsystem = new LimelightSubsystem();
   private final PulsingShooterSubsystem shooterSubsystem = new PulsingShooterSubsystem();
   // Camera subsystems
-  private final SimpleCameraSubsystem cameraServerSubsystem = new SimpleCameraSubsystem(false); // Default to single camera mode
+  private final SimpleCameraSubsystem cameraServerSubsystem = new SimpleCameraSubsystem(); // Simplified constructor
   private final CameraFeedBroadcaster cameraFeedBroadcaster = new CameraFeedBroadcaster();
 
   // The driver's controller
@@ -125,10 +126,9 @@ public class RobotContainer {
 
     // Switch USB camera with LEFT TRIGGER (operator controller) - simple 2-camera toggle
     operatorController.leftTrigger()
-        .onTrue(() -> {
+        .onTrue(new InstantCommand(() -> {
             DynamicUSBCameraServer.toggleDevice();  // Simple toggle between 0 and 1
-            return null;
-        });
+        }));
 
     // Set the default command for the drive subsystem to the command provided by
     // factory with the values provided by the joystick axes on the driver
