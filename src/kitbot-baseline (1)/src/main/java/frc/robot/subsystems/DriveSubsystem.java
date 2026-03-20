@@ -59,8 +59,8 @@ public abstract class DriveSubsystem extends SubsystemBase {
     protected double manualLeftSpeed = 0.0;
     protected double manualRightSpeed = 0.0;
     
-    // Movement inversion state
-    private boolean movementInverted = false;
+    // Movement inversion state - inverted by default
+    private boolean movementInverted = true;
     
     /**
      * Update odometry - should be called periodically
