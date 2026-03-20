@@ -8,6 +8,7 @@ import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.cscore.VideoMode;
 import edu.wpi.first.cscore.UsbCamera;
 import edu.wpi.first.cscore.VideoSink;
+import edu.wpi.first.cscore.VideoSource.ConnectionStrategy;
 import frc.robot.config.CameraConfig;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -111,6 +112,9 @@ public class DynamicUSBCameraServer {
             // Wait for camera to initialize
             Thread.sleep(200);
             
+            // Set connection strategy to keep camera connected
+            camera.setConnectionStrategy(ConnectionStrategy.kKeepOpen);
+            
             // Set resolution and FPS
             camera.setResolution(CAMERA_WIDTH, CAMERA_HEIGHT);
             camera.setFPS(CAMERA_FPS);
@@ -161,20 +165,97 @@ public class DynamicUSBCameraServer {
         }
         
         try {
-            // Instant camera switching using VideoSink.setSource()
-            UsbCamera newCamera = (newDeviceNumber == 0) ? camera0 : camera1;
-            server.setSource(newCamera);
-            currentDevice = newDeviceNumber;
+            // Check if target camera is still connected
+            UsbCamera targetCamera = (newDeviceNumber == 0) ? camera0 : camera1;
+            if (targetCamera == null) {
+                System.err.println("Target camera " + newDeviceNumber + " is null");
+                attemptCameraRecovery(newDeviceNumber);
+                return;
+            }
             
-            // Update SmartDashboard
-            SmartDashboard.putNumber("DynamicUSBCamera/DeviceNumber", currentDevice);
-            SmartDashboard.putString("DynamicUSBCamera/CurrentCamera", newCamera.getName());
-            SmartDashboard.putBoolean("DynamicUSBCamera/IsReversed", isCameraInverted || isCameraControlInverted); // Maintain combined inversion status
+            // Attempt camera switching with retry logic
+            boolean switchSuccess = false;
+            int retryCount = 0;
+            int maxRetries = 3;
             
-            System.out.println("Switched to camera: " + newCamera.getName());
+            while (!switchSuccess && retryCount < maxRetries) {
+                try {
+                    // Instant camera switching using VideoSink.setSource()
+                    server.setSource(targetCamera);
+                    currentDevice = newDeviceNumber;
+                    switchSuccess = true;
+                    
+                    // Update SmartDashboard
+                    SmartDashboard.putNumber("DynamicUSBCamera/DeviceNumber", currentDevice);
+                    SmartDashboard.putString("DynamicUSBCamera/CurrentCamera", targetCamera.getName());
+                    SmartDashboard.putBoolean("DynamicUSBCamera/IsReversed", isCameraInverted || isCameraControlInverted);
+                    SmartDashboard.putBoolean("DynamicUSBCamera/SwitchSuccess", true);
+                    
+                    System.out.println("Switched to camera: " + targetCamera.getName());
+                    
+                } catch (Exception switchException) {
+                    retryCount++;
+                    System.err.println("Switch attempt " + retryCount + " failed: " + switchException.getMessage());
+                    
+                    if (retryCount < maxRetries) {
+                        System.out.println("Retrying camera switch...");
+                        Thread.sleep(500); // Wait before retry
+                    } else {
+                        System.err.println("Failed to switch after " + maxRetries + " attempts");
+                        SmartDashboard.putBoolean("DynamicUSBCamera/SwitchSuccess", false);
+                        SmartDashboard.putString("DynamicUSBCamera/LastError", switchException.getMessage());
+                        
+                        // Attempt recovery
+                        attemptCameraRecovery(newDeviceNumber);
+                    }
+                }
+            }
             
         } catch (Exception e) {
             System.err.println("Error switching to device " + newDeviceNumber + ": " + e.getMessage());
+            SmartDashboard.putBoolean("DynamicUSBCamera/SwitchSuccess", false);
+            SmartDashboard.putString("DynamicUSBCamera/LastError", e.getMessage());
+        }
+    }
+    
+    /**
+     * Attempts to recover a failed camera by reinitializing it.
+     * 
+     * @param deviceNumber The device number to recover
+     */
+    private static void attemptCameraRecovery(int deviceNumber) {
+        System.out.println("Attempting camera recovery for device " + deviceNumber);
+        
+        try {
+            // Remove the failed camera
+            UsbCamera failedCamera = (deviceNumber == 0) ? camera0 : camera1;
+            if (failedCamera != null) {
+                CameraServer.removeCamera(failedCamera.getName());
+                System.out.println("Removed failed camera: " + failedCamera.getName());
+            }
+            
+            // Wait a moment for cleanup
+            Thread.sleep(1000);
+            
+            // Recreate the camera
+            UsbCamera newCamera = CameraServer.startAutomaticCapture(deviceNumber);
+            newCamera.setConnectionStrategy(ConnectionStrategy.kKeepOpen);
+            configureCamera(newCamera, "Camera" + deviceNumber + "_Recovered");
+            
+            // Update the appropriate camera reference
+            if (deviceNumber == 0) {
+                camera0 = newCamera;
+            } else {
+                camera1 = newCamera;
+            }
+            
+            System.out.println("Camera recovery completed for device " + deviceNumber);
+            SmartDashboard.putBoolean("DynamicUSBCamera/RecoverySuccess", true);
+            
+        } catch (Exception e) {
+            System.err.println("Camera recovery failed for device " + deviceNumber + ": " + e.getMessage());
+            SmartDashboard.putBoolean("DynamicUSBCamera/RecoverySuccess", false);
+            SmartDashboard.putString("DynamicUSBCamera/RecoveryError", e.getMessage());
         }
     }
     
@@ -465,6 +546,32 @@ public class DynamicUSBCameraServer {
         SmartDashboard.putBoolean("DynamicUSBCamera/Connected", connected);
         SmartDashboard.putNumber("DynamicUSBCamera/CurrentDevice", currentDevice);
         SmartDashboard.putNumber("DynamicUSBCamera/LastUpdate", System.currentTimeMillis() / 1000.0);
+        
+        // Camera health monitoring
+        try {
+            if (camera0 != null) {
+                SmartDashboard.putBoolean("DynamicUSBCamera/Camera0Connected", true);
+                SmartDashboard.putString("DynamicUSBCamera/Camera0Name", camera0.getName());
+            } else {
+                SmartDashboard.putBoolean("DynamicUSBCamera/Camera0Connected", false);
+            }
+            
+            if (camera1 != null) {
+                SmartDashboard.putBoolean("DynamicUSBCamera/Camera1Connected", true);
+                SmartDashboard.putString("DynamicUSBCamera/Camera1Name", camera1.getName());
+            } else {
+                SmartDashboard.putBoolean("DynamicUSBCamera/Camera1Connected", false);
+            }
+            
+            if (server != null) {
+                SmartDashboard.putBoolean("DynamicUSBCamera/ServerConnected", true);
+            } else {
+                SmartDashboard.putBoolean("DynamicUSBCamera/ServerConnected", false);
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Error updating camera health status: " + e.getMessage());
+        }
         
         // Re-publish stream info
         publishCameraStream();
