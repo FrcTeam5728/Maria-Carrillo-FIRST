@@ -8,6 +8,7 @@ import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.cscore.VideoMode;
 import edu.wpi.first.cscore.UsbCamera;
 import edu.wpi.first.cscore.VideoSink;
+import frc.robot.config.CameraConfig;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -18,11 +19,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  */
 public class DynamicUSBCameraServer {
     
-    private static final String CAMERA_NAME = "DriverCamera";
-    private static final int CAMERA_WIDTH = 120;   // Low but more standard resolution
-    private static final int CAMERA_HEIGHT = 80;    // Low but more standard resolution  
-    private static final int CAMERA_FPS = 8;       // Low FPS but not too low
-    private static final int TEAM_NUMBER = 5728;
+    private static final String CAMERA_NAME = CameraConfig.PRIMARY_CAMERA_NAME;
+    private static final int CAMERA_WIDTH = CameraConfig.CAMERA_WIDTH;
+    private static final int CAMERA_HEIGHT = CameraConfig.CAMERA_HEIGHT;
+    private static final int CAMERA_FPS = CameraConfig.CAMERA_FPS;
+    private static final int TEAM_NUMBER = CameraConfig.TEAM_NUMBER;
     
     private static boolean initialized = false;
     private static boolean connected = false;
@@ -423,7 +424,7 @@ public class DynamicUSBCameraServer {
         if (!initialized || !connected) {
             return "";
         }
-        return "http://roboRIO-" + TEAM_NUMBER + ".local:1181/stream.mjpg";
+        return "http://roboRIO-" + TEAM_NUMBER + ".local:" + CameraConfig.PRIMARY_CAMERA_STREAM_PORT + "/stream.mjpg";
     }
     
     /**

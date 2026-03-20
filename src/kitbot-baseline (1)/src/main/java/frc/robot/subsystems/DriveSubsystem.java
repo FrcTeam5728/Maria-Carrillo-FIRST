@@ -125,6 +125,9 @@ public abstract class DriveSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Drive/Odometry/Y", pose.getY());
         SmartDashboard.putNumber("Drive/Odometry/Heading", pose.getRotation().getDegrees());
         
+        // Publish reverse indicator to Shuffleboard
+        SmartDashboard.putBoolean("Drive/IsReversed", movementInverted);
+        
         if (leftEncoder != null && rightEncoder != null) {
             SmartDashboard.putNumber("Drive/Encoder/Left", leftEncoder.getDistance());
             SmartDashboard.putNumber("Drive/Encoder/Right", rightEncoder.getDistance());
@@ -282,6 +285,7 @@ public abstract class DriveSubsystem extends SubsystemBase {
         movementInverted = !movementInverted;
         System.out.println("Movement inversion " + (movementInverted ? "ENABLED" : "DISABLED"));
         SmartDashboard.putBoolean("Drive/MovementInverted", movementInverted);
+        SmartDashboard.putBoolean("Drive/IsReversed", movementInverted);
     }
     
     /**
@@ -302,5 +306,6 @@ public abstract class DriveSubsystem extends SubsystemBase {
         this.movementInverted = inverted;
         System.out.println("Movement inversion " + (movementInverted ? "ENABLED" : "DISABLED"));
         SmartDashboard.putBoolean("Drive/MovementInverted", movementInverted);
+        SmartDashboard.putBoolean("Drive/IsReversed", movementInverted);
     }
 }

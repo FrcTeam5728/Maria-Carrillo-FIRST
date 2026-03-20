@@ -15,7 +15,7 @@ public final class CameraConfig {
      * Set to true to enable dual USB camera support.
      * Set to false for single USB camera mode.
      */
-    public static final boolean USE_DUAL_CAMERAS = false;
+    public static final boolean USE_DUAL_CAMERAS = true;
     
     /**
      * USB Camera device numbers.
@@ -28,8 +28,8 @@ public final class CameraConfig {
     /**
      * USB Camera resolution and FPS settings.
      */
-    public static final int CAMERA_WIDTH = 640;
-    public static final int CAMERA_HEIGHT = 480;
+    public static final int CAMERA_WIDTH = 320;
+    public static final int CAMERA_HEIGHT = 240;
     public static final int CAMERA_FPS = 30;
     
     /**

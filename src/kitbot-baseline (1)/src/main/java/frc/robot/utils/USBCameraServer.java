@@ -5,6 +5,7 @@
 package frc.robot.utils;
 
 import edu.wpi.first.cameraserver.CameraServer;
+import frc.robot.config.CameraConfig;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -17,11 +18,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  */
 public class USBCameraServer {
     
-    private static final String CAMERA_NAME = "DriverCamera";
-    private static final int CAMERA_WIDTH = 640;
-    private static final int CAMERA_HEIGHT = 480;
-    private static final int CAMERA_FPS = 30;
-    private static final int DEFAULT_DEVICE = 0;
+    private static final String CAMERA_NAME = CameraConfig.PRIMARY_CAMERA_NAME;
+    private static final int CAMERA_WIDTH = CameraConfig.CAMERA_WIDTH;
+    private static final int CAMERA_HEIGHT = CameraConfig.CAMERA_HEIGHT;
+    private static final int CAMERA_FPS = CameraConfig.CAMERA_FPS;
+    private static final int DEFAULT_DEVICE = CameraConfig.PRIMARY_USB_CAMERA_DEVICE;
     
     private static boolean isInitialized = false;
     private static boolean isConnected = false;
@@ -149,7 +150,7 @@ public class USBCameraServer {
         }
         
         // Use team number 5728
-        return "http://roboRIO-5728.local:1181/stream.mjpg";
+        return "http://roboRIO-" + CameraConfig.TEAM_NUMBER + ".local:" + CameraConfig.PRIMARY_CAMERA_STREAM_PORT + "/stream.mjpg";
     }
     
     /**
@@ -162,7 +163,7 @@ public class USBCameraServer {
         if (!isInitialized) {
             return "";
         }
-        return "http://roboRIO-" + teamNumber + ".local:1181/stream.mjpg";
+        return "http://roboRIO-" + teamNumber + ".local:" + CameraConfig.PRIMARY_CAMERA_STREAM_PORT + "/stream.mjpg";
     }
     
     /**
