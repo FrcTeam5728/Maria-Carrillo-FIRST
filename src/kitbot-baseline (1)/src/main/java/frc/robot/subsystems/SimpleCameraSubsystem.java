@@ -9,31 +9,52 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 /**
  * Simple camera subsystem that publishes camera URLs to SmartDashboard.
  * Uses pure SmartDashboard approach for maximum compatibility.
- * Simplified to support only 2 USB cameras (0 and 1).
+ * Supports both single and dual USB camera configurations.
  */
 public class SimpleCameraSubsystem extends SubsystemBase {
     
     // Camera status
-    private boolean usbCameraAvailable = false;
+    private boolean primaryUsbCameraAvailable = false;
+    private boolean secondaryUsbCameraAvailable = false;
     private boolean limelightAvailable = false;
+    private boolean dualCameraMode = false;
     
-    // Constants - USB CONNECTION (working solution)
+    // Constants
     private static final String LIMELIGHT_IP = "172.22.11.2"; // USB connection to roboRIO
     private static final String LIMELIGHT_STREAM_URL = "http://" + LIMELIGHT_IP + ":5800/stream.mjpg";
     
     /**
-     * Creates a new SimpleCameraSubsystem.
+     * Creates a new SimpleCameraSubsystem in single camera mode.
      */
     public SimpleCameraSubsystem() {
+        this(false);
+    }
+    
+    /**
+     * Creates a new SimpleCameraSubsystem with specified camera mode.
+     * 
+     * @param dualCameraMode Whether to enable dual camera support
+     */
+    public SimpleCameraSubsystem(boolean dualCameraMode) {
+        this.dualCameraMode = dualCameraMode;
+        
         // Initialize camera data in SmartDashboard
         initializeCameraData();
         
         System.out.println("SimpleCameraSubsystem initialized");
+        System.out.println("Camera Mode: " + (dualCameraMode ? "DUAL CAMERA" : "SINGLE CAMERA"));
         System.out.println("Camera URLs published to SmartDashboard");
         System.out.println("Use these URLs in Shuffleboard Camera widgets:");
         System.out.println("  Limelight: " + LIMELIGHT_STREAM_URL);
-        System.out.println("  USB Camera: Dynamic switching between cameras 0 and 1");
-        System.out.println("  Add Camera widget with Custom URL in Shuffleboard");
+        
+        if (dualCameraMode) {
+            System.out.println("  Primary USB: " + frc.robot.config.CameraConfig.getPrimaryCameraStreamUrl());
+            System.out.println("  Secondary USB: " + frc.robot.config.CameraConfig.getSecondaryCameraStreamUrl());
+            System.out.println("  Add two Camera Server widgets in Shuffleboard");
+        } else {
+            System.out.println("  USB Camera: Dynamic switching between cameras 0 and 1");
+            System.out.println("  Add Camera widget with Custom URL in Shuffleboard");
+        }
     }
     
     /**
@@ -44,63 +65,155 @@ public class SimpleCameraSubsystem extends SubsystemBase {
         edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Camera/Limelight_URL", LIMELIGHT_STREAM_URL);
         edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putBoolean("Camera/Limelight_Available", true);
         
-        // Simple USB camera setup - use DynamicUSBCameraServer
-        String usbCameraUrl = "";
-        if (frc.robot.utils.DynamicUSBCameraServer.isInitialized()) {
-            usbCameraUrl = "http://10.57.28.11:5800/stream"; // Generic URL
-            usbCameraAvailable = true;
+        if (dualCameraMode) {
+            // Dual camera setup - use DualUSBCameraServer
+            if (frc.robot.utils.DualUSBCameraServer.isInitialized()) {
+                primaryUsbCameraAvailable = frc.robot.utils.DualUSBCameraServer.isPrimaryConnected();
+                secondaryUsbCameraAvailable = frc.robot.utils.DualUSBCameraServer.isSecondaryConnected();
+                
+                // Publish dual camera URLs
+                edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Camera/Primary_USB_URL", 
+                    frc.robot.config.CameraConfig.getPrimaryCameraStreamUrl());
+                edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putBoolean("Camera/Primary_USB_Available", primaryUsbCameraAvailable);
+                
+                edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Camera/Secondary_USB_URL", 
+                    frc.robot.config.CameraConfig.getSecondaryCameraStreamUrl());
+                edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putBoolean("Camera/Secondary_USB_Available", secondaryUsbCameraAvailable);
+                
+                // Also publish to root level for easy access
+                edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Primary_USB_Camera_URL", 
+                    frc.robot.config.CameraConfig.getPrimaryCameraStreamUrl());
+                edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Secondary_USB_Camera_URL", 
+                    frc.robot.config.CameraConfig.getSecondaryCameraStreamUrl());
+            }
+        } else {
+            // Single camera setup - use DynamicUSBCameraServer
+            String usbCameraUrl = "";
+            if (frc.robot.utils.DynamicUSBCameraServer.isInitialized()) {
+                usbCameraUrl = "http://10.57.28.11:5800/stream"; // Generic URL
+                primaryUsbCameraAvailable = frc.robot.utils.DynamicUSBCameraServer.isConnected();
+            }
+            
+            edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Camera/USB_URL", usbCameraUrl);
+            edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putBoolean("Camera/USB_Available", primaryUsbCameraAvailable);
+            
+            // Also publish to root level for easy access
+            edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("USB_Camera_URL", usbCameraUrl);
         }
         
-        edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Camera/USB_URL", usbCameraUrl);
-        edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putBoolean("Camera/USB_Available", usbCameraAvailable);
-        
-        // Also publish to root level for easy access
-        edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("USB_Camera_URL", usbCameraUrl);
+        // Always publish Limelight URL to root level
         edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Limelight_URL", LIMELIGHT_STREAM_URL);
     }
     
     @Override
     public void periodic() {
-        // Update USB camera status from DynamicUSBCameraServer
-        if (frc.robot.utils.DynamicUSBCameraServer.isInitialized()) {
-            usbCameraAvailable = frc.robot.utils.DynamicUSBCameraServer.isConnected();
-            if (usbCameraAvailable) {
-                String usbCameraUrl = "http://10.57.28.11:5800/stream"; // Generic URL
-                edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Camera/USB_URL", usbCameraUrl);
-                edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("USB_Camera_URL", usbCameraUrl);
+        if (dualCameraMode) {
+            // Update dual camera status from DualUSBCameraServer
+            if (frc.robot.utils.DualUSBCameraServer.isInitialized()) {
+                primaryUsbCameraAvailable = frc.robot.utils.DualUSBCameraServer.isPrimaryConnected();
+                secondaryUsbCameraAvailable = frc.robot.utils.DualUSBCameraServer.isSecondaryConnected();
+                
+                // Update SmartDashboard with current status
+                edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putBoolean("Camera/Primary_USB_Available", primaryUsbCameraAvailable);
+                edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putBoolean("Camera/Secondary_USB_Available", secondaryUsbCameraAvailable);
             }
+        } else {
+            // Update single camera status from DynamicUSBCameraServer
+            if (frc.robot.utils.DynamicUSBCameraServer.isInitialized()) {
+                primaryUsbCameraAvailable = frc.robot.utils.DynamicUSBCameraServer.isConnected();
+                if (primaryUsbCameraAvailable) {
+                    String usbCameraUrl = "http://10.57.28.11:5800/stream"; // Generic URL
+                    edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Camera/USB_URL", usbCameraUrl);
+                    edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("USB_Camera_URL", usbCameraUrl);
+                }
+            }
+            
+            // Update camera status in SmartDashboard
+            edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putBoolean("Camera/USB_Available", primaryUsbCameraAvailable);
         }
         
-        // Update camera status in SmartDashboard
-        edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putBoolean("Camera/USB_Available", usbCameraAvailable);
+        // Always update Limelight status
         edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putBoolean("Camera/Limelight_Available", limelightAvailable);
         
         // Debug: Print status every 10 seconds
         long currentTime = System.currentTimeMillis();
         if (currentTime % 10000 < 50) { // Every 10 seconds for 50ms
-            System.out.println("Camera Status:");
-            System.out.println("  USB Camera: " + (usbCameraAvailable ? "AVAILABLE" : "NOT AVAILABLE"));
+            System.out.println("=== Camera Status Update ===");
+            System.out.println("Camera Mode: " + (dualCameraMode ? "DUAL CAMERA" : "SINGLE CAMERA"));
+            
+            if (dualCameraMode) {
+                System.out.println("  Primary USB Camera: " + (primaryUsbCameraAvailable ? "AVAILABLE" : "NOT AVAILABLE"));
+                System.out.println("  Secondary USB Camera: " + (secondaryUsbCameraAvailable ? "AVAILABLE" : "NOT AVAILABLE"));
+                System.out.println("  Primary URL: " + frc.robot.config.CameraConfig.getPrimaryCameraStreamUrl());
+                System.out.println("  Secondary URL: " + frc.robot.config.CameraConfig.getSecondaryCameraStreamUrl());
+                System.out.println("  Add two Camera Server widgets to Shuffleboard:");
+                System.out.println("    - Primary_USB_Camera_URL: Primary camera feed");
+                System.out.println("    - Secondary_USB_Camera_URL: Secondary camera feed");
+            } else {
+                System.out.println("  USB Camera: " + (primaryUsbCameraAvailable ? "AVAILABLE" : "NOT AVAILABLE"));
+                System.out.println("  USB Camera URL: Dynamic switching between cameras 0 and 1");
+            }
+            
             System.out.println("  Limelight: " + (limelightAvailable ? "AVAILABLE" : "NOT AVAILABLE"));
             System.out.println("  Limelight URL: " + LIMELIGHT_STREAM_URL);
-            System.out.println("  Add Camera widgets to Shuffleboard using these SmartDashboard keys:");
-            System.out.println("    - USB_Camera_URL: Dynamic switching between cameras 0 and 1");
-            System.out.println("    - Limelight_URL: " + LIMELIGHT_STREAM_URL);
+            System.out.println("=============================");
         }
     }
     
     /**
-     * Sets USB camera availability status.
-     * Call this if you implement USB camera detection.
+     * Sets primary USB camera availability status.
+     * 
+     * @param available Whether primary USB camera is available
+     */
+    public void setPrimaryUsbCameraAvailable(boolean available) {
+        this.primaryUsbCameraAvailable = available;
+        System.out.println("Primary USB Camera availability set to: " + (available ? "AVAILABLE" : "NOT AVAILABLE"));
+    }
+    
+    /**
+     * Sets secondary USB camera availability status.
+     * 
+     * @param available Whether secondary USB camera is available
+     */
+    public void setSecondaryUsbCameraAvailable(boolean available) {
+        this.secondaryUsbCameraAvailable = available;
+        System.out.println("Secondary USB Camera availability set to: " + (available ? "AVAILABLE" : "NOT AVAILABLE"));
+    }
+    
+    /**
+     * Sets USB camera availability status (for single camera mode).
      * 
      * @param available Whether USB camera is available
      */
     public void setUsbCameraAvailable(boolean available) {
-        this.usbCameraAvailable = available;
+        this.primaryUsbCameraAvailable = available;
         System.out.println("USB Camera availability set to: " + (available ? "AVAILABLE" : "NOT AVAILABLE"));
     }
     
     /**
-     * Sets USB camera URL.
+     * Sets primary USB camera URL.
+     * 
+     * @param url The primary USB camera stream URL
+     */
+    public void setPrimaryUsbCameraUrl(String url) {
+        edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Camera/Primary_USB_URL", url);
+        edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Primary_USB_Camera_URL", url);
+        System.out.println("Primary USB Camera URL set to: " + url);
+    }
+    
+    /**
+     * Sets secondary USB camera URL.
+     * 
+     * @param url The secondary USB camera stream URL
+     */
+    public void setSecondaryUsbCameraUrl(String url) {
+        edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Camera/Secondary_USB_URL", url);
+        edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString("Secondary_USB_Camera_URL", url);
+        System.out.println("Secondary USB Camera URL set to: " + url);
+    }
+    
+    /**
+     * Sets USB camera URL (for single camera mode).
      * 
      * @param url The USB camera stream URL
      */
@@ -120,12 +233,69 @@ public class SimpleCameraSubsystem extends SubsystemBase {
     }
     
     /**
-     * Gets USB camera availability status.
+     * Gets primary USB camera availability status.
+     * 
+     * @return True if primary USB camera is available
+     */
+    public boolean isPrimaryUsbCameraAvailable() {
+        return primaryUsbCameraAvailable;
+    }
+    
+    /**
+     * Gets secondary USB camera availability status.
+     * 
+     * @return True if secondary USB camera is available
+     */
+    public boolean isSecondaryUsbCameraAvailable() {
+        return secondaryUsbCameraAvailable;
+    }
+    
+    /**
+     * Gets USB camera availability status (for single camera mode).
      * 
      * @return True if USB camera is available
      */
     public boolean isUsbCameraAvailable() {
-        return usbCameraAvailable;
+        return primaryUsbCameraAvailable;
+    }
+    
+    /**
+     * Gets primary USB camera stream URL.
+     * 
+     * @return Primary USB camera stream URL
+     */
+    public String getPrimaryUsbCameraUrl() {
+        return frc.robot.config.CameraConfig.getPrimaryCameraStreamUrl();
+    }
+    
+    /**
+     * Gets secondary USB camera stream URL.
+     * 
+     * @return Secondary USB camera stream URL
+     */
+    public String getSecondaryUsbCameraUrl() {
+        return frc.robot.config.CameraConfig.getSecondaryCameraStreamUrl();
+    }
+    
+    /**
+     * Gets USB camera stream URL (for single camera mode).
+     * 
+     * @return USB camera stream URL
+     */
+    public String getUsbCameraUrl() {
+        if (frc.robot.utils.DynamicUSBCameraServer.isInitialized()) {
+            return "http://10.57.28.11:5800/stream"; // Generic URL
+        }
+        return "";
+    }
+    
+    /**
+     * Gets the camera mode (dual or single).
+     * 
+     * @return True if dual camera mode is enabled
+     */
+    public boolean isDualCameraMode() {
+        return dualCameraMode;
     }
     
     /**
@@ -178,22 +348,40 @@ public class SimpleCameraSubsystem extends SubsystemBase {
      * @return Array of camera URLs
      */
     public String[] getCameraUrls() {
-        return new String[] {
-            LIMELIGHT_STREAM_URL,
-            "http://10.57.28.11:5800/stream", // Generic USB camera URL
-            ""
-        };
+        if (dualCameraMode) {
+            return new String[] {
+                LIMELIGHT_STREAM_URL,
+                getPrimaryUsbCameraUrl(),
+                getSecondaryUsbCameraUrl()
+            };
+        } else {
+            return new String[] {
+                LIMELIGHT_STREAM_URL,
+                getUsbCameraUrl(),
+                ""
+            };
+        }
     }
     
     /**
-     * Gets USB camera stream URL.
+     * Gets camera system status summary.
      * 
-     * @return USB camera stream URL
+     * @return Status summary string
      */
-    public String getUsbCameraUrl() {
-        if (frc.robot.utils.DynamicUSBCameraServer.isInitialized()) {
-            return "http://10.57.28.11:5800/stream"; // Generic URL
+    public String getStatusSummary() {
+        StringBuilder status = new StringBuilder();
+        status.append("Camera System: ");
+        
+        if (dualCameraMode) {
+            status.append("DUAL MODE - ");
+            status.append("Primary=").append(primaryUsbCameraAvailable ? "OK" : "FAIL");
+            status.append(", Secondary=").append(secondaryUsbCameraAvailable ? "OK" : "FAIL");
+        } else {
+            status.append("SINGLE MODE - ");
+            status.append("USB=").append(primaryUsbCameraAvailable ? "OK" : "FAIL");
         }
-        return "";
+        
+        status.append(", Limelight=").append(limelightAvailable ? "OK" : "FAIL");
+        return status.toString();
     }
 }

@@ -42,7 +42,7 @@ public class RobotContainer {
   private final LimelightSubsystem limelightSubsystem = new LimelightSubsystem();
   private final PulsingShooterSubsystem shooterSubsystem = new PulsingShooterSubsystem();
   // Camera subsystems
-  private final SimpleCameraSubsystem cameraServerSubsystem = new SimpleCameraSubsystem(); // Simplified constructor
+  private final SimpleCameraSubsystem cameraServerSubsystem = new SimpleCameraSubsystem(true); // Enable dual camera mode
   private final CameraFeedBroadcaster cameraFeedBroadcaster = new CameraFeedBroadcaster();
 
   // The driver's controller
@@ -104,8 +104,21 @@ public class RobotContainer {
     // Initialize camera systems
     LimelightCameraServer.initialize();
     
-    // Initialize USB CameraServer for driver camera
-    SimpleUSBCameraServer.initialize(1); // Start with device 1 (back camera)
+    // Initialize dual USB camera system
+    if (frc.robot.config.CameraConfig.USE_DUAL_CAMERAS) {
+      frc.robot.utils.DualUSBCameraServer.initialize();
+      System.out.println("=== DUAL CAMERA SYSTEM ENABLED ===");
+      System.out.println("Primary Camera: Device " + frc.robot.config.CameraConfig.PRIMARY_USB_CAMERA_DEVICE);
+      System.out.println("Secondary Camera: Device " + frc.robot.config.CameraConfig.SECONDARY_USB_CAMERA_DEVICE);
+      System.out.println("Add two Camera Server widgets to Shuffleboard:");
+      System.out.println("  - 'DriverCamera' (Primary)");
+      System.out.println("  - 'SecondaryCamera' (Secondary)");
+      System.out.println("===================================");
+    } else {
+      // Fallback to single camera system
+      SimpleUSBCameraServer.initialize(1); // Start with device 1 (back camera)
+      System.out.println("=== SINGLE CAMERA SYSTEM ===");
+    }
     
     // Wait for camera to fully initialize
     try {
@@ -221,8 +234,12 @@ public class RobotContainer {
     // Update camera systems
     LimelightCameraServer.updateStatus();
     
-    // Update USB CameraServer status
-    SimpleUSBCameraServer.updateStatus();
+    // Update dual camera system if enabled, otherwise single camera
+    if (frc.robot.config.CameraConfig.USE_DUAL_CAMERAS) {
+      frc.robot.utils.DualUSBCameraServer.updateStatus();
+    } else {
+      SimpleUSBCameraServer.updateStatus();
+    }
     
     // Update camera feed broadcaster
     cameraFeedBroadcaster.periodic();
