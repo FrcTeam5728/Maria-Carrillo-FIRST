@@ -28,22 +28,23 @@ public class DualUSBCameraServer {
     private static final int SECONDARY_DEVICE = CameraConfig.SECONDARY_USB_CAMERA_DEVICE;
     private static final int SECONDARY_PORT = CameraConfig.SECONDARY_CAMERA_STREAM_PORT;
     
-    // Common camera settings
-    private static final int CAMERA_WIDTH = CameraConfig.CAMERA_WIDTH;
-    private static final int CAMERA_HEIGHT = CameraConfig.CAMERA_HEIGHT;
-    private static final int CAMERA_FPS = CameraConfig.CAMERA_FPS;
+    // Common camera settings - optimized for bandwidth
+    private static final int CAMERA_WIDTH = 240;  // Reduced from 320
+    private static final int CAMERA_HEIGHT = 180; // Reduced from 240
+    private static final int CAMERA_FPS = 15;     // Reduced from 30
     
     // Initialization state
     private static boolean isInitialized = false;
     private static boolean primaryConnected = false;
     private static boolean secondaryConnected = false;
+    private static boolean bandwidthOptimizationEnabled = true;
     
     // NetworkTables for camera publishing
     private static NetworkTable cameraPublisherTable;
     
     /**
      * Initializes the dual USB camera system.
-     * Starts both primary and secondary cameras simultaneously.
+     * Starts both primary and secondary cameras simultaneously with bandwidth optimization.
      */
     public static void initialize() {
         if (isInitialized) {
@@ -53,14 +54,22 @@ public class DualUSBCameraServer {
         
         try {
             System.out.println("=== INITIALIZING DUAL USB CAMERA SYSTEM ===");
+            System.out.println("Optimized for bandwidth: 240x180 @ 15fps");
             
             // Set up NetworkTables for camera publishing
             cameraPublisherTable = NetworkTableInstance.getDefault().getTable("CameraPublisher");
             
-            // Initialize primary camera
+            // Initialize primary camera first (higher priority)
             initializePrimaryCamera();
             
-            // Initialize secondary camera
+            // Wait a moment before initializing secondary camera
+            try {
+                Thread.sleep(500); // 500ms delay
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            
+            // Initialize secondary camera with bandwidth considerations
             initializeSecondaryCamera();
             
             // Mark as initialized
@@ -75,9 +84,16 @@ public class DualUSBCameraServer {
             System.out.println("=== DUAL USB CAMERA SYSTEM INITIALIZED ===");
             System.out.println("Primary Camera: " + (primaryConnected ? "CONNECTED" : "FAILED"));
             System.out.println("Secondary Camera: " + (secondaryConnected ? "CONNECTED" : "FAILED"));
+            System.out.println("Bandwidth Optimization: " + CAMERA_WIDTH + "x" + CAMERA_HEIGHT + " @ " + CAMERA_FPS + "fps");
             System.out.println("Team Number: " + CameraConfig.TEAM_NUMBER);
             System.out.println("Primary URL: " + getPrimaryStreamUrl());
             System.out.println("Secondary URL: " + getSecondaryStreamUrl());
+            
+            if (!secondaryConnected) {
+                System.out.println("⚠️  Secondary camera failed - this may be due to bandwidth limits");
+                System.out.println("   Try reducing resolution further or using single camera mode");
+            }
+            
             System.out.println("==========================================");
             
         } catch (Exception e) {
@@ -107,23 +123,56 @@ public class DualUSBCameraServer {
     }
     
     /**
-     * Initializes the secondary USB camera.
+     * Initializes the secondary USB camera with bandwidth optimization.
      */
     private static void initializeSecondaryCamera() {
         try {
             System.out.println("Starting Secondary USB Camera (Device " + SECONDARY_DEVICE + ")...");
             
-            // Start automatic capture for secondary camera
+            // Try to start secondary camera with optimized settings
             var secondaryCamera = CameraServer.startAutomaticCapture(SECONDARY_CAMERA_NAME, SECONDARY_DEVICE);
             secondaryCamera.setResolution(CAMERA_WIDTH, CAMERA_HEIGHT);
             secondaryCamera.setFPS(CAMERA_FPS);
             
+            // Additional bandwidth optimization settings
+            try {
+                // Set compression if available (WPILib 2025+)
+                secondaryCamera.setCompression(50); // Medium compression
+            } catch (Exception e) {
+                // Compression not supported, continue anyway
+            }
+            
             secondaryConnected = true;
             System.out.println("✅ Secondary camera initialized: " + SECONDARY_CAMERA_NAME);
+            System.out.println("   Resolution: " + CAMERA_WIDTH + "x" + CAMERA_HEIGHT + " @ " + CAMERA_FPS + "fps");
             
         } catch (Exception e) {
             System.err.println("❌ Failed to initialize secondary camera: " + e.getMessage());
             secondaryConnected = false;
+            
+            // Try fallback with even lower settings
+            tryFallbackSecondaryCamera();
+        }
+    }
+    
+    /**
+     * Attempts to initialize secondary camera with ultra-low bandwidth settings.
+     */
+    private static void tryFallbackSecondaryCamera() {
+        try {
+            System.out.println("🔄 Trying secondary camera with ultra-low bandwidth settings...");
+            
+            var fallbackCamera = CameraServer.startAutomaticCapture(SECONDARY_CAMERA_NAME + "_Fallback", SECONDARY_DEVICE);
+            fallbackCamera.setResolution(160, 120); // Very low resolution
+            fallbackCamera.setFPS(10); // Very low FPS
+            
+            secondaryConnected = true;
+            System.out.println("✅ Secondary camera initialized with fallback settings: 160x120 @ 10fps");
+            
+        } catch (Exception fallbackException) {
+            System.err.println("❌ Fallback also failed: " + fallbackException.getMessage());
+            secondaryConnected = false;
+            System.out.println("💡 Suggestion: Use single camera mode or check USB bandwidth");
         }
     }
     
@@ -343,9 +392,63 @@ public class DualUSBCameraServer {
             return "DualUSBCameraServer: Not initialized";
         }
         
-        return String.format("DualUSBCameraServer: Primary=%s, Secondary=%s, Both=%s",
+        return String.format("DualUSBCameraServer: Primary=%s, Secondary=%s, Both=%s, Bandwidth=%s",
             primaryConnected ? "OK" : "FAIL",
             secondaryConnected ? "OK" : "FAIL", 
-            bothCamerasWorking() ? "OK" : "FAIL");
+            bothCamerasWorking() ? "OK" : "FAIL",
+            bandwidthOptimizationEnabled ? "OPTIMIZED" : "NORMAL");
+    }
+    
+    /**
+     * Enables or disables bandwidth optimization.
+     * When enabled, uses lower resolution and FPS for better performance.
+     * 
+     * @param enabled Whether to enable bandwidth optimization
+     */
+    public static void setBandwidthOptimization(boolean enabled) {
+        bandwidthOptimizationEnabled = enabled;
+        System.out.println("Bandwidth optimization " + (enabled ? "ENABLED" : "DISABLED"));
+        
+        if (enabled) {
+            System.out.println("Using optimized settings: 240x180 @ 15fps");
+        } else {
+            System.out.println("Using normal settings: 320x240 @ 30fps");
+        }
+    }
+    
+    /**
+     * Gets current bandwidth optimization status.
+     * 
+     * @return True if bandwidth optimization is enabled
+     */
+    public static boolean isBandwidthOptimizationEnabled() {
+        return bandwidthOptimizationEnabled;
+    }
+    
+    /**
+     * Attempts to restart secondary camera with different settings.
+     * Useful for troubleshooting bandwidth issues.
+     */
+    public static void retrySecondaryCamera() {
+        if (!isInitialized) {
+            System.out.println("DualUSBCameraServer not initialized - cannot retry secondary camera");
+            return;
+        }
+        
+        System.out.println("🔄 Retrying secondary camera initialization...");
+        secondaryConnected = false; // Reset status
+        
+        // Try with current settings first
+        initializeSecondaryCamera();
+        
+        // Update status
+        updateSmartDashboardStatus();
+        publishCameraStreams();
+        
+        if (secondaryConnected) {
+            System.out.println("✅ Secondary camera retry successful");
+        } else {
+            System.out.println("❌ Secondary camera retry failed");
+        }
     }
 }

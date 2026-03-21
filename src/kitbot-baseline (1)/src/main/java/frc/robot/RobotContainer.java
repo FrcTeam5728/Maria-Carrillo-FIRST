@@ -198,6 +198,14 @@ public class RobotContainer {
             SimpleUSBCameraServer.switchCamera();
         }));
 
+    // Retry secondary camera with RIGHT TRIGGER (operator controller) - bandwidth troubleshooting
+    operatorController.rightTrigger()
+        .onTrue(new InstantCommand(() -> {
+            if (frc.robot.config.CameraConfig.USE_DUAL_CAMERAS) {
+                frc.robot.utils.DualUSBCameraServer.retrySecondaryCamera();
+            }
+        }));
+
     // Set the default command for the drive subsystem to the command provided by
     // factory with the values provided by the joystick axes on the driver
     // controller. The Y axis of the controller is inverted so that pushing the

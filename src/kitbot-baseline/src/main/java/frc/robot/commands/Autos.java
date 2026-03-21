@@ -20,10 +20,12 @@ public final class Autos {
         // Stop driving. This line uses the regular driveArcade command factory so it
         // ends immediately after commanding the motors to stop
         driveSubsystem.driveArcade(() -> 0, () -> 0),
-        // Spin up the launcher for 1 second and then launch balls for 9 seconds, for a
-        // total of 10 seconds
-        ballSubsystem.spinUpCommand().withTimeout(1),
-        ballSubsystem.launchCommand().withTimeout(9),
+        // Repeat pattern: shoot for 2 seconds, intake for 1 second, for 15 seconds total
+        // This creates 5 complete cycles (5 * 3 = 15 seconds)
+        new SequentialCommandGroup(
+            ballSubsystem.launchCommand().withTimeout(2),
+            ballSubsystem.intakeCommand().withTimeout(1)
+        ).repeatedly().withTimeout(15),
         // Stop running the launcher
         ballSubsystem.runOnce(() -> ballSubsystem.stop()));
   }
