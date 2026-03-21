@@ -133,28 +133,28 @@ public class RobotContainer {
     // Driver controller A button - follow test path
     driverController.a()
         .onTrue(Commands.runOnce(() -> {
-            DynamicUSBCameraServer.pauseForAutonomous();
+            SimpleUSBCameraServer.initialize(1); // Reinitialize camera for autonomous
         }).andThen(PathPlannerAutoBuilder.getFollowPathCommand("TestPath"))
         .finallyDo(() -> {
-            DynamicUSBCameraServer.resumeFromAutonomous();
+            SimpleUSBCameraServer.initialize(1); // Reinitialize camera after autonomous
         }));
     
     // Driver controller X button - run test autonomous
     driverController.x()
         .onTrue(Commands.runOnce(() -> {
-            DynamicUSBCameraServer.pauseForAutonomous();
+            SimpleUSBCameraServer.initialize(1); // Reinitialize camera for autonomous
         }).andThen(PathPlannerAutoBuilder.getAutoCommand("TestAuto"))
         .finallyDo(() -> {
-            DynamicUSBCameraServer.resumeFromAutonomous();
+            SimpleUSBCameraServer.initialize(1); // Reinitialize camera after autonomous
         }));
     
     // Operator controller A button - follow square path
     operatorController.a()
         .onTrue(Commands.runOnce(() -> {
-            DynamicUSBCameraServer.pauseForAutonomous();
+            SimpleUSBCameraServer.initialize(1); // Reinitialize camera for autonomous
         }).andThen(PathPlannerAutoBuilder.getFollowPathCommand("SquarePath"))
         .finallyDo(() -> {
-            DynamicUSBCameraServer.resumeFromAutonomous();
+            SimpleUSBCameraServer.initialize(1); // Reinitialize camera after autonomous
         }));
 
     // === DRIVER CONTROLLER - MOVEMENT CONTROLS ===
