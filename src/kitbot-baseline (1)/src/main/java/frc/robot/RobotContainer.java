@@ -84,6 +84,9 @@ public class RobotContainer {
     autoChooser.addOption("Ramp Zigzag Shoot", new RampZigzagShootAuto(driveSubsystem, ballSubsystem));
     autoChooser.addOption("Quick Auto", Autos.quickAuto(driveSubsystem, ballSubsystem));
     autoChooser.addOption("Shoot Only", Autos.shootOnlyAuto(driveSubsystem, ballSubsystem));
+    
+    // Publish the chooser to SmartDashboard
+    SmartDashboard.putData("Autonomous Chooser", autoChooser);
   }
 
   /**
