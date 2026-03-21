@@ -31,6 +31,18 @@ public final class Autos {
         ballSubsystem.runOnce(() -> ballSubsystem.stop()));
   }
 
+  // Simple autonomous that just shoots
+  public static final Command shootOnlyAuto(DriveSubsystem driveSubsystem, FuelSubsystem ballSubsystem) {
+    return new SequentialCommandGroup(
+      // Spin up the launcher for 1 second
+      ballSubsystem.spinUpCommand().withTimeout(1),
+      // Launch balls for 20 seconds
+      ballSubsystem.launchCommand().withTimeout(20),
+      // Stop running the launcher
+      ballSubsystem.runOnce(() -> ballSubsystem.stop())
+    );
+  }
+
   // Quick autonomous path: 300" forward, left turn, intake while driving 180", left turn, 170" forward, stop
   public static final Command quickAuto(DriveSubsystem driveSubsystem, FuelSubsystem ballSubsystem) {
     return new SequentialCommandGroup(
