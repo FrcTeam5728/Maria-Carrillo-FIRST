@@ -71,6 +71,10 @@ public class RobotContainer {
 
     configureBindings();
 
+    // Set to back camera (USB1) for teleop
+    DynamicUSBCameraServer.switchToDevice(1);
+    System.out.println("Teleop: Switched to back camera (USB1)");
+
     // Set the options to show up in the Dashboard for selecting auto modes. If you
     // add additional auto modes you can add additional lines here with
     // autoChooser.addOption
@@ -151,21 +155,19 @@ public class RobotContainer {
 
     // === DRIVER CONTROLLER - MOVEMENT CONTROLS ===
     
-    // Driver controller B button toggles movement inversion AND camera port
+    // Driver controller A button switches camera (starts on USB1, toggles between 0 and 1)
+    driverController.a()
+        .onTrue(new InstantCommand(() -> {
+            DynamicUSBCameraServer.toggleDevice();  // Toggle between USB0 and USB1
+            int currentCam = DynamicUSBCameraServer.getCurrentDevice();
+            System.out.println("A button: Switched to camera " + currentCam);
+        }));
+
+    // Driver controller B button toggles movement inversion only
     driverController.b()
         .onTrue(driveSubsystem.runOnce(() -> {
-            // Toggle movement inversion
             driveSubsystem.toggleMovementInversion();
-            
-            if (driveSubsystem.isMovementInverted()) {
-                // Movement inverted - switch to camera port 1
-                DynamicUSBCameraServer.switchToDevice(1);
-                System.out.println("B button: Movement INVERTED, Camera switched to port 1");
-            } else {
-                // Movement normal - switch to camera port 0
-                DynamicUSBCameraServer.switchToDevice(0);
-                System.out.println("B button: Movement NORMAL, Camera switched to port 0");
-            }
+            System.out.println("B button: Movement inversion toggled");
         }));
 
     // Switch USB camera with LEFT TRIGGER (operator controller) - simple 2-camera toggle

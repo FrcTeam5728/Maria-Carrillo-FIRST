@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.FuelSubsystem;
+import frc.robot.utils.DynamicUSBCameraServer;
 
 public final class Autos {
   // Example autonomous command which drives forward for 1 second.
