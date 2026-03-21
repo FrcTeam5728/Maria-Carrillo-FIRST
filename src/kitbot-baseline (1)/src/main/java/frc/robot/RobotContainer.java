@@ -23,7 +23,7 @@ import frc.robot.subsystems.FuelSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
 import frc.robot.subsystems.PulsingShooterSubsystem;
 import frc.robot.utils.CameraFeedBroadcaster;
-import frc.robot.utils.DynamicUSBCameraServer;
+import frc.robot.utils.SimpleUSBCameraServer;
 import frc.robot.utils.LimelightCameraServer;
 import frc.robot.utils.USBCameraServer;
 
@@ -71,15 +71,6 @@ public class RobotContainer {
 
     configureBindings();
 
-    // Set to back camera (USB1) for teleop with delay
-    try {
-        Thread.sleep(500); // Wait for camera initialization
-        DynamicUSBCameraServer.switchToDevice(1);
-        System.out.println("Teleop: Switched to back camera (USB1)");
-    } catch (Exception e) {
-        System.err.println("Error switching to USB1: " + e.getMessage());
-    }
-
     // Set the options to show up in the Dashboard for selecting auto modes. If you
     // add additional auto modes you can add additional lines here with
     // autoChooser.addOption
@@ -109,7 +100,15 @@ public class RobotContainer {
     LimelightCameraServer.initialize();
     
     // Initialize USB CameraServer for driver camera
-    DynamicUSBCameraServer.initialize(1); // Start with device 1 (back camera)
+    SimpleUSBCameraServer.initialize(1); // Start with device 1 (back camera)
+    
+    // Wait for camera to fully initialize
+    try {
+        Thread.sleep(1000);
+        System.out.println("Camera initialization delay completed");
+    } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+    }
     
     // Configure basic Shuffleboard controls
     SimpleShuffleboardControls.initialize(limelightSubsystem, shooterSubsystem, driveSubsystem);
@@ -163,16 +162,9 @@ public class RobotContainer {
     // Driver controller A button switches camera (starts on USB1, toggles between 0 and 1)
     driverController.a()
         .onTrue(new InstantCommand(() -> {
-            try {
-                DynamicUSBCameraServer.toggleDevice();  // Toggle between USB0 and USB1
-                int currentCam = DynamicUSBCameraServer.getCurrentDevice();
-                System.out.println("A button: Switched to camera " + currentCam);
-                
-                // Small delay to allow camera to stabilize
-                Thread.sleep(200);
-            } catch (Exception e) {
-                System.err.println("Error switching camera: " + e.getMessage());
-            }
+            SimpleUSBCameraServer.switchCamera();
+            int currentCam = SimpleUSBCameraServer.getCurrentDevice();
+            System.out.println("A button: Switched to camera " + currentCam);
         }));
 
     // Driver controller B button toggles movement inversion only
@@ -185,7 +177,7 @@ public class RobotContainer {
     // Switch USB camera with LEFT TRIGGER (operator controller) - simple 2-camera toggle
     operatorController.leftTrigger()
         .onTrue(new InstantCommand(() -> {
-            DynamicUSBCameraServer.toggleDevice();  // Simple toggle between 0 and 1
+            SimpleUSBCameraServer.switchCamera();
         }));
 
     // Set the default command for the drive subsystem to the command provided by
@@ -225,7 +217,7 @@ public class RobotContainer {
     LimelightCameraServer.updateStatus();
     
     // Update USB CameraServer status
-    DynamicUSBCameraServer.updateStatus();
+    SimpleUSBCameraServer.updateStatus();
     
     // Update camera feed broadcaster
     cameraFeedBroadcaster.periodic();
