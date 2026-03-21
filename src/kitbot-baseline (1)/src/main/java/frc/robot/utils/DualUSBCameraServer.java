@@ -113,13 +113,10 @@ public class DualUSBCameraServer {
         try {
             System.out.println("Starting Secondary USB Camera (Device " + SECONDARY_DEVICE + ")...");
             
-            var secondaryCamera = CameraServer.addCamera(SECONDARY_CAMERA_NAME);
-            var secondaryServer = CameraServer.getServer();
-            
             // Start automatic capture for secondary camera
-            var secondaryCameraCapture = CameraServer.startAutomaticCapture(SECONDARY_DEVICE);
-            secondaryCameraCapture.setResolution(CAMERA_WIDTH, CAMERA_HEIGHT);
-            secondaryCameraCapture.setFPS(CAMERA_FPS);
+            var secondaryCamera = CameraServer.startAutomaticCapture(SECONDARY_CAMERA_NAME, SECONDARY_DEVICE);
+            secondaryCamera.setResolution(CAMERA_WIDTH, CAMERA_HEIGHT);
+            secondaryCamera.setFPS(CAMERA_FPS);
             
             secondaryConnected = true;
             System.out.println("✅ Secondary camera initialized: " + SECONDARY_CAMERA_NAME);
