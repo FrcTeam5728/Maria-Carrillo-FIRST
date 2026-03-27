@@ -23,6 +23,7 @@ import frc.robot.commands.ResetFieldPositionCommand;
 import frc.robot.commands.SelectShootingPositionCommand;
 import frc.robot.commands.ShootAtPositionCommand;
 import frc.robot.commands.SimpleAutoShootCommand;
+// import frc.robot.commands.FollowPathPlannerPath;
 import frc.robot.config.ShuffleboardManager;
 import frc.robot.config.SimpleShuffleboardControls;
 import frc.robot.subsystems.SimpleCameraSubsystem;
@@ -81,10 +82,16 @@ public class RobotContainer {
 
     configureBindings();
 
+    // Initialize PathPlanner for differential drive (commented out until dependency is added)
+    // FollowPathPlannerPath.configureAutoBuilder(driveSubsystem);
+    // System.out.println("PathPlanner AutoBuilder configured for differential drive");
+
     // Set the options to show up in the Dashboard for selecting auto modes. If you
     // add additional auto modes you can add additional lines here with
     // autoChooser.addOption
-    autoChooser.setDefaultOption("Autonomous", Autos.exampleAuto(driveSubsystem, ballSubsystem));
+    autoChooser.setDefaultOption("Legacy Auto", Autos.exampleAuto(driveSubsystem, ballSubsystem));
+    // autoChooser.addOption("PathPlanner Example", Autos.pathPlannerExampleAuto(driveSubsystem, ballSubsystem));
+    // autoChooser.addOption("PathPlanner Custom", Autos.customPathPlannerAuto(driveSubsystem, ballSubsystem));
   }
 
   /**
@@ -204,12 +211,19 @@ public class RobotContainer {
     
     // Switch USB camera with LEFT TRIGGER (operator controller) - for bandwidth management
     operatorController.leftTrigger()
-        .onTrue(() -> {
-            // Switch to next USB camera device (0 -> 1 -> 2 -> 0)
-            int currentDevice = USBCameraServer.getDeviceNumber();
-            int nextDevice = (currentDevice + 1) % 3; // Cycle through 0, 1, 2
-            USBCameraServer.switchToDevice(nextDevice);
-            return null;
+        .onTrue(new Command() {
+            @Override
+            public void initialize() {
+                // Switch to next USB camera device (0 -> 1 -> 2 -> 0)
+                int currentDevice = USBCameraServer.getDeviceNumber();
+                int nextDevice = (currentDevice + 1) % 3; // Cycle through 0, 1, 2
+                USBCameraServer.switchToDevice(nextDevice);
+            }
+            
+            @Override
+            public boolean isFinished() {
+                return true;
+            }
         });
 
     // Set the default command for the drive subsystem to the command provided by
