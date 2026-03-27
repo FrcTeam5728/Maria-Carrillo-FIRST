@@ -23,6 +23,7 @@ import frc.robot.commands.ResetFieldPositionCommand;
 import frc.robot.commands.SelectShootingPositionCommand;
 import frc.robot.commands.ShootAtPositionCommand;
 import frc.robot.commands.SimpleAutoShootCommand;
+import frc.robot.commands.FollowPathPlannerPath;
 import frc.robot.config.ShuffleboardManager;
 import frc.robot.config.SimpleShuffleboardControls;
 import frc.robot.subsystems.SimpleCameraSubsystem;
@@ -30,6 +31,7 @@ import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.FuelSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
 import frc.robot.subsystems.PulsingShooterSubsystem;
+import frc.robot.subsystems.SwerveDriveSubsystem;
 import frc.robot.utils.CameraFeedBroadcaster;
 import frc.robot.utils.FieldPositionSystem;
 import frc.robot.utils.LimelightCameraServer;
@@ -81,12 +83,20 @@ public class RobotContainer {
 
     configureBindings();
 
+    // Initialize PathPlanner if using swerve drive
+    if (driveSubsystem instanceof SwerveDriveSubsystem) {
+      FollowPathPlannerPath.configureAutoBuilder((SwerveDriveSubsystem)driveSubsystem);
+      System.out.println("PathPlanner AutoBuilder configured for swerve drive");
+    }
+
     // Set the options to show up in the Dashboard for selecting auto modes. If you
     // add additional auto modes you can add additional lines here with
     // autoChooser.addOption
     if (driveSubsystem instanceof SwerveDriveSubsystem) {
       autoChooser.setDefaultOption("Swerve Auto", Autos.swerveAuto((SwerveDriveSubsystem)driveSubsystem, ballSubsystem));
       autoChooser.addOption("Quick Swerve", Autos.quickAuto((SwerveDriveSubsystem)driveSubsystem, ballSubsystem));
+      autoChooser.addOption("PathPlanner Example", Autos.pathPlannerExampleAuto((SwerveDriveSubsystem)driveSubsystem, ballSubsystem));
+      autoChooser.addOption("PathPlanner Custom", Autos.customPathPlannerAuto((SwerveDriveSubsystem)driveSubsystem, ballSubsystem));
       autoChooser.addOption("Legacy Auto", Autos.exampleAuto(driveSubsystem, ballSubsystem));
     } else {
       autoChooser.setDefaultOption("Autonomous", Autos.exampleAuto(driveSubsystem, ballSubsystem));

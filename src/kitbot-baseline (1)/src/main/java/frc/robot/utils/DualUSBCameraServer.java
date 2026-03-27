@@ -135,12 +135,9 @@ public class DualUSBCameraServer {
             secondaryCamera.setFPS(CAMERA_FPS);
             
             // Additional bandwidth optimization settings
-            try {
-                // Set compression if available (WPILib 2025+)
-                secondaryCamera.setCompression(50); // Medium compression
-            } catch (Exception e) {
-                // Compression not supported, continue anyway
-            }
+            // Note: UsbCamera does not define setCompression(int) in many WPILib versions,
+            // so we rely on resolution/FPS (and any camera-side settings) to reduce bandwidth.
+            System.out.println("Note: compression setting not supported on this WPILib/Camera API; using resolution/FPS to optimize bandwidth");
             
             secondaryConnected = true;
             System.out.println("✅ Secondary camera initialized: " + SECONDARY_CAMERA_NAME);

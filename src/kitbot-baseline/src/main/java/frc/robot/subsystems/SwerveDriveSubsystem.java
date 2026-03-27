@@ -255,6 +255,21 @@ public class SwerveDriveSubsystem extends DriveSubsystem {
   }
 
   /**
+   * Gets the current chassis speeds from the swerve modules.
+   * 
+   * @return Current chassis speeds
+   */
+  public ChassisSpeeds getChassisSpeeds() {
+    SwerveModuleState[] states = new SwerveModuleState[] {
+      m_frontLeft.getState(),
+      m_frontRight.getState(),
+      m_backLeft.getState(),
+      m_backRight.getState()
+    };
+    return m_kinematics.toChassisSpeeds(states);
+  }
+
+  /**
    * Creates a command to stop the robot.
    *
    * @return Command to stop the robot

@@ -10,6 +10,9 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.FuelSubsystem;
 import frc.robot.subsystems.SwerveDriveSubsystem;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.path.PathPlannerPath;
 
 public final class Autos {
   // Example autonomous command which drives forward for 1 second.
@@ -100,6 +103,73 @@ public final class Autos {
         
         // Stop launcher
         ballSubsystem.runOnce(() -> ballSubsystem.stop())
+    );
+  }
+
+  /**
+   * PathPlanner autonomous that follows the "example" path.
+   * 
+   * @param driveSubsystem The swerve drive subsystem
+   * @param ballSubsystem The fuel subsystem
+   * @return Command that follows the path and shoots
+   */
+  public static final Command pathPlannerExampleAuto(SwerveDriveSubsystem driveSubsystem, FuelSubsystem ballSubsystem) {
+    return new SequentialCommandGroup(
+        // Follow the example path
+        FollowPathPlannerPath.followNamedPath("example", driveSubsystem, true),
+        
+        // Stop and shoot for 3 seconds
+        driveSubsystem.stopCommand().alongWith(
+            ballSubsystem.launchCommand().withTimeout(3)
+        ),
+        
+        // Stop launcher
+        ballSubsystem.runOnce(() -> ballSubsystem.stop())
+    );
+  }
+
+  /**
+   * Creates a PathPlanner autonomous command from a named auto.
+   * 
+   * @param autoName The name of the auto from autos.json
+   * @param driveSubsystem The swerve drive subsystem  
+   * @param ballSubsystem The fuel subsystem
+   * @return Command that runs the full PathPlanner autonomous
+   */
+  public static final Command pathPlannerAuto(String autoName, SwerveDriveSubsystem driveSubsystem, FuelSubsystem ballSubsystem) {
+    return new SequentialCommandGroup(
+        // Run the PathPlanner auto
+        FollowPathPlannerPath.createAutoCommand(autoName),
+        
+        // Ensure everything is stopped at the end
+        driveSubsystem.stopCommand().alongWith(
+            ballSubsystem.runOnce(() -> ballSubsystem.stop())
+        )
+    );
+  }
+
+  /**
+   * Custom PathPlanner auto with path following and shooting sequence.
+   * 
+   * @param driveSubsystem The swerve drive subsystem
+   * @param ballSubsystem The fuel subsystem
+   * @return Command with path following and shooting
+   */
+  public static final Command customPathPlannerAuto(SwerveDriveSubsystem driveSubsystem, FuelSubsystem ballSubsystem) {
+    return new SequentialCommandGroup(
+        // Follow the example path
+        FollowPathPlannerPath.followNamedPath("example", driveSubsystem, true),
+        
+        // Repeat pattern: shoot for 2 seconds, intake for 1 second, for 15 seconds total
+        new SequentialCommandGroup(
+            ballSubsystem.launchCommand().withTimeout(2),
+            ballSubsystem.intakeCommand().withTimeout(1)
+        ).repeatedly().withTimeout(15),
+        
+        // Stop everything
+        driveSubsystem.stopCommand().alongWith(
+            ballSubsystem.runOnce(() -> ballSubsystem.stop())
+        )
     );
   }
 }
