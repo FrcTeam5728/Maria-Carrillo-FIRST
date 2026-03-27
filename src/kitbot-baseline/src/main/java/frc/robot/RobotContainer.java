@@ -84,7 +84,13 @@ public class RobotContainer {
     // Set the options to show up in the Dashboard for selecting auto modes. If you
     // add additional auto modes you can add additional lines here with
     // autoChooser.addOption
-    autoChooser.setDefaultOption("Autonomous", Autos.exampleAuto(driveSubsystem, ballSubsystem));
+    if (driveSubsystem instanceof SwerveDriveSubsystem) {
+      autoChooser.setDefaultOption("Swerve Auto", Autos.swerveAuto((SwerveDriveSubsystem)driveSubsystem, ballSubsystem));
+      autoChooser.addOption("Quick Swerve", Autos.quickAuto((SwerveDriveSubsystem)driveSubsystem, ballSubsystem));
+      autoChooser.addOption("Legacy Auto", Autos.exampleAuto(driveSubsystem, ballSubsystem));
+    } else {
+      autoChooser.setDefaultOption("Autonomous", Autos.exampleAuto(driveSubsystem, ballSubsystem));
+    }
   }
 
   /**

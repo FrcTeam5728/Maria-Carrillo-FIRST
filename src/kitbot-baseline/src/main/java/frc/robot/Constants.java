@@ -16,8 +16,8 @@ package frc.robot;
  */
 public final class Constants {
   public static final class FactoryConstants {
-    // Drive subsystem type selection: "SPARKMAX" or "VICTORSPX"
-    public static final String DRIVE_SUBSYSTEM_TYPE = "SPARKMAX";
+    // Drive subsystem type selection: "SPARKMAX", "VICTORSPX", or "SWERVE"
+    public static final String DRIVE_SUBSYSTEM_TYPE = "SWERVE";
 
     // Fuel subsystem type selection: "SPARKMAX" or "VICTORSPX"
     public static final String FUEL_SUBSYSTEM_TYPE = "SPARKMAX";

@@ -6,6 +6,7 @@ import frc.robot.subsystems.FuelSubsystemSparkMax;
 import frc.robot.subsystems.FuelSubsystemVictorSpx;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.FuelSubsystem;
+import frc.robot.subsystems.SwerveDriveSubsystem;
 import static frc.robot.Constants.FactoryConstants.*;
 
 /**
@@ -17,7 +18,7 @@ public class RobotSubsystemFactory {
     /**
      * Creates a drive subsystem based on the DRIVE_SUBSYSTEM_TYPE constant.
      * 
-     * @return A DriveSubsystem implementation (either SparkMax or VictorSPX based)
+     * @return A DriveSubsystem implementation (either SparkMax, VictorSPX, or SwerveDrive based)
      * @throws IllegalArgumentException if the subsystem type is not recognized
      */
     public static DriveSubsystem createDriveSubsystem() {
@@ -26,10 +27,12 @@ public class RobotSubsystemFactory {
                 return new DriveSubsystemSparkMax();
             case "VICTORSPX":
                 return new DriveSubsystemVictorSpx();
+            case "SWERVE":
+                return new SwerveDriveSubsystem();
             default:
                 throw new IllegalArgumentException(
                     "Unknown drive subsystem type: " + DRIVE_SUBSYSTEM_TYPE + 
-                    ". Must be 'SPARKMAX' or 'VICTORSPX'");
+                    ". Must be 'SPARKMAX', 'VICTORSPX', or 'SWERVE'");
         }
     }
 
