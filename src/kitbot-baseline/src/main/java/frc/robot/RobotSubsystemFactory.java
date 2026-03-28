@@ -1,54 +1,31 @@
+// Copyright (c) FIRST and other WPILib contributors.
+// Open Source Software; you can modify and/or share it under the terms of
+// the WPILib BSD license file in the root directory of this project.
+
 package frc.robot;
 
-import frc.robot.subsystems.DriveSubsystemSparkMax;
-import frc.robot.subsystems.DriveSubsystemVictorSpx;
-import frc.robot.subsystems.FuelSubsystemSparkMax;
-import frc.robot.subsystems.FuelSubsystemVictorSpx;
 import frc.robot.subsystems.DriveSubsystem;
-import frc.robot.subsystems.FuelSubsystem;
+import frc.robot.subsystems.SwerveDriveSubsystem;
+
 import static frc.robot.Constants.FactoryConstants.*;
 
 /**
- * Factory class for creating robot subsystems based on configuration constants.
- * This allows easy switching between different motor controller implementations
- * without changing code throughout the robot.
+ * Factory class for creating drive subsystems based on configuration.
  */
 public class RobotSubsystemFactory {
-    /**
-     * Creates a drive subsystem based on the DRIVE_SUBSYSTEM_TYPE constant.
-     * 
-     * @return A DriveSubsystem implementation (either SparkMax or VictorSPX based)
-     * @throws IllegalArgumentException if the subsystem type is not recognized
-     */
-    public static DriveSubsystem createDriveSubsystem() {
-        switch (DRIVE_SUBSYSTEM_TYPE.toUpperCase()) {
-            case "SPARKMAX":
-                return new DriveSubsystemSparkMax();
-            case "VICTORSPX":
-                return new DriveSubsystemVictorSpx();
-            default:
-                throw new IllegalArgumentException(
-                    "Unknown drive subsystem type: " + DRIVE_SUBSYSTEM_TYPE + 
-                    ". Must be 'SPARKMAX' or 'VICTORSPX'");
-        }
+  /**
+   * Creates a drive subsystem based on the configured drive type.
+   * 
+   * @return The appropriate drive subsystem
+   */
+  public static DriveSubsystem createDriveSubsystem() {
+    if (DRIVE_SUBSYSTEM_TYPE.equals("SWERVE")) {
+      return new SwerveDriveSubsystem();
+    } else if (DRIVE_SUBSYSTEM_TYPE.equals("SPARKMAX")) {
+      return new DriveSubsystemSparkMax();
+    } else {
+      // Default to differential drive
+      return new DriveSubsystemSparkMax();
     }
-
-    /**
-     * Creates a fuel subsystem based on the FUEL_SUBSYSTEM_TYPE constant.
-     * 
-     * @return A FuelSubsystem implementation (either SparkMax or VictorSFX based)
-     * @throws IllegalArgumentException if the subsystem type is not recognized
-     */
-    public static FuelSubsystem createFuelSubsystem() {
-        switch (FUEL_SUBSYSTEM_TYPE.toUpperCase()) {
-            case "SPARKMAX":
-                return new FuelSubsystemSparkMax();
-            case "VICTORSPX":
-                return new FuelSubsystemVictorSpx();
-            default:
-                throw new IllegalArgumentException(
-                    "Unknown fuel subsystem type: " + FUEL_SUBSYSTEM_TYPE + 
-                    ". Must be 'SPARKMAX' or 'VICTORSPX'");
-        }
-    }
+  }
 }
