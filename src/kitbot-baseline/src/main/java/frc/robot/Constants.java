@@ -5,73 +5,41 @@
 package frc.robot;
 
 /**
- * The Constants class provides a convenient place for teams to hold robot-wide
- * numerical or boolean constants. This class should not be used for any other
- * purpose. All constants should be declared globally (i.e. public static). Do
- * not put anything functional in this class.
- *
- * <p>
- * It is advised to statically import this class (or one of its inner classes)
- * wherever the constants are needed, to reduce verbosity.
+ * Constants for the robot.
  */
 public final class Constants {
-  public static final class FactoryConstants {
-    // Drive subsystem type selection: "SPARKMAX" or "VICTORSPX"
-    public static final String DRIVE_SUBSYSTEM_TYPE = "SPARKMAX";
-
-    // Fuel subsystem type selection: "SPARKMAX" or "VICTORSPX"
-    public static final String FUEL_SUBSYSTEM_TYPE = "SPARKMAX";
-  }
-
   public static final class DriveConstants {
-    // Motor controller IDs for drivetrain motors
-    public static final int LEFT_LEADER_ID_SPARKMAX = 33;
-    public static final int LEFT_FOLLOWER_ID_SPARKMAX = 32;
-    public static final int RIGHT_LEADER_ID_SPARKMAX = 31;
-    public static final int RIGHT_FOLLOWER_ID_SPARKMAX = 34;
-
-    public static final int LEFT_LEADER_ID_SPX = 1;
-    public static final int LEFT_FOLLOWER_ID_SPX = 2;
-    public static final int RIGHT_LEADER_ID_SPX = 3;
-    public static final int RIGHT_FOLLOWER_ID_SPX = 4;
-
-    // Current limit for drivetrain motors. 60A is a reasonable maximum to reduce
-    // likelihood of tripping breakers or damaging CIM motors
-    public static final int DRIVE_MOTOR_CURRENT_LIMIT = 40;
+    // Motor CAN IDs for swerve drive
+    public static final int kFrontLeftDriveMotorId = 1;
+    public static final int kFrontRightDriveMotorId = 2;
+    public static final int kBackLeftDriveMotorId = 3;
+    public static final int kBackRightDriveMotorId = 4;
+    
+    // Encoder DIO ports for swerve drive
+    public static final int kFrontLeftDriveEncoderId = 0;
+    public static final int kFrontRightDriveEncoderId = 1;
+    public static final int kBackLeftDriveEncoderId = 2;
+    public static final int kBackRightDriveEncoderId = 3;
+    
+    // Motor constants
+    public static final double kDriveMotorCurrentLimit = 40;
+    public static final double kTurningMotorCurrentLimit = 30;
+    public static final double kDriveRampRate = 0.1;
+    public static final double kTurningRampRate = 0.1;
+    
+    // Physical dimensions
+    public static final double kTrackWidth = 0.6; // meters
+    public static final double kWheelBase = 0.5; // meters
+    public static final double kModuleOffset = 0.3; // meters from center to each module
   }
 
-  public static final class FuelConstants {
-    // Motor controller IDs for Fuel Mechanism motors
-    public static final int FEEDER_MOTOR_ID_SPARKMAX = 22;
-    public static final int INTAKE_LAUNCHER_MOTOR_ID_SPARKMAX = 21;
-
-    public static final int FEEDER_MOTOR_ID_SPX = 6;
-    public static final int INTAKE_LAUNCHER_MOTOR_ID_SPX = 5;
-
-    // Current limit and nominal voltage for fuel mechanism motors.
-    public static final int FEEDER_MOTOR_CURRENT_LIMIT = 40;
-    public static final int LAUNCHER_MOTOR_CURRENT_LIMIT = 40;
-
-    // Voltage values for various fuel operations. These values may need to be tuned
-    // based on exact robot construction.
-    // See the Software Guide for tuning information
-    public static final double INTAKING_FEEDER_VOLTAGE = -12;
-    public static final double INTAKING_INTAKE_VOLTAGE = 10;
-    public static final double LAUNCHING_FEEDER_VOLTAGE = -9;
-    public static final double LAUNCHING_LAUNCHER_VOLTAGE = 10.6;
-    public static final double SPIN_UP_FEEDER_VOLTAGE = 6;
-    public static final double SPIN_UP_SECONDS = 1;
+  public static final class OIConstants {
+    public static final int kDriverControllerPort = 0;
+    public static final int kOperatorControllerPort = 1;
   }
 
-  public static final class OperatorConstants {
-    // Port constants for driver and operator controllers. These should match the
-    // values in the Joystick tab of the Driver Station software
-    public static final int DRIVER_CONTROLLER_PORT = 0;
-    public static final int OPERATOR_CONTROLLER_PORT = 0; // Both driver and operator use same controller;
-
-    // This value is multiplied by the joystick value when driving the robot to
-    // help avoid driving and turning too fast and being difficult to control
-    public static final double DRIVE_SCALING = .7;
-    public static final double ROTATION_SCALING = .8;
+  public static final class FactoryConstants {
+    // Drive subsystem type: "SWERVE" for swerve drive, "SPARKMAX" for differential drive
+    public static final String DRIVE_SUBSYSTEM_TYPE = "SWERVE";
   }
 }

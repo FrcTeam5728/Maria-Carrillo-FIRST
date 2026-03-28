@@ -4,361 +4,174 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-
-import static frc.robot.Constants.OperatorConstants.*;
-import frc.robot.commands.AprilTagPositionTestCommand;
-import frc.robot.commands.AutoAimCommand;
-import frc.robot.commands.FindLimelightCommand;
-import frc.robot.commands.ImmediateAprilTagUpdateCommand;
-import frc.robot.commands.LimelightTroubleshootCommand;
-import frc.robot.commands.LimelightVideoTestCommand;
-import frc.robot.commands.TestLimelightStreamCommand;
-import frc.robot.commands.ToggleLimelightModeCommand;
 import frc.robot.commands.Autos;
-import frc.robot.commands.ResetFieldPositionCommand;
-import frc.robot.commands.SelectShootingPositionCommand;
-import frc.robot.commands.ShootAtPositionCommand;
-import frc.robot.commands.SimpleAutoShootCommand;
-// import frc.robot.commands.FollowPathPlannerPath;
 import frc.robot.config.ShuffleboardManager;
-import frc.robot.config.SimpleShuffleboardControls;
-import frc.robot.subsystems.SimpleCameraSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.FuelSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
 import frc.robot.subsystems.PulsingShooterSubsystem;
+import frc.robot.subsystems.SimpleCameraSubsystem;
 import frc.robot.utils.CameraFeedBroadcaster;
 import frc.robot.utils.FieldPositionSystem;
-import frc.robot.utils.LimelightCameraServer;
-import frc.robot.utils.USBCameraServer;
 import frc.robot.utils.ShootingPositionManager;
+import frc.robot.subsystems.SwerveDriveSubsystem;
+
+import static frc.robot.Constants.DriveConstants.*;
+import static frc.robot.Constants.OIConstants.*;
 
 /**
- * This class is where the bulk of the robot should be declared. Since
- * Command-based is a "declarative" paradigm, very little robot logic should
- * actually be handled in the {@link Robot} periodic methods (other than the
- * scheduler calls). Instead, the structure of the robot (including subsystems,
- * commands, and trigger mappings) should be declared here.
+ * This class is where the bulk of the robot components are declared.
+ * This class declares subsystems and command objects for the entire robot.
  */
 public class RobotContainer {
   // The robot's subsystems
-  private final DriveSubsystem driveSubsystem = RobotSubsystemFactory.createDriveSubsystem();
-  private final FuelSubsystem ballSubsystem = RobotSubsystemFactory.createFuelSubsystem();
-  private final LimelightSubsystem limelightSubsystem = new LimelightSubsystem();
-  private final PulsingShooterSubsystem shooterSubsystem = new PulsingShooterSubsystem();
-  private final FieldPositionSystem fieldPositionSystem = new FieldPositionSystem(limelightSubsystem);
-  private final ShootingPositionManager shootingPositionManager = new ShootingPositionManager(limelightSubsystem);
-  private final SimpleCameraSubsystem cameraServerSubsystem = new SimpleCameraSubsystem();
-  private final CameraFeedBroadcaster cameraFeedBroadcaster = new CameraFeedBroadcaster();
-  private final ShuffleboardManager shuffleboardManager = new ShuffleboardManager();
-
-  // Static field for periodic diagnostics timing
-  private static long lastDiagnosticTime = 0;
-
-  // The driver's controller
-  private final CommandXboxController driverController = new CommandXboxController(
-      DRIVER_CONTROLLER_PORT);
+  private final SwerveDriveSubsystem m_swerveDrive;
+  private final FuelSubsystem m_fuelSubsystem;
+  private final LimelightSubsystem m_limelightSubsystem;
+  private final PulsingShooterSubsystem m_shooterSubsystem;
+  private final SimpleCameraSubsystem m_cameraSubsystem;
+  private final CameraFeedBroadcaster cameraFeedBroadcaster;
+  private final FieldPositionSystem fieldPositionSystem;
+  private final ShootingPositionManager shootingPositionManager;
 
   // The operator's controller
-  private final CommandXboxController operatorController = new CommandXboxController(
-      OPERATOR_CONTROLLER_PORT);
+  private final CommandXboxController m_driverController;
+  private final CommandXboxController m_operatorController;
 
-  // The autonomous chooser
+  // Shuffleboard manager for displaying robot data
+  private final ShuffleboardManager shuffleboardManager = new ShuffleboardManager();
+
+  // Autonomous command chooser
   private final SendableChooser<Command> autoChooser = new SendableChooser<>();
 
   /**
-   * The container for robot. Contains subsystems, OI devices, and commands.
+   * The container for the robot. Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
-    // Initialize subsystems (centralized Limelight handles all vision data)
-    System.out.println("=== CENTRALIZED LIMELIGHT SYSTEM ===");
-    System.out.println("Single source for all Limelight data");
-    System.out.println("Pulsing shooter: 3s ON, 0.5s OFF");
-    System.out.println("===================================");
-    
-    // Set up camera for AprilTag detection
-    driveSubsystem.setAprilTagCamera(limelightSubsystem); // Use Limelight for AprilTags
-    
+    // Initialize subsystems
+    m_swerveDrive = new SwerveDriveSubsystem();
+    m_fuelSubsystem = new FuelSubsystem();
+    m_limelightSubsystem = new LimelightSubsystem();
+    m_shooterSubsystem = new PulsingShooterSubsystem();
+    m_cameraSubsystem = new SimpleCameraSubsystem();
+    cameraFeedBroadcaster = new CameraFeedBroadcaster();
+    fieldPositionSystem = new FieldPositionSystem();
+    shootingPositionManager = new ShootingPositionManager();
+
+    // Initialize operator controllers
+    m_driverController = new CommandXboxController(kDriverControllerPort);
+    m_operatorController = new CommandXboxController(kOperatorControllerPort);
+
+    // Initialize Shuffleboard manager
+    shuffleboardManager = new ShuffleboardManager();
+
+    // Configure button bindings
     configureBindings();
 
-    // Initialize PathPlanner for differential drive (commented out until dependency is added)
-    // FollowPathPlannerPath.configureAutoBuilder(driveSubsystem);
-    // System.out.println("PathPlanner AutoBuilder configured for differential drive");
-
-    // Set the options to show up in the Dashboard for selecting auto modes. If you
-    // add additional auto modes you can add additional lines here with
-    // autoChooser.addOption
-    autoChooser.setDefaultOption("Legacy Auto", Autos.exampleAuto(driveSubsystem, ballSubsystem));
-    // autoChooser.addOption("PathPlanner Example", Autos.pathPlannerExampleAuto(driveSubsystem, ballSubsystem));
-    // autoChooser.addOption("PathPlanner Custom", Autos.customPathPlannerAuto(driveSubsystem, ballSubsystem));
+    // Initialize autonomous chooser
+    autoChooser.setDefaultOption("Swerve Auto", Autos.swerveAuto(m_swerveDrive, m_fuelSubsystem));
   }
 
   /**
-   * Use this method to define your trigger->command mappings. Triggers can be
-   * created via the {@link Trigger#Trigger(java.util.function.BooleanSupplier)}
-   * constructor with an arbitrary predicate, or via the named factories in
-   * {@link edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses
-   * for {@link CommandXboxController Xbox}/
-   * {@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller PS4}
-   * controllers or
+   * Gets the drive subsystem.
+   * 
+   * @return The swerve drive subsystem
    */
-  private void configureBindings() {
-    
-    // Initialize Limelight CameraServer for video feed
-    LimelightCameraServer.initialize();
-    
-    // Initialize USB CameraServer for driver camera
-    USBCameraServer.initialize();
-    
-    // Configure Shuffleboard controls
-    SimpleShuffleboardControls.initialize(limelightSubsystem, fieldPositionSystem, 
-                                       shooterSubsystem, driveSubsystem);
-    
-    // Limelight troubleshoot with MENU button (driver controller)
-    driverController.back()
-        .onTrue(new LimelightTroubleshootCommand());
-    
-    // Find Limelight with Y button (driver controller)
-    driverController.y()
-        .onTrue(new FindLimelightCommand());
-    
-    // Test Limelight stream with B button (driver controller)
-    driverController.b()
-        .onTrue(new TestLimelightStreamCommand());
-    
-    // Limelight video test with START button (driver controller)
-    driverController.start()
-        .onTrue(new LimelightVideoTestCommand(limelightSubsystem));
-    
-    // Reset field position with RIGHT STICK button (driver controller)
-    driverController.rightStick()
-        .onTrue(new ResetFieldPositionCommand(fieldPositionSystem));
-    
-    // Toggle Limelight mode with X button (driver controller)
-    driverController.x()
-        .onTrue(new ToggleLimelightModeCommand(fieldPositionSystem.getPositionUpdater()));
-    
-    // Limelight video test with LEFT BUMPER button (driver controller)
-    driverController.leftBumper()
-        .onTrue(new LimelightVideoTestCommand(limelightSubsystem));
-    
-    // Auto-aim with A button (driver controller)
-    driverController.a()
-        .onTrue(new AutoAimCommand(limelightSubsystem, fieldPositionSystem));
-    
-    // Immediate AprilTag update with B button (driver controller)
-    driverController.b()
-        .onTrue(new ImmediateAprilTagUpdateCommand(limelightSubsystem, 
-                                                   fieldPositionSystem.getPositionUpdater()));
-    
-    // AprilTag position test with Y button (driver controller)
-    driverController.y()
-        .onTrue(new AprilTagPositionTestCommand(fieldPositionSystem.getPositionUpdater()));
-    
-    // Field position reset with LEFT BUMPER button (driver controller)
-    driverController.leftBumper()
-        .onTrue(new ResetFieldPositionCommand(fieldPositionSystem));
-    
-    // === OPERATOR CONTROLLER - SHOOTING CONTROLS ===
-    
-    // Auto-shoot with RIGHT TRIGGER (operator controller) - primary shooting method
-    operatorController.rightTrigger()
-        .whileTrue(new SimpleAutoShootCommand(driveSubsystem, limelightSubsystem, shooterSubsystem));
-    
-    // D-pad controls for shooting position selection
-    operatorController.povUp()
-        .onTrue(new SelectShootingPositionCommand(shootingPositionManager, 0)); // Up - Speaker positions
-    
-    operatorController.povRight()
-        .onTrue(new SelectShootingPositionCommand(shootingPositionManager, 90)); // Right - Next position
-    
-    operatorController.povDown()
-        .onTrue(new SelectShootingPositionCommand(shootingPositionManager, 180)); // Down - Stage positions
-    
-    operatorController.povLeft()
-        .onTrue(new SelectShootingPositionCommand(shootingPositionManager, 270)); // Left - Previous position
-    
-    // Shoot at selected position with X button
-    operatorController.x()
-        .onTrue(new ShootAtPositionCommand(driveSubsystem, limelightSubsystem, 
-                                         shooterSubsystem, shootingPositionManager));
-    
-    // Manual shooter control with Y button
-    operatorController.y()
-        .whileTrue(shooterSubsystem.runEnd(() -> shooterSubsystem.startContinuous(), 
-                                          () -> shooterSubsystem.stop()));
-    
-    // Pulsing shooter toggle with A button
-    operatorController.a()
-        .onTrue(shooterSubsystem.runOnce(() -> {
-            if (shooterSubsystem.isPulsing()) {
-                shooterSubsystem.stop();
-                System.out.println("Pulsing shooter stopped");
-            } else {
-                shooterSubsystem.startPulsing();
-                System.out.println("Pulsing shooter started");
-            }
-        }));
-    
-    // While the left bumper on operator controller is held, intake Fuel
-    operatorController.leftBumper()
-        .whileTrue(ballSubsystem.runEnd(() -> ballSubsystem.intake(), () -> ballSubsystem.stop()));
-    
-    // While the right bumper on operator controller is held, manual spin-up
-    operatorController.rightBumper()
-        .whileTrue(ballSubsystem.runEnd(() -> ballSubsystem.spinUp(), () -> ballSubsystem.stop()));
-    
-    // Switch USB camera with LEFT TRIGGER (operator controller) - for bandwidth management
-    operatorController.leftTrigger()
-        .onTrue(new Command() {
-            @Override
-            public void initialize() {
-                // Switch to next USB camera device (0 -> 1 -> 2 -> 0)
-                int currentDevice = USBCameraServer.getDeviceNumber();
-                int nextDevice = (currentDevice + 1) % 3; // Cycle through 0, 1, 2
-                USBCameraServer.switchToDevice(nextDevice);
-            }
-            
-            @Override
-            public boolean isFinished() {
-                return true;
-            }
-        });
-
-    // Set the default command for the drive subsystem to the command provided by
-    // factory with the values provided by the joystick axes on the driver
-    // controller. The Y axis of the controller is inverted so that pushing the
-    // stick away from you (a negative value) drives the robot forwards (a positive
-    // value). The X-axis is also inverted so a positive value (stick to the right)
-    // results in clockwise rotation (front of the robot turning right). Both axes
-    // are also scaled down so the rotation is more easily controllable.
-    // 
-    // Right trigger provides speed boost (up to 50% additional speed)
-    driveSubsystem.setDefaultCommand(
-        driveSubsystem.driveArcade(
-            () -> {
-              double baseSpeed = -driverController.getLeftY() * DRIVE_SCALING;
-              double triggerBoost = driverController.getRightTriggerAxis() * 0.5; // 50% boost
-              return baseSpeed + triggerBoost;
-            },
-            () -> -driverController.getRightX() * ROTATION_SCALING));
+  public SwerveDriveSubsystem getSwerveDrive() {
+    return m_swerveDrive;
   }
 
   /**
-   * Use this to pass the autonomous command to the main {@link Robot} class.
-   *
-   * @return the command to run in autonomous
+   * Gets the fuel subsystem.
+   * 
+   * @return The fuel subsystem
+   */
+  public FuelSubsystem getFuelSubsystem() {
+    return m_fuelSubsystem;
+  }
+
+  /**
+   * Gets the limelight subsystem.
+   * 
+   * @return The limelight subsystem
+   */
+  public LimelightSubsystem getLimelightSubsystem() {
+    return m_limelightSubsystem;
+  }
+
+  /**
+   * Gets the shooter subsystem.
+   * 
+   * @return The shooter subsystem
+   */
+  public PulsingShooterSubsystem getShooterSubsystem() {
+    return m_shooterSubsystem;
+  }
+
+  /**
+   * Gets the camera subsystem.
+   * 
+   * @return The camera subsystem
+   */
+  public SimpleCameraSubsystem getCameraSubsystem() {
+    return m_cameraSubsystem;
+  }
+
+  /**
+   * Gets the field position system.
+   * 
+   * @return The field position system
+   */
+  public FieldPositionSystem getFieldPositionSystem() {
+    return fieldPositionSystem;
+  }
+
+  /**
+   * Gets the shooting position manager.
+   * 
+   * @return The shooting position manager
+   */
+  public ShootingPositionManager getShootingPositionManager() {
+    return shootingPositionManager;
+  }
+
+  /**
+   * Gets the autonomous command selected.
+   * 
+   * @return The selected autonomous command
    */
   public Command getAutonomousCommand() {
-    // An example command will be run in autonomous
     return autoChooser.getSelected();
-  }
-  
-  /**
-   * Updates all subsystems that need periodic updates.
-   */
-  public void periodic() {
-    // Update Limelight CameraServer status
-    LimelightCameraServer.updateStatus();
-    
-    // Update USB CameraServer status
-    USBCameraServer.updateStatus();
-    
-    // Update camera feed broadcaster
-    cameraFeedBroadcaster.periodic();
-    
-    // Update field position system
-    fieldPositionSystem.update();
-    
-    // Update advanced positioning with AprilTags
-    driveSubsystem.updatePositionWithAprilTags();
-    
-    // Update Shuffleboard values including field widget
-    SimpleShuffleboardControls.updateValues(limelightSubsystem, fieldPositionSystem, 
-          shooterSubsystem, driveSubsystem);
-    
-    // Update ShuffleboardManager widgets (including field visualization)
-    shuffleboardManager.updateOdometryWidgets(driveSubsystem);
-    shuffleboardManager.updateAdvancedPositioningWidgets(driveSubsystem);
-    
-    // Run periodic Limelight diagnostics (every 5 seconds)
-    runPeriodicDiagnostics();
-  }
-  
-  /**
-   * Runs periodic diagnostics for Limelight and other systems.
-   */
-  private void runPeriodicDiagnostics() {
-    long currentTime = System.currentTimeMillis();
-    
-    // Run diagnostics every 5 seconds
-    if (currentTime - lastDiagnosticTime > 5000) {
-      lastDiagnosticTime = currentTime;
-      
-      // Check Limelight connection status
-      if (!limelightSubsystem.isConnected()) {
-        edu.wpi.first.wpilibj.DriverStation.reportWarning(
-          "⚠️ LIMELIGHT DISCONNECTED - Check power and network", false);
-      }
-      
-      // Check if we have recent position updates
-      if (fieldPositionSystem.getPositionUpdater().hasValidPosition()) {
-        double timeSinceUpdate = (currentTime / 1000.0) - 
-                               fieldPositionSystem.getPositionUpdater().getLastUpdateTime();
-        if (timeSinceUpdate > 10.0) {
-          edu.wpi.first.wpilibj.DriverStation.reportWarning(
-            "⚠️ NO APRILTAG UPDATES FOR " + (int)timeSinceUpdate + "s - Check visibility", false);
-        }
-      }
-      
-      // Report current status
-      String status = fieldPositionSystem.getAprilTagStatus();
-      if (!status.equals("No valid position")) {
-        edu.wpi.first.wpilibj.DriverStation.reportWarning(
-          "📍 " + status, false);
-      }
-    }
   }
 
   /**
-   * Optional helper used by dynamic button mappers to retrieve commands by name.
-   * Currently a stub that returns null for unknown names. Teams should extend
-   * this to return actual commands referenced by external configs.
+   * Configures the button bindings.
    */
-  public Command getCommandForButton(String name) {
-    // TODO: map named strings to commands (e.g. "INTAKE" -> ballSubsystem.runEnd(...))
-    // Returning null is acceptable; callers already handle missing commands.
-    return null;
-  }
-  
-  /**
-   * Updates field position and shooting position systems.
-   * Call this periodically (usually in robotPeriodic()).
-   */
-  public void updateFieldPosition() {
-    fieldPositionSystem.update();
-    // shootingPositionManager.update(); // Uncomment if needed
-    
-    // Update Shuffleboard widgets with current data
-    shuffleboardManager.updateAllWidgets(
-      cameraServerSubsystem,
-      limelightSubsystem,
-      driveSubsystem,
-      fieldPositionSystem,
-      shootingPositionManager
+  private void configureBindings() {
+    // Driver controller bindings
+    m_swerveDrive.setDefaultCommand(
+        m_swerveDrive::driveCommand(
+            () -> -m_driverController.getLeftY(),
+            () -> -m_driverController.getLeftX(),
+            () -> -m_driverController.getRightX()
+        )
     );
-  }
-  
-  /**
-   * Gets camera server information for Shuffleboard.
-   * 
-   * @return Camera server subsystem
-   */
-  public SimpleCameraSubsystem getCameraServer() {
-    return cameraServerSubsystem;
+
+    // Operator controller bindings
+    m_operatorController.a().whileTrue(m_shooterSubsystem::intake).onFalse(m_shooterSubsystem::stop);
+    m_operatorController.b().whileTrue(m_shooterSubsystem::launch).onFalse(m_shooterSubsystem::stop);
+    m_operatorController.x().whileTrue(m_shooterSubsystem::intake).onFalse(m_shooterSubsystem::stop);
+    m_operatorController.y().whileTrue(m_shooterSubsystem::launch).onFalse(m_shooterSubsystem::stop);
+
+    // Update Shuffleboard with subsystem data
+    shuffleboardManager.updateAllWidgets(
+        m_cameraSubsystem,
+        m_limelightSubsystem,
+        fieldPositionSystem,
+        shootingPositionManager,
+        m_swerveDrive
+    );
   }
 }

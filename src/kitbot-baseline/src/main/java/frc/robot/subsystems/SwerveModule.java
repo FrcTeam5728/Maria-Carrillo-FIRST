@@ -4,153 +4,129 @@
 
 package frc.robot.subsystems;
 
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.RelativeEncoder;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+import static frc.robot.Constants.DriveConstants.*;
 
 /**
- * Represents a swerve module with drive and turning motors, encoders, and PID controllers.
+ * Swerve module implementation for a differential drive robot.
+ * This module represents one of the four swerve modules that make up the swerve drive.
  */
-public class SwerveModule {
-  private static final double kWheelRadius = 0.0508; // meters
-  private static final int kEncoderResolution = 4096;
+public class SwerveModule extends SubsystemBase {
+  private final SparkMax m_driveMotor;
+  private final SparkMax m_turningMotor;
+  private final RelativeEncoder m_driveEncoder;
+  private final RelativeEncoder m_turningEncoder;
 
-  private static final double kModuleMaxAngularVelocity = SwerveDriveSubsystem.kMaxAngularSpeed;
-  private static final double kModuleMaxAngularAcceleration = 2 * Math.PI; // radians per second squared
-
-  private final PWMSparkMax m_driveMotor;
-  private final PWMSparkMax m_turningMotor;
-
-  private final Encoder m_driveEncoder;
-  private final Encoder m_turningEncoder;
-
-  // Gains are for example purposes only - must be determined for your own robot!
-  private final PIDController m_drivePIDController = new PIDController(1.0, 0, 0);
-
-  // Gains are for example purposes only - must be determined for your own robot!
-  private final ProfiledPIDController m_turningPIDController =
-      new ProfiledPIDController(
-          1.0,
-          0,
-          0,
-          new TrapezoidProfile.Constraints(
-              kModuleMaxAngularVelocity, kModuleMaxAngularAcceleration));
-
-  // Gains are for example purposes only - must be determined for your own robot!
-  private final SimpleMotorFeedforward m_driveFeedforward = new SimpleMotorFeedforward(1.0, 3.0);
-  private final SimpleMotorFeedforward m_turnFeedforward = new SimpleMotorFeedforward(1.0, 0.5);
+  private final double m_offset;
+  private SwerveModuleState m_state;
 
   /**
-   * Constructs a SwerveModule with a drive motor, turning motor, drive encoder and turning encoder.
-   *
-   * @param driveMotorChannel PWM output for the drive motor.
-   * @param turningMotorChannel PWM output for the turning motor.
-   * @param driveEncoderChannelA DIO input for the drive encoder channel A
-   * @param driveEncoderChannelB DIO input for the drive encoder channel B
-   * @param turningEncoderChannelA DIO input for the turning encoder channel A
-   * @param turningEncoderChannelB DIO input for the turning encoder channel B
+   * Constructs a SwerveModule.
+   * 
+   * @param driveMotorId   CAN ID of the drive motor
+   * @param turningMotorId CAN ID of the turning motor
+   * @param driveEncoderId DIO port of the drive encoder
+   * @param turningEncoderId DIO port of the turning encoder
+   * @param offset         Offset of the module from the center of the robot
    */
-  public SwerveModule(
-      int driveMotorChannel,
-      int turningMotorChannel,
-      int driveEncoderChannelA,
-      int driveEncoderChannelB,
-      int turningEncoderChannelA,
-      int turningEncoderChannelB) {
-    m_driveMotor = new PWMSparkMax(driveMotorChannel);
-    m_turningMotor = new PWMSparkMax(turningMotorChannel);
+  public SwerveModule(int driveMotorId, int turningMotorId, int driveEncoderId, int turningEncoderId, double offset) {
+    m_driveMotor = new SparkMax(driveMotorId, MotorType.kBrushed);
+    m_turningMotor = new SparkMax(turningMotorId, MotorType.kBrushed);
+    m_driveEncoder = new RelativeEncoder(driveEncoderId);
+    m_turningEncoder = new RelativeEncoder(turningEncoderId);
+    m_offset = offset;
 
-    m_driveEncoder = new Encoder(driveEncoderChannelA, driveEncoderChannelB);
-    m_turningEncoder = new Encoder(turningEncoderChannelA, turningEncoderChannelB);
+    // Configure the motors
+    SparkMaxConfig driveConfig = new SparkMaxConfig();
+    driveConfig.smartCurrentLimit(40);
+    driveConfig.openLoopRamp(0.1);
+    driveConfig.closedLoopRamp(0.1);
 
-    // Set the distance per pulse for the drive encoder. We can simply use the
-    // distance traveled for one rotation of the wheel divided by the encoder
-    // resolution.
-    m_driveEncoder.setDistancePerPulse(2 * Math.PI * kWheelRadius / kEncoderResolution);
+    SparkMaxConfig turningConfig = new SparkMaxConfig();
+    turningConfig.smartCurrentLimit(30);
+    turningConfig.openLoopRamp(0.1);
+    turningConfig.closedLoopRamp(0.1);
 
-    // Set the distance (in this case, angle) in radians per pulse for the turning encoder.
-    // This is the the angle through an entire rotation (2 * pi) divided by the
-    // encoder resolution.
-    m_turningEncoder.setDistancePerPulse(2 * Math.PI / kEncoderResolution);
-
-    // Limit the PID Controller's input range between -pi and pi and set the input
-    // to be continuous.
-    m_turningPIDController.enableContinuousInput(-Math.PI, Math.PI);
+    m_driveMotor.configure(driveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    m_turningMotor.configure(turningConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
   /**
-   * Returns the current state of the module.
-   *
-   * @return The current state of the module.
-   */
-  public SwerveModuleState getState() {
-    return new SwerveModuleState(
-        m_driveEncoder.getRate(), new Rotation2d(m_turningEncoder.getDistance()));
-  }
-
-  /**
-   * Returns the current position of the module.
-   *
-   * @return The current position of the module.
-   */
-  public SwerveModulePosition getPosition() {
-    return new SwerveModulePosition(
-        m_driveEncoder.getDistance(), new Rotation2d(m_turningEncoder.getDistance()));
-  }
-
-  /**
-   * Sets the desired state for the module.
-   *
-   * @param desiredState Desired state with speed and angle.
+   * Sets the desired state of the swerve module.
+   * 
+   * @param desiredState The desired swerve module state with speeds and angles
    */
   public void setDesiredState(SwerveModuleState desiredState) {
-    var encoderRotation = new Rotation2d(m_turningEncoder.getDistance());
-
-    // Optimize the reference state to avoid spinning further than 90 degrees
-    desiredState.optimize(encoderRotation);
-
-    // Scale speed by cosine of angle error. This scales down movement perpendicular to the desired
-    // direction of travel that can occur when modules change directions. This results in smoother
-    // driving.
-    desiredState.cosineScale(encoderRotation);
-
-    // Calculate the drive output from the drive PID controller.
-    final double driveOutput =
-        m_drivePIDController.calculate(m_driveEncoder.getRate(), desiredState.speedMetersPerSecond);
-
-    final double driveFeedforward = m_driveFeedforward.calculate(desiredState.speedMetersPerSecond);
-
-    // Calculate the turning motor output from the turning PID controller.
-    final double turnOutput =
-        m_turningPIDController.calculate(
-            m_turningEncoder.getDistance(), desiredState.angle.getRadians());
-
-    final double turnFeedforward =
-        m_turnFeedforward.calculate(m_turningPIDController.getSetpoint().velocity);
-
-    m_driveMotor.setVoltage(driveOutput + driveFeedforward);
-    m_turningMotor.setVoltage(turnOutput + turnFeedforward);
+    m_state = desiredState;
   }
 
-  /** Resets the drive encoder to zero. */
-  public void resetDriveEncoder() {
-    m_driveEncoder.reset();
+  /**
+   * Gets the current state of the swerve module.
+   * 
+   * @return The current swerve module state
+   */
+  public SwerveModuleState getState() {
+    return m_state;
   }
 
-  /** Resets the turning encoder to zero. */
-  public void resetTurningEncoder() {
-    m_turningEncoder.reset();
+  /**
+   * Gets the current drive speed.
+   * 
+   * @return The current drive speed in meters per second
+   */
+  public double getDriveSpeed() {
+    return m_state.speeds.metersPerSecond;
   }
 
-  /** Resets both encoders to zero. */
-  public void resetEncoders() {
-    resetDriveEncoder();
-    resetTurningEncoder();
+  /**
+   * Gets the current turning speed.
+   * 
+   * @return The current turning speed in radians per second
+   */
+  public double getTurningSpeed() {
+    return m_state.speeds.omegaRadiansPerSecond;
+  }
+
+  /**
+   * Gets the current drive angle.
+   * 
+   * @return The current drive angle in radians
+   */
+  public double getDriveAngle() {
+    return m_state.speeds.angle;
+  }
+
+  /**
+   * Gets the current turning angle.
+   * 
+   * @return The current turning angle in radians
+   */
+  public double getTurningAngle() {
+    return m_state.speeds.omega;
+  }
+
+  /**
+   * Gets the current drive position.
+   * 
+   * @return The current drive position
+   */
+  public SwerveModulePosition getPosition() {
+    return m_state.positions;
+  }
+
+  @Override
+  public void periodic() {
+    // This method will be called periodically to update the module state
+    // Implementation depends on your specific hardware setup
   }
 }
