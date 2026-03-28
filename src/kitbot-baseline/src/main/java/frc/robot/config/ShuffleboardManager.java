@@ -8,6 +8,11 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.shuffleboard.SimpleWidget;
+import edu.wpi.first.wpilibj.shuffleboard.WidgetType;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.math.geometry.Pose2d;
 import frc.robot.subsystems.SimpleCameraSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
@@ -47,11 +52,21 @@ public class ShuffleboardManager {
     private SimpleWidget leftEncoder;
     private SimpleWidget rightEncoder;
     
+    // Field visualization widget
+    private Field2d fieldWidget;
+    
     // Field position widgets
     private SimpleWidget fieldX;
     private SimpleWidget fieldY;
     private SimpleWidget fieldConfidence;
     private SimpleWidget positionSource;
+    
+    // Advanced positioning widgets
+    private SimpleWidget advancedPoseX;
+    private SimpleWidget advancedPoseY;
+    private SimpleWidget advancedPoseHeading;
+    private SimpleWidget tagsDetected;
+    private SimpleWidget positioningConfidence;
     
     // Shooting widgets
     private SimpleWidget selectedPosition;
@@ -147,16 +162,22 @@ public class ShuffleboardManager {
      * Initializes odometry and drive system widgets.
      */
     private void initializeOdometryWidgets() {
+        // Create field visualization widget
+        fieldWidget = new Field2d();
+        driverTab.add("Field", fieldWidget)
+            .withPosition(4, 0)
+            .withSize(4, 3);
+        
         robotX = driverTab.add("Robot X", 0.0)
             .withWidget(BuiltInWidgets.kNumberBar)
             .withProperties(Map.of("min", -5, "max", 15))
-            .withPosition(4, 3)
+            .withPosition(8, 3)
             .withSize(4, 1);
             
         robotY = driverTab.add("Robot Y", 0.0)
             .withWidget(BuiltInWidgets.kNumberBar)
             .withProperties(Map.of("min", -2, "max", 10))
-            .withPosition(4, 4)
+            .withPosition(8, 4)
             .withSize(4, 1);
             
         robotHeading = driverTab.add("Robot Heading", 0.0)
@@ -207,6 +228,35 @@ public class ShuffleboardManager {
             .withWidget(BuiltInWidgets.kTextView)
             .withPosition(8, 6)
             .withSize(6, 1);
+            
+        // Advanced positioning widgets
+        advancedPoseX = driverTab.add("Advanced X", 0.0)
+            .withWidget(BuiltInWidgets.kNumberBar)
+            .withProperties(Map.of("min", -5, "max", 15))
+            .withPosition(0, 6)
+            .withSize(4, 1);
+            
+        advancedPoseY = driverTab.add("Advanced Y", 0.0)
+            .withWidget(BuiltInWidgets.kNumberBar)
+            .withProperties(Map.of("min", -2, "max", 10))
+            .withPosition(4, 7)
+            .withSize(4, 1);
+            
+        advancedPoseHeading = driverTab.add("Advanced Heading", 0.0)
+            .withWidget(BuiltInWidgets.kGyro)
+            .withPosition(0, 8)
+            .withSize(2, 3);
+            
+        tagsDetected = driverTab.add("Tags Detected", 0)
+            .withWidget(BuiltInWidgets.kTextView)
+            .withPosition(2, 8)
+            .withSize(2, 1);
+            
+        positioningConfidence = driverTab.add("Positioning Confidence", 0.0)
+            .withWidget(BuiltInWidgets.kNumberSlider)
+            .withProperties(Map.of("min", 0, "max", 1))
+            .withPosition(2, 9)
+            .withSize(2, 1);
     }
     
     /**
@@ -306,6 +356,9 @@ public class ShuffleboardManager {
         robotHeading.getEntry().setDouble(pose.getRotation().getDegrees());
         gyroAngle.getEntry().setDouble(drive.getGyroAngle());
         
+        // Update field widget with robot position
+        fieldWidget.setRobotPose(pose);
+        
         // Encoder values would need to be accessed from DriveSubsystem
         // This is a placeholder - actual implementation may vary
         leftEncoder.getEntry().setDouble(0.0); // Placeholder
@@ -321,6 +374,86 @@ public class ShuffleboardManager {
         fieldY.getEntry().setDouble(pose.getY());
         fieldConfidence.getEntry().setDouble(fieldPosition.getConfidence());
         positionSource.getEntry().setString(fieldPosition.getPositionSource());
+    }
+    
+    /**
+     * Updates advanced positioning widgets with AprilTag/odometry data.
+     */
+    public void updateAdvancedPositioningWidgets(DriveSubsystem drive) {
+        if (drive instanceof DriveSubsystemSparkMax) {
+            var sparkDrive = (DriveSubsystemSparkMax) drive;
+            var advancedPose = sparkDrive.getPositioning().getFieldPose();
+            
+            advancedPoseX.getEntry().setDouble(advancedPose.getX());
+            advancedPoseY.getEntry().setDouble(advancedPose.getY());
+            advancedPoseHeading.getEntry().setDouble(advancedPose.getRotation().getDegrees());
+            tagsDetected.getEntry().setNumber(sparkDrive.getPositioning().hasRecentAprilTagDetection() ? 1 : 0);
+            positioningConfidence.getEntry().setDouble(sparkDrive.getPositioning().getConfidence());
+        }
+    }
+    
+    /**
+     * Displays a trajectory on the field widget.
+     * Useful for visualizing PathPlanner paths or autonomous trajectories.
+     * 
+     * @param trajectory The trajectory to display
+     * @param name The name of the trajectory (for legend)
+     */
+    public void displayTrajectory(Trajectory trajectory, String name) {
+        if (fieldWidget != null && trajectory != null) {
+            fieldWidget.getObject(name).setTrajectory(trajectory);
+        }
+    }
+    
+    /**
+     * Displays a simple path on the field widget using a list of poses.
+     * 
+     * @param poses List of poses that make up the path
+     * @param name The name of the path (for legend)
+     */
+    public void displayPath(Pose2d[] poses, String name) {
+        if (fieldWidget != null && poses != null && poses.length > 0) {
+            // Create a simple trajectory from the poses
+            var trajectory = new Trajectory();
+            var states = new java.util.ArrayList<Trajectory.State>();
+            
+            for (int i = 0; i < poses.length; i++) {
+                var state = new Trajectory.State();
+                state.poseMeters = poses[i];
+                state.timeSeconds = i * 0.1; // 0.1 seconds between poses
+                states.add(state);
+            }
+            
+            trajectory.getStates().addAll(states);
+            fieldWidget.getObject(name).setTrajectory(trajectory);
+        }
+    }
+    
+    /**
+     * Clears all trajectories from the field widget except the robot pose.
+     */
+    public void clearTrajectories() {
+        if (fieldWidget != null) {
+            // Create a new field widget to clear all trajectories
+            // This is the simplest way to clear all objects
+            var currentPose = fieldWidget.getRobotPose();
+            fieldWidget = new Field2d();
+            fieldWidget.setRobotPose(currentPose);
+            
+            // Re-add the widget to Shuffleboard
+            driverTab.add("Field", fieldWidget)
+                .withPosition(4, 0)
+                .withSize(4, 3);
+        }
+    }
+    
+    /**
+     * Gets the field widget for direct manipulation.
+     * 
+     * @return The Field2d widget
+     */
+    public Field2d getFieldWidget() {
+        return fieldWidget;
     }
     
     /**

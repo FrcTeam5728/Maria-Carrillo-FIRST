@@ -79,7 +79,10 @@ public class RobotContainer {
     System.out.println("Single source for all Limelight data");
     System.out.println("Pulsing shooter: 3s ON, 0.5s OFF");
     System.out.println("===================================");
-
+    
+    // Set up camera for AprilTag detection
+    driveSubsystem.setAprilTagCamera(limelightSubsystem); // Use Limelight for AprilTags
+    
     configureBindings();
 
     // Initialize PathPlanner for differential drive (commented out until dependency is added)
@@ -271,9 +274,16 @@ public class RobotContainer {
     // Update field position system
     fieldPositionSystem.update();
     
-    // Update Shuffleboard values
+    // Update advanced positioning with AprilTags
+    driveSubsystem.updatePositionWithAprilTags();
+    
+    // Update Shuffleboard values including field widget
     SimpleShuffleboardControls.updateValues(limelightSubsystem, fieldPositionSystem, 
-                                          shooterSubsystem, driveSubsystem);
+          shooterSubsystem, driveSubsystem);
+    
+    // Update ShuffleboardManager widgets (including field visualization)
+    shuffleboardManager.updateOdometryWidgets(driveSubsystem);
+    shuffleboardManager.updateAdvancedPositioningWidgets(driveSubsystem);
     
     // Run periodic Limelight diagnostics (every 5 seconds)
     runPeriodicDiagnostics();

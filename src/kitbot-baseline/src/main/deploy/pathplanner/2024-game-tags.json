@@ -1,0 +1,122 @@
+{
+  "tags": [
+    {
+      "ID": 1,
+      "pose": {
+        "translation": {"x": 0.72, "y": 0.72, "z": 0.0},
+        "rotation": {"quaternion": {"W": 1.0, "X": 0.0, "Y": 0.0, "Z": 0.0}}
+      }
+    },
+    {
+      "ID": 2,
+      "pose": {
+        "translation": {"x": 2.74, "y": 0.72, "z": 0.0},
+        "rotation": {"quaternion": {"W": 1.0, "X": 0.0, "Y": 0.0, "Z": 0.0}}
+      }
+    },
+    {
+      "ID": 3,
+      "pose": {
+        "translation": {"x": 4.76, "y": 0.72, "z": 0.0},
+        "rotation": {"quaternion": {"W": 1.0, "X": 0.0, "Y": 0.0, "Z": 0.0}}
+      }
+    },
+    {
+      "ID": 4,
+      "pose": {
+        "translation": {"x": 6.78, "y": 0.72, "z": 0.0},
+        "rotation": {"quaternion": {"W": 1.0, "X": 0.0, "Y": 0.0, "Z": 0.0}}
+      }
+    },
+    {
+      "ID": 5,
+      "pose": {
+        "translation": {"x": 8.80, "y": 0.72, "z": 0.0},
+        "rotation": {"quaternion": {"W": 1.0, "X": 0.0, "Y": 0.0, "Z": 0.0}}
+      }
+    },
+    {
+      "ID": 6,
+      "pose": {
+        "translation": {"x": 10.82, "y": 0.72, "z": 0.0},
+        "rotation": {"quaternion": {"W": 1.0, "X": 0.0, "Y": 0.0, "Z": 0.0}}
+      }
+    },
+    {
+      "ID": 7,
+      "pose": {
+        "translation": {"x": 0.72, "y": 2.13, "z": 0.0},
+        "rotation": {"quaternion": {"W": 1.0, "X": 0.0, "Y": 0.0, "Z": 0.0}}
+      }
+    },
+    {
+      "ID": 8,
+      "pose": {
+        "translation": {"x": 2.74, "y": 2.13, "z": 0.0},
+        "rotation": {"quaternion": {"W": 1.0, "X": 0.0, "Y": 0.0, "Z": 0.0}}
+      }
+    },
+    {
+      "ID": 9,
+      "pose": {
+        "translation": {"x": 4.76, "y": 2.13, "z": 0.0},
+        "rotation": {"quaternion": {"W": 1.0, "X": 0.0, "Y": 0.0, "Z": 0.0}}
+      }
+    },
+    {
+      "ID": 10,
+      "pose": {
+        "translation": {"x": 6.78, "y": 2.13, "z": 0.0},
+        "rotation": {"quaternion": {"W": 1.0, "X": 0.0, "Y": 0.0, "Z": 0.0}}
+      }
+    },
+    {
+      "ID": 11,
+      "pose": {
+        "translation": {"x": 8.80, "y": 2.13, "z": 0.0},
+        "rotation": {"quaternion": {"W": 1.0, "X": 0.0, "Y": 0.0, "Z": 0.0}}
+      }
+    },
+    {
+      "ID": 12,
+      "pose": {
+        "translation": {"x": 10.82, "y": 2.13, "z": 0.0},
+        "rotation": {"quaternion": {"W": 1.0, "X": 0.0, "Y": 0.0, "Z": 0.0}}
+      }
+    },
+    {
+      "ID": 13,
+      "pose": {
+        "translation": {"x": 0.72, "y": 3.54, "z": 0.0},
+        "rotation": {"quaternion": {"W": 1.0, "X": 0.0, "Y": 0.0, "Z": 0.0}}
+      }
+    },
+    {
+      "ID": 14,
+      "pose": {
+        "translation": {"x": 2.74, "y": 3.54, "z": 0.0},
+        "rotation": {"quaternion": {"W": 1.0, "X": 0.0, "Y": 0.0, "Z": 0.0}}
+      }
+    },
+    {
+      "ID": 15,
+      "pose": {
+        "translation": {"x": 4.76, "y": 3.54, "z": 0.0},
+        "rotation": {"quaternion": {"W": 1.0, "X": 0.0, "Y": 0.0, "Z": 0.0}}
+      }
+    },
+    {
+      "ID": 16,
+      "pose": {
+        "translation": {"x": 6.78, "y": 3.54, "z": 0.0},
+        "rotation": {"quaternion": {"W": 1.0, "X": 0.0, "Y": 0.0, "Z": 0.0}}
+      }
+    }
+  ],
+  "field": {
+    "length": 16.54,
+    "width": 8.02,
+    "name": "2024 FRC Field",
+    "origin": {"x": 0, "y": 0}
+  }
+}
