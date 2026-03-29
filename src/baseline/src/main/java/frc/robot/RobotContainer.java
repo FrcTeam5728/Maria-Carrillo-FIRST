@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -14,6 +15,8 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -90,6 +93,8 @@ public class RobotContainer
                                                                                .translationHeadingOffset(Rotation2d.fromDegrees(
                                                                                    0));
 
+  //private final SendableChooser<Command> autoChooser;
+
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
@@ -99,6 +104,19 @@ public class RobotContainer
     configureBindings();
     DriverStation.silenceJoystickConnectionWarning(true);
     NamedCommands.registerCommand("test", Commands.print("I EXIST"));
+
+    // Register commands  used in any pathplanner autos.
+    NamedCommands.registerCommand("ShootAllFuel", Commands.print("Shooting all fuel!"));
+    NamedCommands.registerCommand("EnableIntake", Commands.print("Intaking fuel..."));
+    NamedCommands.registerCommand("DisableIntake", Commands.print("...stop intaking fuel."));
+
+    // Build an auto chooser. This will use Commands.none() as the default option.
+    //autoChooser = AutoBuilder.buildAutoChooser();
+
+    // Another option that allows you to specify the default auto by its name
+    // autoChooser = AutoBuilder.buildAutoChooser("My Default Auto");
+    //SmartDashboard.putData("Auto Selector", autoChooser);
+
   }
 
   /**
@@ -184,8 +202,10 @@ public class RobotContainer
    */
   public Command getAutonomousCommand()
   {
+    //return autoChooser.getSelected();
     // An example command will be run in autonomous
-    return drivebase.getAutonomousCommand("New Auto");
+    //drivebase.getAutonomousCommand("PreloadedFuel1");
+    return Commands.none();
   }
 
   public void setMotorBrake(boolean brake)
