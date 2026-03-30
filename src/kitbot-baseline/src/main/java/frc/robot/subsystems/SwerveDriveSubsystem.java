@@ -7,8 +7,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
-
-import edu.wpi.first.wpilibj.ADXRS450_Gyro;
+import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -16,20 +15,18 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.Command;
 
-public class SwerveDriveSubsystem extends SubsystemBase {
+public class SwerveDriveSubsystem extends DriveSubsystem {
     private PoseEstimator s_PoseEstimator = new PoseEstimator();
     public SwerveDriveOdometry swerveOdometry;
     public SwerveMod[] mSwerveMods;
-    public ADXRS450_Gyro gyro;
-    //public PigeonIMU gyro;
     private Field2d field = new Field2d();
     
     public SwerveDriveSubsystem(PoseEstimator s_PoseEstimator) {
         this.s_PoseEstimator = s_PoseEstimator;
-        
-        gyro = new ADXRS450_Gyro();
+
+        initializeGyro();
         gyro.reset();
 
         //gyro = new PigeonIMU(Constants.Swerve.pigeonID);
@@ -50,9 +47,18 @@ public class SwerveDriveSubsystem extends SubsystemBase {
         );
         
         System.out.println(getPose().getX());
-    
+
         // Set up custom logging to add the current path to a field 2d widget
         SmartDashboard.putData("Field", field);
+    }
+
+    @Override
+    public Command driveArcade(DoubleSupplier forward, DoubleSupplier rotation) {
+        return this.run(() -> {
+            double xSpeed = forward.getAsDouble();
+            double rot = rotation.getAsDouble();
+            drive(new Translation2d(xSpeed, 0.0), rot, false, true);
+        });
     }
 
     public void drive(Translation2d translation, double rotation, boolean fieldRelative, boolean isOpenLoop) {
@@ -181,5 +187,6 @@ public class SwerveDriveSubsystem extends SubsystemBase {
         swerveOdometry.update(getGyroYaw(), getModulePositions());
         s_PoseEstimator.updateSwerve(getGyroYaw(), getModulePositions());
         field.setRobotPose(getPose());
+        this.pose = getPose();
     }
 }

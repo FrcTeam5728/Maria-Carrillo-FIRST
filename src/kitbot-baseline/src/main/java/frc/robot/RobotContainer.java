@@ -6,6 +6,7 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -80,11 +81,6 @@ public class RobotContainer {
     System.out.println("===================================");
 
     configureBindings();
-
-    // Set the options to show up in the Dashboard for selecting auto modes. If you
-    // add additional auto modes you can add additional lines here with
-    // autoChooser.addOption
-    autoChooser.setDefaultOption("Autonomous", null);
   }
 
   /**
@@ -204,13 +200,12 @@ public class RobotContainer {
     
     // Switch USB camera with LEFT TRIGGER (operator controller) - for bandwidth management
     operatorController.leftTrigger()
-        .onTrue(() -> {
+        .onTrue(Commands.runOnce(() -> {
             // Switch to next USB camera device (0 -> 1 -> 2 -> 0)
             int currentDevice = USBCameraServer.getDeviceNumber();
             int nextDevice = (currentDevice + 1) % 3; // Cycle through 0, 1, 2
             USBCameraServer.switchToDevice(nextDevice);
-            return null;
-        });
+        }));
 
     // Set the default command for the drive subsystem to the command provided by
     // factory with the values provided by the joystick axes on the driver
