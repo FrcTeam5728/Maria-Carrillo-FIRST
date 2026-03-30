@@ -42,3 +42,6 @@ deploy/
 
 # Vendor dependency caches
 vendordeps/cache/
+
+# Specifically ignore kitbot-baseline build artifacts
+src/kitbot-baseline (1)/build/
