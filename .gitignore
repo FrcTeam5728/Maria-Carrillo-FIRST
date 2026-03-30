@@ -1,0 +1,44 @@
+# Build directories
+build/
+.gradle/
+out/
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# FRC specific
+deploy/
+*.jar
+
+# Large binary files that shouldn't be in git
+**/*.so
+**/*.dll
+**/*.dylib
+**/*.exe
+
+# WPILib build artifacts
+**/build/jni/
+**/build/libs/
+**/build/tmp/
+**/build/distributions/
+
+# Simulation files
+**/*.sim
+
+# Vendor dependency caches
+vendordeps/cache/
