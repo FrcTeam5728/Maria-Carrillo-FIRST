@@ -13,7 +13,7 @@ import edu.wpi.first.math.kinematics.DifferentialDriveWheelPositions;
 // import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.Encoder;
 // import edu.wpi.first.wpilibj.SerialPort;
-// import edu.wpi.first.wpilibj.ADXRS450_Gyro;
+import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /**
@@ -29,6 +29,9 @@ public abstract class DriveSubsystem extends SubsystemBase {
      * Protected so subclasses can initialize it in their constructors.
      */
     protected DifferentialDrive drive;
+    
+    // Gyro for heading measurement
+    protected ADXRS450_Gyro gyro;
     
     // Odometry for tracking robot position
     protected DifferentialDriveOdometry odometry;

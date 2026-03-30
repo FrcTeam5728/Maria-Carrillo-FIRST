@@ -14,10 +14,12 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 import static frc.robot.Constants.OperatorConstants.*;
 import frc.robot.commands.Autos;
+import frc.robot.commands.FollowPathCommand;
+import frc.robot.config.PathPlannerAutoBuilder;
+import frc.robot.config.PathPlannerConfig;
 import frc.robot.commands.RampZigzagShootAuto;
 import frc.robot.commands.SimpleAutoShootCommand;
 import frc.robot.config.SimpleShuffleboardControls;
-import frc.robot.config.PathPlannerAutoBuilder;
 import frc.robot.subsystems.SimpleCameraSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.FuelSubsystem;
@@ -68,7 +70,7 @@ public class RobotContainer {
 
     // Configure PathPlanner for autonomous path following
     PathPlannerAutoBuilder.configure(driveSubsystem);
-    System.out.println("PathPlanner configured for differential drive");
+    System.out.println("PathPlanner configured for drive system");
 
     configureBindings();
 

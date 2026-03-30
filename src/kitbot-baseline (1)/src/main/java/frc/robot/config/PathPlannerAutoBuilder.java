@@ -16,10 +16,11 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.SwerveDriveSubsystem;
 
 /**
  * Utility class for building PathPlanner autonomous commands.
- * Configures AutoBuilder for differential drive robots.
+ * Configures AutoBuilder for both differential and swerve drive robots.
  */
 public class PathPlannerAutoBuilder {
     
@@ -36,18 +37,35 @@ public class PathPlannerAutoBuilder {
             return;
         }
         
-        // Configure AutoBuilder for differential drive
-        AutoBuilder.configure(
-            driveSubsystem::getPose, // Robot pose supplier
-            driveSubsystem::resetOdometry, // Method to reset odometry
-            () -> new edu.wpi.first.math.kinematics.ChassisSpeeds(), // ChassisSpeeds supplier (empty for now)
-            (speeds, feedforwards) -> {
-                // Chassis speeds consumer - convert to tank drive
-                // This is a simplified version for differential drive
-                double leftSpeed = speeds.vxMetersPerSecond - speeds.omegaRadiansPerSecond * PathPlannerConfig.getTrackWidth() / 2.0;
-                double rightSpeed = speeds.vxMetersPerSecond + speeds.omegaRadiansPerSecond * PathPlannerConfig.getTrackWidth() / 2.0;
-                driveSubsystem.driveArcade(() -> leftSpeed, () -> rightSpeed);
-            },
+        if (driveSubsystem instanceof SwerveDriveSubsystem swerveDrive) {
+            // Configure AutoBuilder for swerve drive
+            AutoBuilder.configure(
+                swerveDrive::getPose, // Robot pose supplier
+                swerveDrive::resetOdometry, // Method to reset odometry
+                swerveDrive::getRobotRelativeSpeeds, // ChassisSpeeds supplier
+                (speeds, feedforwards) -> swerveDrive.driveRobotRelative(speeds), // Chassis speeds consumer
+                PathPlannerConfig.getHolonomicPathFollower(), // Path following controller
+                PathPlannerConfig.createConfig(), // Robot config
+                () -> {
+                    // Alliance flipper
+                    var alliance = edu.wpi.first.wpilibj.DriverStation.getAlliance();
+                    return alliance.isPresent() && alliance.get() == edu.wpi.first.wpilibj.DriverStation.Alliance.Red;
+                },
+                swerveDrive // Reference to this subsystem for path following events
+            );
+        } else {
+            // Configure AutoBuilder for differential drive
+            AutoBuilder.configure(
+                driveSubsystem::getPose, // Robot pose supplier
+                driveSubsystem::resetOdometry, // Method to reset odometry
+                () -> new edu.wpi.first.math.kinematics.ChassisSpeeds(), // ChassisSpeeds supplier (empty for now)
+                (speeds, feedforwards) -> {
+                    // Chassis speeds consumer - convert to tank drive
+                    // This is a simplified version for differential drive
+                    double leftSpeed = speeds.vxMetersPerSecond - speeds.omegaRadiansPerSecond * PathPlannerConfig.getTrackWidth() / 2.0;
+                    double rightSpeed = speeds.vxMetersPerSecond + speeds.omegaRadiansPerSecond * PathPlannerConfig.getTrackWidth() / 2.0;
+                    driveSubsystem.driveArcade(() -> leftSpeed, () -> rightSpeed);
+                },
             new PPLTVController(0.02), // Path following controller for differential drive
             PathPlannerConfig.createConfig(), // Robot config
             () -> {
@@ -56,10 +74,12 @@ public class PathPlannerAutoBuilder {
                 return alliance.isPresent() && alliance.get() == edu.wpi.first.wpilibj.DriverStation.Alliance.Red;
             },
             driveSubsystem // Reference to this subsystem to set requirements
-        );
+            );
+        }
         
         configured = true;
-        System.out.println("PathPlanner AutoBuilder configured for differential drive");
+        System.out.println("PathPlanner AutoBuilder configured for " + 
+            (driveSubsystem instanceof SwerveDriveSubsystem ? "swerve" : "differential") + " drive");
     }
     
     /**

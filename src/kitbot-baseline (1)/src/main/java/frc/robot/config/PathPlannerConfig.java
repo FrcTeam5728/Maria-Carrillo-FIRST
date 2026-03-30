@@ -7,13 +7,14 @@ package frc.robot.config;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.config.ModuleConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.system.plant.DCMotor;
 import frc.robot.subsystems.DriveSubsystem;
 
 /**
- * Configuration for PathPlanner with differential drive kinematics.
+ * Configuration for PathPlanner with differential and swerve drive kinematics.
  */
 public class PathPlannerConfig {
     
@@ -93,5 +94,17 @@ public class PathPlannerConfig {
      */
     public static double getMaxAcceleration() {
         return MAX_ACCELERATION_METERS_PER_SEC_SQ;
+    }
+    
+    /**
+     * Gets the holonomic path follower controller for swerve drive.
+     * 
+     * @return PPHolonomicDriveController configured for swerve
+     */
+    public static PPHolonomicDriveController getHolonomicPathFollower() {
+        return new PPHolonomicDriveController(
+            new PIDConstants(5.0, 0.0, 0.0), // Translation PID
+            new PIDConstants(5.0, 0.0, 0.0) // Rotation PID
+        );
     }
 }
