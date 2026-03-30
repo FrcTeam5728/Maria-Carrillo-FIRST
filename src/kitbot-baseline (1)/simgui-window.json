@@ -1,0 +1,60 @@
+{
+  "Docking": {
+    "Data": []
+  },
+  "MainWindow": {
+    "GLOBAL": {
+      "font": "Proggy Dotted",
+      "fps": "120",
+      "height": "1152",
+      "maximized": "0",
+      "style": "0",
+      "userScale": "2",
+      "width": "2040",
+      "xpos": "108",
+      "ypos": "176"
+    }
+  },
+  "Window": {
+    "###FMS": {
+      "Collapsed": "0",
+      "Pos": "7,860",
+      "Size": "388,176"
+    },
+    "###Joysticks": {
+      "Collapsed": "0",
+      "Pos": "398,741",
+      "Size": "1156,91"
+    },
+    "###NetworkTables": {
+      "Collapsed": "0",
+      "Pos": "398,441",
+      "Size": "1195,294"
+    },
+    "###NetworkTables Info": {
+      "Collapsed": "0",
+      "Pos": "398,207",
+      "Size": "1195,231"
+    },
+    "###Other Devices": {
+      "Collapsed": "0",
+      "Pos": "1633,31",
+      "Size": "398,1107"
+    },
+    "###Timing": {
+      "Collapsed": "0",
+      "Pos": "7,239",
+      "Size": "188,157"
+    },
+    "Debug##Default": {
+      "Collapsed": "0",
+      "Pos": "60,60",
+      "Size": "400,400"
+    },
+    "Robot State": {
+      "Collapsed": "0",
+      "Pos": "5,20",
+      "Size": "137,152"
+    }
+  }
+}

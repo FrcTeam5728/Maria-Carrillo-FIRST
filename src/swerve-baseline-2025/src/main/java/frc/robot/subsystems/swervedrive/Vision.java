@@ -40,11 +40,14 @@ import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 import swervelib.SwerveDrive;
 import swervelib.telemetry.SwerveDriveTelemetry;
+import frc.robot.Constants;
 
 
 /**
  * Example PhotonVision class to aid in the pursuit of accurate odometry. Taken from
  * https://gitlab.com/ironclad_code/ironclad-2024/-/blob/master/src/main/java/frc/robot/vision/Vision.java?ref_type=heads
+ * 
+ * Enhanced with Limelight integration for dual-vision system support.
  */
 public class Vision
 {
@@ -74,6 +77,10 @@ public class Vision
    * Field from {@link swervelib.SwerveDrive#field}
    */
   private             Field2d             field2d;
+  /**
+   * Limelight subsystem for additional vision processing.
+   */
+  private final       Limelight           limelight;
 
 
   /**
@@ -86,6 +93,7 @@ public class Vision
   {
     this.currentPose = currentPose;
     this.field2d = field;
+    this.limelight = new Limelight(Constants.LimelightConstants.LIMELIGHT_NAME);
 
     if (Robot.isSimulation())
     {
@@ -140,6 +148,8 @@ public class Vision
        */
       visionSim.update(swerveDrive.getSimulationDriveTrainPose().get());
     }
+    
+    // Update PhotonVision pose estimates
     for (Cameras camera : Cameras.values())
     {
       Optional<EstimatedRobotPose> poseEst = getEstimatedGlobalPose(camera);
@@ -151,7 +161,16 @@ public class Vision
                                          camera.curStdDevs);
       }
     }
-
+    
+    // Update Limelight pose estimates
+    Optional<Pose2d> limelightPose = limelight.getBotPose();
+    if (limelightPose.isPresent())
+    {
+      double timestamp = limelight.getBotPoseTimestamp();
+      // Use reasonable standard deviations for Limelight
+      Matrix<N3, N1> limelightStdDevs = VecBuilder.fill(0.5, 0.5, 0.5);
+      swerveDrive.addVisionMeasurement(limelightPose.get(), timestamp, limelightStdDevs);
+    }
   }
 
   /**
@@ -277,6 +296,16 @@ public class Vision
   public VisionSystemSim getVisionSim()
   {
     return visionSim;
+  }
+
+  /**
+   * Get the Limelight subsystem instance.
+   *
+   * @return Limelight subsystem
+   */
+  public Limelight getLimelight()
+  {
+    return limelight;
   }
 
   /**

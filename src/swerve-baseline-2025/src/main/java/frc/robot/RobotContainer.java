@@ -20,6 +20,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
+import frc.robot.subsystems.swervedrive.Vision;
+import frc.robot.commands.Autos;
 import java.io.File;
 import swervelib.SwerveInputStream;
 
@@ -36,6 +38,7 @@ public class RobotContainer
   // The robot's subsystems and commands are defined here...
   private final SwerveSubsystem       drivebase  = new SwerveSubsystem(new File(Filesystem.getDeployDirectory(),
                                                                                 "swerve/neo"));
+  private final Vision                 vision    = new Vision(drivebase::getPose, drivebase.field);
 
   /**
    * Converts driver input into a field-relative ChassisSpeeds that is controlled by angular velocity.
@@ -95,10 +98,19 @@ public class RobotContainer
    */
   public RobotContainer()
   {
+    // Configure PathPlanner with swerve drive and vision
+    Autos.configurePathPlanner(drivebase, vision.getLimelight());
+    
     // Configure the trigger bindings
     configureBindings();
     DriverStation.silenceJoystickConnectionWarning(true);
     NamedCommands.registerCommand("test", Commands.print("I EXIST"));
+    
+    // Add vision periodic updates
+    Commands.run(() -> {
+      vision.updatePoseEstimation(drivebase);
+      vision.updateVisionField();
+    }).schedule();
   }
 
   /**
@@ -173,6 +185,20 @@ public class RobotContainer
       driverXbox.back().whileTrue(Commands.none());
       driverXbox.leftBumper().whileTrue(Commands.runOnce(drivebase::lock, drivebase).repeatedly());
       driverXbox.rightBumper().onTrue(Commands.none());
+      
+      // Vision-related bindings
+      driverXbox.povUp().onTrue(Commands.runOnce(() -> {
+        vision.getLimelight().setLEDMode(Constants.LimelightConstants.LED_ON);
+      }));
+      driverXbox.povDown().onTrue(Commands.runOnce(() -> {
+        vision.getLimelight().setLEDMode(Constants.LimelightConstants.LED_OFF);
+      }));
+      driverXbox.povLeft().onTrue(Commands.runOnce(() -> {
+        vision.getLimelight().setPipeline(Constants.LimelightConstants.APRILTAG_PIPELINE);
+      }));
+      driverXbox.povRight().onTrue(Commands.runOnce(() -> {
+        vision.getLimelight().setPipeline(Constants.LimelightConstants.RETROREFLECTIVE_PIPELINE);
+      }));
     }
 
   }
@@ -184,8 +210,14 @@ public class RobotContainer
    */
   public Command getAutonomousCommand()
   {
-    // An example command will be run in autonomous
-    return drivebase.getAutonomousCommand("New Auto");
+    // Use PathPlanner for autonomous - change "New Auto" to your desired path name
+    return Autos.getPathPlannerAuto("New Auto");
+    
+    // Alternative: Use vision-based autonomous
+    // return Autos.visionAuto(drivebase, vision.getLimelight());
+    
+    // Alternative: Use simple drive forward
+    // return Autos.driveForward(drivebase, 2.0, 1.0);
   }
 
   public void setMotorBrake(boolean brake)

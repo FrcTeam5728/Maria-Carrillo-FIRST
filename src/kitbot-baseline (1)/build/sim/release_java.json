@@ -1,0 +1,21 @@
+[
+  {
+    "type": "java",
+    "name": "jar (in project kitbot-baseline)",
+    "extensions": [
+      {
+        "name": "Sim GUI",
+        "libName": "/home/physicsiscool314/TONK/src/kitbot-baseline/build/jni/release/libhalsim_gui.so",
+        "defaultEnabled": true
+      },
+      {
+        "name": "Use Real DriverStation",
+        "libName": "/home/physicsiscool314/TONK/src/kitbot-baseline/build/jni/release/libhalsim_ds_socket.so",
+        "defaultEnabled": false
+      }
+    ],
+    "environment": {},
+    "libraryDir": "/home/physicsiscool314/TONK/src/kitbot-baseline/build/jni/release",
+    "mainClassName": "frc.robot.Main"
+  }
+]

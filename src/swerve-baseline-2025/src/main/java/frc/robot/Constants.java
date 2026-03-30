@@ -49,4 +49,52 @@ public final class Constants
     public static final double RIGHT_X_DEADBAND = 0.1;
     public static final double TURN_CONSTANT    = 6;
   }
+
+  public static final class LimelightConstants
+  {
+    // Limelight configuration
+    public static final String LIMELIGHT_NAME = "limelight";
+    public static final double LIMELIGHT_MOUNT_HEIGHT = 0.5; // meters
+    public static final double LIMELIGHT_ANGLE = 15.0; // degrees from horizontal
+    public static final double TARGET_HEIGHT = 0.0; // meters (adjust based on actual target)
+    
+    // Pipeline constants
+    public static final int DEFAULT_PIPELINE = 0;
+    public static final int RETROREFLECTIVE_PIPELINE = 0;
+    public static final int APRILTAG_PIPELINE = 1;
+    
+    // LED modes
+    public static final int LED_OFF = 0;
+    public static final int LED_BLINK = 1;
+    public static final int LED_ON = 2;
+    public static final int LED_USE_PIPELINE = 3;
+    
+    // Vision targeting constants
+    public static final double TARGETING_KP = 0.02; // Proportional gain for targeting
+    public static final double TARGETING_KD = 0.0; // Derivative gain for targeting
+    public static final double MAX_TARGETING_SPEED = 2.0; // m/s
+    public static final double TARGETING_TOLERANCE = 1.0; // degrees
+  }
+
+  public static final class PathPlannerConstants
+  {
+    // Path following constants
+    public static final double MAX_VELOCITY = 4.0; // m/s
+    public static final double MAX_ACCELERATION = 3.0; // m/s^2
+    public static final double MAX_ANGULAR_VELOCITY = Math.PI; // rad/s
+    public static final double MAX_ANGULAR_ACCELERATION = Math.PI; // rad/s^2
+    
+    // PID constants for path following
+    public static final double TRANSLATION_KP = 5.0;
+    public static final double TRANSLATION_KI = 0.0;
+    public static final double TRANSLATION_KD = 0.0;
+    
+    public static final double ROTATION_KP = 5.0;
+    public static final double ROTATION_KI = 0.0;
+    public static final double ROTATION_KD = 0.0;
+    
+    // Replanning configuration
+    public static final boolean ENABLE_DYNAMIC_REPLANNING = true;
+    public static final double REPLANNING_INTERVAL = 0.1; // seconds
+  }
 }
