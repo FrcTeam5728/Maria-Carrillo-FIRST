@@ -1,280 +1,185 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.subsystems;
 
-import java.util.function.DoubleSupplier;
+import frc.robot.SwerveMod;
+import frc.robot.Constants;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
+
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-/**
- * Represents a swerve drive style drivetrain.
- */
-public class SwerveDriveSubsystem extends DriveSubsystem {
-  public static final double kMaxSpeed = 3.0; // 3 meters per second
-  public static final double kMaxAngularSpeed = Math.PI; // 1/2 rotation per second
-
-  // Module locations relative to robot center
-  private final Translation2d m_frontLeftLocation = new Translation2d(0.381, 0.381);
-  private final Translation2d m_frontRightLocation = new Translation2d(0.381, -0.381);
-  private final Translation2d m_backLeftLocation = new Translation2d(-0.381, 0.381);
-  private final Translation2d m_backRightLocation = new Translation2d(-0.381, -0.381);
-
-  // Swerve modules
-  private final SwerveModule m_frontLeft = new SwerveModule(1, 2, 0, 1, 2, 3);
-  private final SwerveModule m_frontRight = new SwerveModule(3, 4, 4, 5, 6, 7);
-  private final SwerveModule m_backLeft = new SwerveModule(5, 6, 8, 9, 10, 11);
-  private final SwerveModule m_backRight = new SwerveModule(7, 8, 12, 13, 14, 15);
-
-  // Gyro
-  private final ADXRS450_Gyro m_gyro = new ADXRS450_Gyro();
-
-  // Kinematics and odometry
-  private final SwerveDriveKinematics m_kinematics =
-      new SwerveDriveKinematics(
-          m_frontLeftLocation, m_frontRightLocation, m_backLeftLocation, m_backRightLocation);
-
-  private final SwerveDriveOdometry m_odometry =
-      new SwerveDriveOdometry(
-          m_kinematics,
-          m_gyro.getRotation2d(),
-          new SwerveModulePosition[] {
-            m_frontLeft.getPosition(),
-            m_frontRight.getPosition(),
-            m_backLeft.getPosition(),
-            m_backRight.getPosition()
-          });
-
-  // Debug counters
-  private int debugCounter = 0;
-
-  public SwerveDriveSubsystem() {
-    // Initialize parent class components
-    initializeGyro();
-    initializeOdometry();
+public class SwerveDriveSubsystem extends SubsystemBase {
+    private PoseEstimator s_PoseEstimator = new PoseEstimator();
+    public SwerveDriveOdometry swerveOdometry;
+    public SwerveMod[] mSwerveMods;
+    public ADXRS450_Gyro gyro;
+    //public PigeonIMU gyro;
+    private Field2d field = new Field2d();
     
-    m_gyro.reset();
-    System.out.println("=== SWERVE DRIVE SUBSYSTEM INITIALIZED ===");
-    System.out.println("Max Speed: " + kMaxSpeed + " m/s");
-    System.out.println("Max Angular Speed: " + kMaxAngularSpeed + " rad/s");
-    System.out.println("Module Locations (meters):");
-    System.out.println("  Front Left: " + m_frontLeftLocation.getX() + ", " + m_frontLeftLocation.getY());
-    System.out.println("  Front Right: " + m_frontRightLocation.getX() + ", " + m_frontRightLocation.getY());
-    System.out.println("  Back Left: " + m_backLeftLocation.getX() + ", " + m_backLeftLocation.getY());
-    System.out.println("  Back Right: " + m_backRightLocation.getX() + ", " + m_backRightLocation.getY());
-    System.out.println("=======================================");
-  }
+    public SwerveDriveSubsystem(PoseEstimator s_PoseEstimator) {
+        this.s_PoseEstimator = s_PoseEstimator;
+        
+        gyro = new ADXRS450_Gyro();
+        gyro.reset();
 
-  @Override
-  public void periodic() {
-    // Update swerve odometry
-    updateOdometry();
+        //gyro = new PigeonIMU(Constants.Swerve.pigeonID);
+        //gyro.configFactoryDefault();
+        //gyro.setYaw(0);
 
-    // Debug output
-    debugCounter++;
-    if (debugCounter % 50 == 0) { // Every 1 second
-      Pose2d pose = getPose();
-      System.out.println("Swerve Odometry: X=" + String.format("%.3f", pose.getX()) + 
-                       ", Y=" + String.format("%.3f", pose.getY()) + 
-                       ", Heading=" + String.format("%.1f", pose.getRotation().getDegrees()) +
-                       ", Gyro=" + String.format("%.1f", m_gyro.getAngle()));
+        mSwerveMods = new SwerveMod[] {
+            new SwerveMod(0, Constants.Swerve.Mod0.constants),
+            new SwerveMod(1, Constants.Swerve.Mod1.constants),
+            new SwerveMod(2, Constants.Swerve.Mod2.constants),
+            new SwerveMod(3, Constants.Swerve.Mod3.constants)
+        };
+
+        swerveOdometry = new SwerveDriveOdometry(
+            Constants.Swerve.swerveKinematics, 
+            getGyroYaw(), 
+            getModulePositions()
+        );
+        
+        System.out.println(getPose().getX());
+    
+        // Set up custom logging to add the current path to a field 2d widget
+        SmartDashboard.putData("Field", field);
     }
 
-    // Publish data to SmartDashboard
-    Pose2d pose = getPose();
-    SmartDashboard.putNumber("Swerve/Odometry/X", pose.getX());
-    SmartDashboard.putNumber("Swerve/Odometry/Y", pose.getY());
-    SmartDashboard.putNumber("Swerve/Odometry/Heading", pose.getRotation().getDegrees());
-    SmartDashboard.putNumber("Swerve/Gyro/Angle", m_gyro.getAngle());
-    SmartDashboard.putBoolean("Swerve/Gyro/Connected", m_gyro.isConnected());
-    
-    // Update parent class pose for compatibility
-    this.pose = getPose();
-  }
+    public void drive(Translation2d translation, double rotation, boolean fieldRelative, boolean isOpenLoop) {
+        SwerveModuleState[] swerveModuleStates = 
+            Constants.Swerve.swerveKinematics.toSwerveModuleStates(
+                fieldRelative ? 
+                ChassisSpeeds.fromFieldRelativeSpeeds(
+                    translation.getX(), 
+                    translation.getY(), 
+                    rotation, 
+                    getHeading()
+                ) : 
+                new ChassisSpeeds(
+                    translation.getX(), 
+                    translation.getY(), 
+                    rotation
+                )
+            );
+        SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, Constants.Swerve.maxSpeed);
+        
+        for(SwerveMod mod : mSwerveMods){
+            mod.setDesiredState(swerveModuleStates[mod.getModuleNumber()], isOpenLoop);
+        }
+    }
 
-  /**
-   * Method to drive the robot using joystick info.
-   *
-   * @param xSpeed Speed of the robot in the x direction (forward).
-   * @param ySpeed Speed of the robot in the y direction (sideways).
-   * @param rot Angular rate of the robot.
-   * @param fieldRelative Whether the provided x and y speeds are relative to the field.
-   */
-  public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative) {
-    var swerveModuleStates =
-        m_kinematics.toSwerveModuleStates(
-            fieldRelative
-                ? ChassisSpeeds.fromFieldRelativeSpeeds(
-                    xSpeed, ySpeed, rot, m_gyro.getRotation2d())
-                : new ChassisSpeeds(xSpeed, ySpeed, rot));
-    
-    SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, kMaxSpeed);
-    m_frontLeft.setDesiredState(swerveModuleStates[0]);
-    m_frontRight.setDesiredState(swerveModuleStates[1]);
-    m_backLeft.setDesiredState(swerveModuleStates[2]);
-    m_backRight.setDesiredState(swerveModuleStates[3]);
-  }
+    public void driveRobotRelative(ChassisSpeeds robotRelativeSpeeds) {
+        ChassisSpeeds targetSpeeds = ChassisSpeeds.discretize(robotRelativeSpeeds, 0.02);
 
-  /** Updates the field relative position of the robot. */
-  public void updateOdometry() {
-    m_odometry.update(
-        m_gyro.getRotation2d(),
-        new SwerveModulePosition[] {
-          m_frontLeft.getPosition(),
-          m_frontRight.getPosition(),
-          m_backLeft.getPosition(),
-          m_backRight.getPosition()
-        });
-  }
+        SwerveModuleState[] targetStates = Constants.Swerve.swerveKinematics.toSwerveModuleStates(targetSpeeds);
+        setModuleStates(targetStates);
+    }
 
-  /**
-   * Returns the current pose of the robot using swerve odometry.
-   *
-   * @return The current pose of the robot.
-   */
-  @Override
-  public Pose2d getPose() {
-    return m_odometry.getPoseMeters();
-  }
+    /** Sets the swerve ModuleStates. */
+    public void setModuleStates(SwerveModuleState[] desiredStates) {
+        SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, Constants.Swerve.maxSpeed);
+        for(SwerveMod mod : mSwerveMods){
+            mod.setDesiredState(desiredStates[mod.getModuleNumber()], false);
+        }
+    }
 
-  /**
-   * Resets the odometry to the specified pose.
-   *
-   * @param pose The pose to reset to.
-   */
-  public void resetOdometry(Pose2d pose) {
-    m_odometry.resetPosition(
-        m_gyro.getRotation2d(),
-        new SwerveModulePosition[] {
-          m_frontLeft.getPosition(),
-          m_frontRight.getPosition(),
-          m_backLeft.getPosition(),
-          m_backRight.getPosition()
-        },
-        pose);
-  }
+    public void setX(){
+        SwerveModuleState[] states = new SwerveModuleState[4];
+        for(int i = 0; i < 4; i++){
+            states[i] = new SwerveModuleState(0, Rotation2d.fromDegrees(getModuleAngles()[i] + 45));
+        }
+        setModuleStates(states);
+    }
 
-  /**
-   * Resets the gyro angle to zero.
-   */
-  @Override
-  public void resetGyro() {
-    m_gyro.reset();
-  }
+    /** Sets the swerve ModuleStates to zero. */
+    public void stop() {
+        SwerveModuleState[] states = new SwerveModuleState[4];
+        for(int i = 0; i < 4; i++){
+            states[i] = new SwerveModuleState(0, Rotation2d.fromDegrees(getModuleAngles()[i]));
+        }
+        setModuleStates(states);
+    }
 
-  /**
-   * Gets the current gyro angle in degrees.
-   *
-   * @return The gyro angle.
-   */
-  @Override
-  public double getGyroAngle() {
-    return m_gyro.getAngle();
-  }
+    public Rotation2d getGyroYaw() {
+        return gyro.getRotation2d();
+    }
 
-  /**
-   * Gets the current heading as Rotation2d.
-   *
-   * @return The current heading.
-   */
-  @Override
-  public Rotation2d getHeading() {
-    return m_gyro.getRotation2d();
-  }
+    public Rotation2d getPitch() {
+        return Rotation2d.fromDegrees(0); // ADXRS450 doesn't have pitch
+    }
 
-  /**
-   * Arcade drive compatibility method - converts arcade drive inputs to swerve drive.
-   * This allows existing code that expects arcade drive to work with swerve drive.
-   *
-   * @param forward Forward/backward speed (-1.0 to 1.0)
-   * @param rotation Rotation speed (-1.0 to 1.0)
-   */
-  @Override
-  public Command driveArcade(DoubleSupplier forward, DoubleSupplier rotation) {
-    return this.run(() -> {
-      double fwd = forward.getAsDouble() * kMaxSpeed;
-      double rot = rotation.getAsDouble() * kMaxAngularSpeed;
-      drive(fwd, 0, rot, false); // Drive in robot-relative mode
-    });
-  }
+    public Rotation2d getRoll() {
+        return Rotation2d.fromDegrees(0); // ADXRS450 doesn't have roll
+    }
 
-  /**
-   * Creates a command to drive the robot with specified speeds.
-   *
-   * @param xSpeed Supplier for forward/backward speed
-   * @param ySpeed Supplier for left/right speed  
-   * @param rot Supplier for rotation speed
-   * @param fieldRelative Whether speeds are field relative
-   * @return Command to drive the robot
-   */
-  public Command driveCommand(DoubleSupplier xSpeed, DoubleSupplier ySpeed, DoubleSupplier rot, boolean fieldRelative) {
-    return this.run(() -> drive(xSpeed.getAsDouble(), ySpeed.getAsDouble(), rot.getAsDouble(), fieldRelative));
-  }
+    public void zeroGyro(){
+        gyro.reset();
+    }
 
-  /**
-   * Creates a command to drive the robot in robot-relative mode.
-   *
-   * @param xSpeed Supplier for forward/backward speed
-   * @param ySpeed Supplier for left/right speed
-   * @param rot Supplier for rotation speed
-   * @return Command to drive the robot
-   */
-  public Command driveRobotRelative(DoubleSupplier xSpeed, DoubleSupplier ySpeed, DoubleSupplier rot) {
-    return driveCommand(xSpeed, ySpeed, rot, false);
-  }
+    public Rotation2d getHeading(){
+        return getPose().getRotation();
+    }
 
-  /**
-   * Creates a command to drive the robot in field-relative mode.
-   *
-   * @param xSpeed Supplier for forward/backward speed
-   * @param ySpeed Supplier for left/right speed
-   * @param rot Supplier for rotation speed
-   * @return Command to drive the robot
-   */
-  public Command driveFieldRelative(DoubleSupplier xSpeed, DoubleSupplier ySpeed, DoubleSupplier rot) {
-    return driveCommand(xSpeed, ySpeed, rot, true);
-  }
+    public void setHeading(Rotation2d heading){
+        swerveOdometry.resetPosition(getGyroYaw(), getModulePositions(), new Pose2d(getPose().getTranslation(), heading));
+    }
 
-  /**
-   * Stops all drive motors.
-   */
-  public void stop() {
-    drive(0, 0, 0, false);
-  }
+    public Pose2d getPose() {
+        return swerveOdometry.getPoseMeters();
+    }
 
-  /**
-   * Gets the current chassis speeds from the swerve modules.
-   * 
-   * @return Current chassis speeds
-   */
-  public ChassisSpeeds getChassisSpeeds() {
-    SwerveModuleState[] states = new SwerveModuleState[] {
-      m_frontLeft.getState(),
-      m_frontRight.getState(),
-      m_backLeft.getState(),
-      m_backRight.getState()
-    };
-    return m_kinematics.toChassisSpeeds(states);
-  }
+    public void resetOdometry(Pose2d pose) {
+        swerveOdometry.resetPosition(getGyroYaw(), getModulePositions(), pose);
+    }
 
-  /**
-   * Creates a command to stop the robot.
-   *
-   * @return Command to stop the robot
-   */
-  public Command stopCommand() {
-    return this.runOnce(this::stop);
-  }
+    public SwerveModuleState[] getModuleStates(){
+        SwerveModuleState[] states = new SwerveModuleState[4];
+        for(SwerveMod mod : mSwerveMods){
+            states[mod.getModuleNumber()] = mod.getState();
+        }
+        return states;
+    }
+
+    public SwerveModulePosition[] getModulePositions(){
+        SwerveModulePosition[] positions = new SwerveModulePosition[4];
+        for(SwerveMod mod : mSwerveMods){
+            positions[mod.getModuleNumber()] = mod.getPosition();
+        }
+        return positions;
+    }
+
+    public ChassisSpeeds getRobotRelativeSpeeds() {
+        return Constants.Swerve.swerveKinematics.toChassisSpeeds(getModuleStates());
+    }
+
+    public void zeroAllEncoders(){
+        for(SwerveMod mod : mSwerveMods){
+            mod.resetToAbsolute();
+        }
+    }
+
+    public double[] getModuleAngles(){
+        double[] angles = new double[4];
+        for(int i = 0; i < 4; i++){
+            angles[i] = mSwerveMods[i].getCANcoder().getDegrees();
+        }
+        return angles;
+    }
+
+    @Override
+    public void periodic(){
+        swerveOdometry.update(getGyroYaw(), getModulePositions());
+        s_PoseEstimator.updateSwerve(getGyroYaw(), getModulePositions());
+        field.setRobotPose(getPose());
+    }
 }

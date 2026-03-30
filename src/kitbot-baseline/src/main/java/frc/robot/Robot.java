@@ -33,6 +33,9 @@ public class Robot extends TimedRobot {
 
   private RobotContainer m_robotContainer;
   
+  // Hardware configurations for swerve drive
+  public static final HardwareConfigs hardwareConfigs = new HardwareConfigs();
+  
   // AdvantageScope NetworkTables publishing
   private DoubleArrayPublisher m_robotPosePub;
   private StringPublisher m_robotModelPub;

@@ -7,6 +7,7 @@ import frc.robot.subsystems.FuelSubsystemVictorSpx;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.FuelSubsystem;
 import frc.robot.subsystems.SwerveDriveSubsystem;
+import frc.robot.subsystems.PoseEstimator;
 import static frc.robot.Constants.FactoryConstants.*;
 
 /**
@@ -28,7 +29,8 @@ public class RobotSubsystemFactory {
             case "VICTORSPX":
                 return new DriveSubsystemVictorSpx();
             case "SWERVE":
-                return new SwerveDriveSubsystem();
+                PoseEstimator poseEstimator = new PoseEstimator();
+                return new SwerveDriveSubsystem(poseEstimator);
             default:
                 throw new IllegalArgumentException(
                     "Unknown drive subsystem type: " + DRIVE_SUBSYSTEM_TYPE + 

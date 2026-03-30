@@ -18,12 +18,10 @@ import frc.robot.commands.LimelightTroubleshootCommand;
 import frc.robot.commands.LimelightVideoTestCommand;
 import frc.robot.commands.TestLimelightStreamCommand;
 import frc.robot.commands.ToggleLimelightModeCommand;
-import frc.robot.commands.Autos;
 import frc.robot.commands.ResetFieldPositionCommand;
 import frc.robot.commands.SelectShootingPositionCommand;
 import frc.robot.commands.ShootAtPositionCommand;
 import frc.robot.commands.SimpleAutoShootCommand;
-import frc.robot.commands.FollowPathPlannerPath;
 import frc.robot.config.ShuffleboardManager;
 import frc.robot.config.SimpleShuffleboardControls;
 import frc.robot.subsystems.SimpleCameraSubsystem;
@@ -83,24 +81,10 @@ public class RobotContainer {
 
     configureBindings();
 
-    // Initialize PathPlanner if using swerve drive
-    if (driveSubsystem instanceof SwerveDriveSubsystem) {
-      FollowPathPlannerPath.configureAutoBuilder((SwerveDriveSubsystem)driveSubsystem);
-      System.out.println("PathPlanner AutoBuilder configured for swerve drive");
-    }
-
     // Set the options to show up in the Dashboard for selecting auto modes. If you
     // add additional auto modes you can add additional lines here with
     // autoChooser.addOption
-    if (driveSubsystem instanceof SwerveDriveSubsystem) {
-      autoChooser.setDefaultOption("Swerve Auto", Autos.swerveAuto((SwerveDriveSubsystem)driveSubsystem, ballSubsystem));
-      autoChooser.addOption("Quick Swerve", Autos.quickAuto((SwerveDriveSubsystem)driveSubsystem, ballSubsystem));
-      autoChooser.addOption("PathPlanner Example", Autos.pathPlannerExampleAuto((SwerveDriveSubsystem)driveSubsystem, ballSubsystem));
-      autoChooser.addOption("PathPlanner Custom", Autos.customPathPlannerAuto((SwerveDriveSubsystem)driveSubsystem, ballSubsystem));
-      autoChooser.addOption("Legacy Auto", Autos.exampleAuto(driveSubsystem, ballSubsystem));
-    } else {
-      autoChooser.setDefaultOption("Autonomous", Autos.exampleAuto(driveSubsystem, ballSubsystem));
-    }
+    autoChooser.setDefaultOption("Autonomous", null);
   }
 
   /**
