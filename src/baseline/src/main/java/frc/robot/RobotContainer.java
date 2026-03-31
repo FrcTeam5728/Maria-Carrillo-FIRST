@@ -93,7 +93,7 @@ public class RobotContainer
                                                                                .translationHeadingOffset(Rotation2d.fromDegrees(
                                                                                    0));
 
-  //private final SendableChooser<Command> autoChooser;
+  private final SendableChooser<Command> autoChooser;
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -111,11 +111,11 @@ public class RobotContainer
     NamedCommands.registerCommand("DisableIntake", Commands.print("...stop intaking fuel."));
 
     // Build an auto chooser. This will use Commands.none() as the default option.
-    //autoChooser = AutoBuilder.buildAutoChooser();
+    autoChooser = AutoBuilder.buildAutoChooser();
 
     // Another option that allows you to specify the default auto by its name
     // autoChooser = AutoBuilder.buildAutoChooser("My Default Auto");
-    //SmartDashboard.putData("Auto Selector", autoChooser);
+    SmartDashboard.putData("Auto Selector", autoChooser);
 
   }
 
@@ -202,10 +202,10 @@ public class RobotContainer
    */
   public Command getAutonomousCommand()
   {
-    //return autoChooser.getSelected();
+    return autoChooser.getSelected();
     // An example command will be run in autonomous
     //drivebase.getAutonomousCommand("PreloadedFuel1");
-    return Commands.none();
+    //return Commands.none();
   }
 
   public void setMotorBrake(boolean brake)
