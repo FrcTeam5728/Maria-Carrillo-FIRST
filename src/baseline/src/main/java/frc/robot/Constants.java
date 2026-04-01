@@ -38,15 +38,54 @@ public final class Constants
     // Hold time on motor brakes when disabled
     public static final double WHEEL_LOCK_TIME = 10; // seconds
   }
+  
+  public static final class FactoryConstants {
+    // Fuel subsystem type selection: "SPARKMAX" or "VICTORSPX"
+    public static final String FUEL_SUBSYSTEM_TYPE = "SPARKMAX";
+  }
+
+  public static final class FuelConstants {
+    // Motor controller IDs for Fuel Mechanism motors
+    public static final int FEEDER_MOTOR_ID_SPARKMAX = 32;
+    public static final int INTAKE_LAUNCHER_MOTOR_ID_SPARKMAX = 31;
+
+    public static final int FEEDER_MOTOR_ID_SPX = 9;
+    public static final int INTAKE_LAUNCHER_MOTOR_ID_SPX = 8;
+
+    // Current limit and nominal voltage for fuel mechanism motors.
+    public static final int FEEDER_MOTOR_CURRENT_LIMIT = 30;
+    public static final int LAUNCHER_MOTOR_CURRENT_LIMIT = 30;
+
+    // Voltage values for various fuel operations. These values may need to be tuned
+    // based on exact robot construction.
+    // See the Software Guide for tuning information
+    public static final double INTAKING_FEEDER_VOLTAGE = -12;
+    public static final double INTAKING_INTAKE_VOLTAGE = 10;
+    public static final double LAUNCHING_FEEDER_VOLTAGE = -9;
+    public static final double LAUNCHING_LAUNCHER_VOLTAGE = 10.6;
+    public static final double SPIN_UP_FEEDER_VOLTAGE = 6;
+    public static final double SPIN_UP_SECONDS = 1;
+  }
+
 
   public static class OperatorConstants
   {
-    public static final int kDriverControllerPort = 0;
+    // Port constants for driver and operator controllers. These should match the
+    // values in the Joystick tab of the Driver Station software
+    public static final int OPERATOR_CONTROLLER_PORT = 0; // Both driver and operator use same controller;
+
+    // This value is multiplied by the joystick value when driving the robot to
+    // help avoid driving and turning too fast and being difficult to control
+    public static final double DRIVE_SCALING = .7;
+    public static final double ROTATION_SCALING = .8;
+    public static final int DRIVER_CONTROLLER_PORT = 0;
 
     // Joystick Deadband
     public static final double DEADBAND        = 0.1;
     public static final double LEFT_Y_DEADBAND = 0.1;
     public static final double RIGHT_X_DEADBAND = 0.1;
     public static final double TURN_CONSTANT    = 6;
+    
   }
 }
+
