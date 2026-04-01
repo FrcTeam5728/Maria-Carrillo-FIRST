@@ -6,6 +6,8 @@ package frc.robot;
 
 //import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.cscore.UsbCamera;
 //import edu.wpi.first.math.controller.ProfiledPIDController;
 //import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -124,6 +126,9 @@ public class RobotContainer
     // autoChooser = AutoBuilder.buildAutoChooser("My Default Auto");
     //SmartDashboard.putData("Auto Selector", autoChooser);
 
+    UsbCamera camera = CameraServer.startAutomaticCapture();
+    camera.setResolution(640, 480);
+    camera.setFPS(10);
   }
 
   /**
