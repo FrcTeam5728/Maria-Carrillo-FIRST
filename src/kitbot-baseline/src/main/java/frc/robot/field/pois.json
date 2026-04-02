@@ -1,0 +1,260 @@
+{
+  "field": {
+    "name": "REBUILT_2026",
+    "dimensions": {
+      "width": 16.54,
+      "length": 8.21,
+      "units": "meters"
+    },
+    "alliance": {
+      "red": {
+        "origin": {"x": 0, "y": 0},
+        "scoring_zone": {"x": 0, "y": 4.105, "width": 2.0, "height": 8.21}
+      },
+      "blue": {
+        "origin": {"x": 16.54, "y": 0},
+        "scoring_zone": {"x": 14.54, "y": 4.105, "width": 2.0, "height": 8.21}
+      }
+    },
+    "pois": [
+      {
+        "id": "hub_red",
+        "type": "HUB",
+        "position": {"x": 0.5, "y": 4.105},
+        "value": 2.0,
+        "confidence": 0.95,
+        "recommended_distance": 1.5,
+        "interaction_radius": 0.5,
+        "active": true,
+        "alliance": "red",
+        "april_tag_ids": [1, 2]
+      },
+      {
+        "id": "hub_blue",
+        "type": "HUB",
+        "position": {"x": 16.04, "y": 4.105},
+        "value": 2.0,
+        "confidence": 0.95,
+        "recommended_distance": 1.5,
+        "interaction_radius": 0.5,
+        "active": true,
+        "alliance": "blue",
+        "april_tag_ids": [3, 4]
+      },
+      {
+        "id": "hub_funnel_red",
+        "type": "HUB_FUNNEL",
+        "position": {"x": 0.5, "y": 4.105},
+        "value": 0.0,
+        "confidence": 0.90,
+        "recommended_distance": 0.3,
+        "interaction_radius": 0.2,
+        "active": true,
+        "alliance": "red",
+        "april_tag_ids": []
+      },
+      {
+        "id": "hub_funnel_blue",
+        "type": "HUB_FUNNEL",
+        "position": {"x": 16.04, "y": 4.105},
+        "value": 0.0,
+        "confidence": 0.90,
+        "recommended_distance": 0.3,
+        "interaction_radius": 0.2,
+        "active": true,
+        "alliance": "blue",
+        "april_tag_ids": []
+      },
+      {
+        "id": "neutral_zone_center",
+        "type": "NEUTRAL_ZONE",
+        "position": {"x": 8.27, "y": 4.105},
+        "value": 0.0,
+        "confidence": 0.85,
+        "recommended_distance": 2.0,
+        "interaction_radius": 1.0,
+        "active": true,
+        "alliance": "neutral",
+        "april_tag_ids": [11, 12]
+      },
+      {
+        "id": "depot_red",
+        "type": "DEPOT",
+        "position": {"x": 2.0, "y": 2.0},
+        "value": 0.0,
+        "confidence": 0.90,
+        "recommended_distance": 1.0,
+        "interaction_radius": 0.5,
+        "active": true,
+        "alliance": "red",
+        "april_tag_ids": [7, 8]
+      },
+      {
+        "id": "depot_blue",
+        "type": "DEPOT",
+        "position": {"x": 14.54, "y": 2.0},
+        "value": 0.0,
+        "confidence": 0.90,
+        "recommended_distance": 1.0,
+        "interaction_radius": 0.5,
+        "active": true,
+        "alliance": "blue",
+        "april_tag_ids": [9, 10]
+      },
+      {
+        "id": "trench_left",
+        "type": "TRENCH",
+        "position": {"x": 4.0, "y": 1.0},
+        "value": 0.0,
+        "confidence": 0.80,
+        "recommended_distance": 1.5,
+        "interaction_radius": 0.8,
+        "active": true,
+        "alliance": "neutral",
+        "april_tag_ids": []
+      },
+      {
+        "id": "trench_right",
+        "type": "TRENCH",
+        "position": {"x": 12.54, "y": 1.0},
+        "value": 0.0,
+        "confidence": 0.80,
+        "recommended_distance": 1.5,
+        "interaction_radius": 0.8,
+        "active": true,
+        "alliance": "neutral",
+        "april_tag_ids": []
+      },
+      {
+        "id": "stage_center",
+        "type": "STAGE",
+        "position": {"x": 8.27, "y": 4.105},
+        "value": 0.0,
+        "confidence": 1.0,
+        "recommended_distance": 2.0,
+        "interaction_radius": 1.0,
+        "active": true,
+        "alliance": "neutral",
+        "april_tag_ids": [13, 14, 15, 16]
+      },
+      {
+        "id": "charging_station_red",
+        "type": "CHARGING_STATION",
+        "position": {"x": 3.66, "y": 4.105},
+        "value": 0.0,
+        "confidence": 0.95,
+        "recommended_distance": 1.5,
+        "interaction_radius": 0.8,
+        "active": true,
+        "alliance": "red",
+        "april_tag_ids": [17, 18]
+      },
+      {
+        "id": "charging_station_blue",
+        "type": "CHARGING_STATION",
+        "position": {"x": 12.88, "y": 4.105},
+        "value": 0.0,
+        "confidence": 0.95,
+        "recommended_distance": 1.5,
+        "interaction_radius": 0.8,
+        "active": true,
+        "alliance": "blue",
+        "april_tag_ids": [19, 20]
+      },
+      {
+        "id": "waypoint_center",
+        "type": "WAYPOINT",
+        "position": {"x": 8.27, "y": 2.0},
+        "value": 0.0,
+        "confidence": 1.0,
+        "recommended_distance": 0.5,
+        "interaction_radius": 0.2,
+        "active": true,
+        "alliance": "neutral",
+        "april_tag_ids": []
+      },
+      {
+        "id": "defensive_red_left",
+        "type": "DEFENSIVE_POSITION",
+        "position": {"x": 4.0, "y": 2.0},
+        "value": 0.0,
+        "confidence": 0.8,
+        "recommended_distance": 1.0,
+        "interaction_radius": 0.5,
+        "active": true,
+        "alliance": "red",
+        "april_tag_ids": []
+      },
+      {
+        "id": "defensive_red_right",
+        "type": "DEFENSIVE_POSITION",
+        "position": {"x": 4.0, "y": 6.0},
+        "value": 0.0,
+        "confidence": 0.8,
+        "recommended_distance": 1.0,
+        "interaction_radius": 0.5,
+        "active": true,
+        "alliance": "red",
+        "april_tag_ids": []
+      },
+      {
+        "id": "defensive_blue_left",
+        "type": "DEFENSIVE_POSITION",
+        "position": {"x": 12.54, "y": 2.0},
+        "value": 0.0,
+        "confidence": 0.8,
+        "recommended_distance": 1.0,
+        "interaction_radius": 0.5,
+        "active": true,
+        "alliance": "blue",
+        "april_tag_ids": []
+      },
+      {
+        "id": "defensive_blue_right",
+        "type": "DEFENSIVE_POSITION",
+        "position": {"x": 12.54, "y": 6.0},
+        "value": 0.0,
+        "confidence": 0.8,
+        "recommended_distance": 1.0,
+        "interaction_radius": 0.5,
+        "active": true,
+        "alliance": "blue",
+        "april_tag_ids": []
+      }
+    ],
+    "april_tags": {
+      "tag_size": 0.165,
+      "units": "meters",
+      "family": "36h11",
+      "mappings": {
+        "1": {"field_position": {"x": 0.23, "y": 5.55}, "facing": "north"},
+        "2": {"field_position": {"x": 0.23, "y": 5.55}, "facing": "south"},
+        "3": {"field_position": {"x": 16.31, "y": 5.55}, "facing": "north"},
+        "4": {"field_position": {"x": 16.31, "y": 5.55}, "facing": "south"},
+        "5": {"field_position": {"x": 1.84, "y": 7.31}, "facing": "west"},
+        "6": {"field_position": {"x": 14.70, "y": 7.31}, "facing": "east"},
+        "7": {"field_position": {"x": 1.57, "y": 1.55}, "facing": "west"},
+        "8": {"field_position": {"x": 1.57, "y": 1.55}, "facing": "west"},
+        "9": {"field_position": {"x": 14.97, "y": 1.55}, "facing": "east"},
+        "10": {"field_position": {"x": 14.97, "y": 1.55}, "facing": "east"},
+        "11": {"field_position": {"x": 7.5, "y": 3.5}, "facing": "north"},
+        "12": {"field_position": {"x": 8.5, "y": 3.5}, "facing": "north"},
+        "13": {"field_position": {"x": 7.5, "y": 4.5}, "facing": "south"},
+        "14": {"field_position": {"x": 8.5, "y": 4.5}, "facing": "south"},
+        "15": {"field_position": {"x": 7.5, "y": 4.105}, "facing": "west"},
+        "16": {"field_position": {"x": 8.5, "y": 4.105}, "facing": "east"},
+        "17": {"field_position": {"x": 3.16, "y": 4.105}, "facing": "west"},
+        "18": {"field_position": {"x": 4.16, "y": 4.105}, "facing": "east"},
+        "19": {"field_position": {"x": 12.38, "y": 4.105}, "facing": "west"},
+        "20": {"field_position": {"x": 13.38, "y": 4.105}, "facing": "east"}
+      }
+    },
+    "notes": [
+      "All positions are in meters from the red alliance origin (bottom-left corner)",
+      "AprilTag positions are the center of the tag on the field",
+      "Interaction radius defines the area where robot can interact with POI",
+      "Recommended distance is optimal distance for robot to maintain from POI",
+      "Confidence values represent reliability of POI detection/interaction"
+    ]
+  }
+}
