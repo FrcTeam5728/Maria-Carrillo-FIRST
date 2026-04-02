@@ -1,0 +1,56 @@
+{
+  "auto": {
+    "Example Auto": {
+      "command": [
+        {
+          "data": {
+            "pathName": "example",
+            "maxVelocity": 2.0,
+            "maxAcceleration": 2.0,
+            "resetOdometry": true
+          },
+          "type": "path"
+        },
+        {
+          "data": {
+            "controls": {
+              "linear": {
+                "type": "none"
+              },
+              "angular": {
+                "type": "none"
+              }
+            },
+            "waitFor": false
+          },
+          "type": "wait"
+        }
+      ],
+      "folder": "Example Auto",
+      "startingPose": {
+        "translation": {
+          "x": 1.0,
+          "y": 1.0
+        },
+        "rotation": {
+          "degrees": 0.0
+        }
+      }
+    }
+  },
+  "choreoAuto": null,
+  "choreoTrajectory": null,
+  "eventMap": {},
+  "forceRefresh": false,
+  "gui": {
+    "autoFolderPath": "Example Auto",
+    "choreoAuto": null,
+    "choreoTrajectory": null,
+    "selectedAuto": "Example Auto",
+    "selectedEventMarkers": [],
+    "selectedPath": "example",
+    "waypointType": "translation"
+  },
+  "hotReload": true,
+  "version": "2026.1.2"
+}

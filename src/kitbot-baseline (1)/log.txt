@@ -1,0 +1,21 @@
+CS: WARNING: DriverCamera: could not set FPS to 30 (UsbCameraImpl.cpp:1053)
+CS: ERROR: ioctl VIDIOC_REQBUFS failed at UsbCameraImpl.cpp:707: Device or resource busy (UsbUtil.cpp:157)
+CS: WARNING: DriverCamera: could not allocate buffers (UsbCameraImpl.cpp:708)
+CS: DriverCamera: Attempting to connect to USB camera on /dev/video0
+CS: DriverCamera: Connected to USB camera on /dev/video0
+CS: ERROR: ioctl VIDIOC_S_FMT failed at UsbCameraImpl.cpp:1025: Device or resource busy (UsbUtil.cpp:157)
+CS: WARNING: DriverCamera: could not set format 1 res 640x480 (UsbCameraImpl.cpp:1026)
+CS: ERROR: ioctl VIDIOC_S_PARM failed at UsbCameraImpl.cpp:1052: Device or resource busy (UsbUtil.cpp:157)
+CS: WARNING: DriverCamera: could not set FPS to 30 (UsbCameraImpl.cpp:1053)
+CS: ERROR: ioctl VIDIOC_REQBUFS failed at UsbCameraImpl.cpp:707: Device or resource busy (UsbUtil.cpp:157)
+CS: WARNING: DriverCamera: could not allocate buffers (UsbCameraImpl.cpp:708)
+Odometry: X=0.000, Y=0.000, Heading=0.0
+Odometry: X=0.000, Y=0.000, Heading=0.0
+CS: DriverCamera: Attempting to connect to USB camera on /dev/video1
+CS: DriverCamera: Connected to USB camera on /dev/video1
+CS: ERROR: ioctl VIDIOC_S_FMT failed at UsbCameraImpl.cpp:1025: Device or resource busy (UsbUtil.cpp:157)
+CS: WARNING: DriverCamera: could not set format 1 res 640x480 (UsbCameraImpl.cpp:1026)
+CS: ERROR: ioctl VIDIOC_S_PARM failed at UsbCameraImpl.cpp:1052: Device or resource busy (UsbUtil.cpp:157)
+CS: WARNING: DriverCamera: could not set FPS to 30 (UsbCameraImpl.cpp:1053)
+CS: ERROR: ioctl VIDIOC_REQBUFS failed at UsbCameraImpl.cpp:707: Device or resource busy (UsbUtil.cpp:157)
+CS: WARNING: DriverCamera: could not allocate buffers (UsbCameraImpl.cpp:708)
