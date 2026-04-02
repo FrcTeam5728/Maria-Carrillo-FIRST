@@ -112,12 +112,12 @@ public class RobotContainer
     // Configure the trigger bindings
     configureBindings();
     DriverStation.silenceJoystickConnectionWarning(true);
-    NamedCommands.registerCommand("test", Commands.print("I EXIST"));
+    //NamedCommands.registerCommand("test", Commands.print("I EXIST"));
 
     // Register commands  used in any pathplanner autos.
-    NamedCommands.registerCommand("ShootAllFuel", Commands.print("Shooting all fuel!"));
-    NamedCommands.registerCommand("EnableIntake", Commands.print("Intaking fuel..."));
-    NamedCommands.registerCommand("DisableIntake", Commands.print("...stop intaking fuel."));
+    NamedCommands.registerCommand("ShootAllFuel", getShootAllFuelCommand());
+    //NamedCommands.registerCommand("EnableIntake", Commands.print("Intaking fuel..."));
+    //NamedCommands.registerCommand("DisableIntake", Commands.print("...stop intaking fuel."));
 
     // Build an auto chooser. This will use Commands.none() as the default option.
     autoChooser = AutoBuilder.buildAutoChooser();
@@ -252,5 +252,15 @@ public class RobotContainer
   public void setMotorBrake(boolean brake)
   {
     drivebase.setMotorBrake(brake);
+  }
+
+  private Command getShootAllFuelCommand()
+  {
+    return Commands.print("Shooting all fuel!")
+      .andThen(ballSubsystem.spinUpCommand().withTimeout(FuelConstants.SPIN_UP_SECONDS))
+      .andThen(Commands.repeatingSequence(
+        ballSubsystem.launchCommand().withTimeout(FuelConstants.CONTINUOUS_LAUNCHING_INTERVAL),
+        ballSubsystem.spinUpCommand().withTimeout(FuelConstants.CONTINUOUS_SPINCYCLE_INTERVAL)))
+      .finallyDo(() -> ballSubsystem.stop());
   }
 }
