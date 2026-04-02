@@ -1,0 +1,92 @@
+{
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.0,
+        "y": 1.0
+      },
+      "heading": 0,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 3.0,
+        "y": 1.0
+      },
+      "prevControl": {
+        "x": 2.0,
+        "y": 1.0
+      },
+      "nextControl": {
+        "x": 4.0,
+        "y": 2.0
+      },
+      "heading": 0,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 5.0,
+        "y": 3.0
+      },
+      "prevControl": {
+        "x": 4.0,
+        "y": 2.0
+      },
+      "nextControl": null,
+      "heading": 45,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 2.0,
+    "maxAcceleration": 2.0,
+    "maxAngularVelocity": 180.0,
+    "maxAngularAcceleration": 180.0
+  },
+  "goalEndState": {
+    "velocity": 0.0,
+    "rotation": 45.0
+  },
+  "sampleDist": 0.1,
+  "resolveTime": 0.1,
+  "reversed": false,
+  "folder": null,
+  "gui": {
+    "centerCamera": true,
+    "visibleWaypoints": true,
+    "visibleControlPoints": true,
+    "visibleTrajectory": true,
+    "visibleRotationTargets": true,
+    "visibleConstraintZones": true,
+    "visiblePointTowardsZones": true,
+    "visibleEventMarkers": true,
+    "visibleGhostWaypoints": true
+  },
+  "choreoAuto": null,
+  "choreoTrajectoryType": null,
+  "choreoTrajectory": null,
+  "showGhostWaypoints": true,
+  "driveSystemType": "swerve",
+  "robotConfig": {
+    "massKG": 45.0,
+    "moi": 6.0,
+    "wheelbaseMeters": 0.762,
+    "trackWidthMeters": 0.762
+  },
+  "bumpers": {
+    "front": 0.5,
+    "back": 0.5,
+    "side": 0.5
+  },
+  "version": "2026.1.2"
+}

@@ -3,6 +3,7 @@
     "name": "CTRE-Phoenix (v5)",
     "version": "5.36.0",
     "frcYear": "2026",
+    "year": 2026,
     "uuid": "fbc886a4-2cec-40c0-9835-71086a8cc3df",
     "mavenUrls": [
         "https://maven.ctr-electronics.com/release/"

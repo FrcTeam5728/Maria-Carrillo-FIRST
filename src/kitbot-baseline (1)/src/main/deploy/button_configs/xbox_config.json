@@ -1,0 +1,20 @@
+{
+  "controllerType": "XBOX",
+  "buttonMappings": [
+    {
+      "button": "A",
+      "commandType": "WHILE_HELD",
+      "command": "eject"
+    },
+    {
+      "button": "LEFT_BUMPER",
+      "commandType": "WHILE_HELD",
+      "command": "intake"
+    },
+    {
+      "button": "RIGHT_BUMPER",
+      "commandType": "WHILE_HELD",
+      "command": "launch"
+    }
+  ]
+}
