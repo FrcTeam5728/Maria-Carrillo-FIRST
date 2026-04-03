@@ -4,7 +4,7 @@
 
 package frc.robot;
 
-//import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.cscore.UsbCamera;
@@ -17,8 +17,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
-//import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-//import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -55,7 +55,7 @@ public class RobotContainer
   SwerveInputStream driveAngularVelocity = SwerveInputStream.of(drivebase.getSwerveDrive(),
                                                                 () -> driverXbox.getLeftY() * -1,
                                                                 () -> driverXbox.getLeftX() * -1)
-                                                            .withControllerRotationAxis(driverXbox::getRightX)
+                                                            .withControllerRotationAxis(() -> driverXbox.getRightX() * -1)
                                                             .deadband(OperatorConstants.DEADBAND)
                                                             .scaleTranslation(0.8)
                                                             .allianceRelativeControl(true);
@@ -102,7 +102,7 @@ public class RobotContainer
                                                                                .translationHeadingOffset(Rotation2d.fromDegrees(
                                                                                    0));
 
-  //private final SendableChooser<Command> autoChooser;
+  private final SendableChooser<Command> autoChooser;
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -112,19 +112,19 @@ public class RobotContainer
     // Configure the trigger bindings
     configureBindings();
     DriverStation.silenceJoystickConnectionWarning(true);
-    NamedCommands.registerCommand("test", Commands.print("I EXIST"));
+    //NamedCommands.registerCommand("test", Commands.print("I EXIST"));
 
     // Register commands  used in any pathplanner autos.
-    NamedCommands.registerCommand("ShootAllFuel", Commands.print("Shooting all fuel!"));
-    NamedCommands.registerCommand("EnableIntake", Commands.print("Intaking fuel..."));
-    NamedCommands.registerCommand("DisableIntake", Commands.print("...stop intaking fuel."));
+    NamedCommands.registerCommand("ShootAllFuel", getShootAllFuelCommand());
+    //NamedCommands.registerCommand("EnableIntake", Commands.print("Intaking fuel..."));
+    //NamedCommands.registerCommand("DisableIntake", Commands.print("...stop intaking fuel."));
 
     // Build an auto chooser. This will use Commands.none() as the default option.
-    //autoChooser = AutoBuilder.buildAutoChooser();
+    autoChooser = AutoBuilder.buildAutoChooser();
 
     // Another option that allows you to specify the default auto by its name
     // autoChooser = AutoBuilder.buildAutoChooser("My Default Auto");
-    //SmartDashboard.putData("Auto Selector", autoChooser);
+    SmartDashboard.putData("Auto Selector", autoChooser);
 
     UsbCamera camera = CameraServer.startAutomaticCapture();
     camera.setResolution(640, 480);
@@ -243,14 +243,24 @@ public class RobotContainer
    */
   public Command getAutonomousCommand()
   {
-    //return autoChooser.getSelected();
+    return autoChooser.getSelected();
     // An example command will be run in autonomous
     //drivebase.getAutonomousCommand("PreloadedFuel1");
-    return Commands.none();
+    //return Commands.none();
   }
 
   public void setMotorBrake(boolean brake)
   {
     drivebase.setMotorBrake(brake);
+  }
+
+  private Command getShootAllFuelCommand()
+  {
+    return Commands.print("Shooting all fuel!")
+      .andThen(ballSubsystem.spinUpCommand().withTimeout(FuelConstants.SPIN_UP_SECONDS))
+      .andThen(Commands.repeatingSequence(
+        ballSubsystem.launchCommand().withTimeout(FuelConstants.CONTINUOUS_LAUNCHING_INTERVAL),
+        ballSubsystem.spinUpCommand().withTimeout(FuelConstants.CONTINUOUS_SPINCYCLE_INTERVAL)))
+      .finallyDo(() -> ballSubsystem.stop());
   }
 }

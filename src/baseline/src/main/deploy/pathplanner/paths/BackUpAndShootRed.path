@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.5,
+        "x": 13.0,
         "y": 4.0
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.5000000000000053,
+        "x": 13.75,
         "y": 4.0
       },
       "isLocked": false,
-      "linkedName": "StartLocationBlue1"
+      "linkedName": "StartLocationRed1"
     },
     {
       "anchor": {
-        "x": 2.75,
+        "x": 13.75,
         "y": 4.0
       },
       "prevControl": {
-        "x": 1.75,
+        "x": 13.0,
         "y": 4.0
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "PreloadShootLocation1"
+      "linkedName": "PreloadShootLocationRed1"
     }
   ],
   "rotationTargets": [],
